@@ -1,11 +1,11 @@
 import { forwardRef, useImperativeHandle, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { App, Table } from 'antd';
-import type { TableColumnsType, TableProps } from 'antd';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import type { TableColumnsType, TableProps } from 'antd';
 
 import { Notification } from '~/utils';
-import { queryClient } from '~/config/query-client';
+import { queryClient } from '~/lib/query-client';
 import { userApi } from '~/features/admin/users/api/user-api';
 import { roleApi } from '~/features/admin/roles/api/role-api';
 import type { UserRolesTabRef } from '~/features/admin/users/components/user-roles-modal';
@@ -81,7 +81,7 @@ const CreateUserRolesTab = forwardRef<UserRolesTabRef, Props>((props, ref) => {
     const payload = selectedRowKeys.map((key) => key.toString());
 
     if (selectedRowKeys.length === 0) {
-      message.warning(t('Validation.SelectAtLeastOne', { name: t('Fields.Role') }));
+      message.warning(t('Validation.SelectAtLeastOne', { name: t('Fields.Role', { count: 1 }) }));
 
       return false;
     }

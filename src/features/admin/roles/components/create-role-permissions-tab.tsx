@@ -1,11 +1,11 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { App, Checkbox, Table } from 'antd';
-import type { TableProps } from 'antd';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import type { TableProps } from 'antd';
 
 import { Notification } from '~/utils';
-import { queryClient } from '~/config/query-client';
+import { queryClient } from '~/lib/query-client';
 import { roleApi } from '~/features/admin/roles/api/role-api';
 import { permissionApi } from '~/features/admin/permissions/api/permission-api';
 import type { RolePermissionsTabRef } from '~/features/admin/roles/components/role-permissions-modal';
@@ -116,7 +116,9 @@ const CreateRolePermissionsTab = forwardRef<RolePermissionsTabRef, Props>((props
       }));
 
     if (payload.length === 0) {
-      message.warning(t('Validation.SelectAtLeastOne', { name: t('Fields.Permission') }));
+      message.warning(
+        t('Validation.SelectAtLeastOne', { name: t('Fields.Permission', { count: 1 }) })
+      );
       return false;
     }
 
@@ -132,7 +134,8 @@ const CreateRolePermissionsTab = forwardRef<RolePermissionsTabRef, Props>((props
   }));
 
   const renderCheckbox =
-    (key: keyof Pick<DataType, 'C' | 'R' | 'U' | 'D'>) => (_: any, __: DataType, index: number) => (
+    (key: keyof Pick<DataType, 'C' | 'R' | 'U' | 'D'>) =>
+    (_: unknown, __: DataType, index: number) => (
       <Checkbox
         checked={selectedPermissions[index]?.[key]}
         onChange={() => toggleCheckbox(index, key)}

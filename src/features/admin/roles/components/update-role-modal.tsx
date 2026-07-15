@@ -16,7 +16,7 @@ const UpdateRoleModal = ({ role }: { role?: Role }) => {
   return (
     <Modal>
       <Modal.Opens opens={modalName}>
-        <Tooltip title={t('Common.Update', { name: t('Fields.Role') })}>
+        <Tooltip title={t('Common.Update', { name: t('Fields.Role', { count: 1 }) })}>
           <Button
             size="small"
             type="text"
@@ -26,7 +26,7 @@ const UpdateRoleModal = ({ role }: { role?: Role }) => {
       </Modal.Opens>
       <Modal.Window
         name={modalName}
-        modalProps={{ title: t('Common.Update', { name: t('Fields.Role') }) }}
+        modalProps={{ title: t('Common.Update', { name: t('Fields.Role', { count: 1 }) }) }}
       >
         <RoleForm role={role} />
       </Modal.Window>

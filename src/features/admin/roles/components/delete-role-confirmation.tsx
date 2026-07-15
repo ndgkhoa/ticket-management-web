@@ -34,11 +34,11 @@ const DeleteRoleConfirmation = ({
 
   return (
     <Popconfirm
-      title={t('Common.Delete', { name: t('Fields.Role') })}
-      description={t('Common.ConfirmDelete', { name: t('Fields.Role') })}
+      title={t('Common.Delete', { name: t('Fields.Role', { count: 1 }) })}
+      description={t('Common.ConfirmDelete', { name: t('Fields.Role', { count: 1 }) })}
       onConfirm={() => onDeleteClick(roleId)}
     >
-      <Tooltip title={t('Common.Delete', { name: t('Fields.Role') })}>
+      <Tooltip title={t('Common.Delete', { name: t('Fields.Role', { count: 1 }) })}>
         <Button
           danger
           size="small"

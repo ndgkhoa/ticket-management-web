@@ -12,7 +12,7 @@ interface Props {
   user?: User;
 }
 
-interface FormValues extends CreateUserBody {}
+type FormValues = CreateUserBody;
 
 const UserForm = (props: Props) => {
   const { t } = useTranslation();
@@ -93,7 +93,7 @@ const UserForm = (props: Props) => {
           label={t('Login.UserName')}
           rules={[
             { required: true, message: t('Validation.Required') },
-            { pattern: Regexes.username, message: t('Validation.Username') },
+            { pattern: Regexes.username, message: t('Validation.UserName') },
           ]}
         >
           <Input placeholder="UserName" />

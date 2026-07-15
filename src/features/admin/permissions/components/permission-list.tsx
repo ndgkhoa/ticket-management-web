@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import type { TableProps } from 'antd';
 import { Empty, Space, Table } from 'antd';
-import dayjs from 'dayjs';
+import type { TableProps } from 'antd';
 
-import { DateTimeFormat } from '~/utils';
+import { formatDate } from '~/utils';
 import { ErrorPage } from '~/components/errors';
 import { useQueryParams } from '~/hooks/use-query-params';
 import { usePermissionList } from '~/features/admin/permissions/hooks/queries/use-permission-list';
@@ -91,8 +90,7 @@ const PermissionList = (
       width: 200,
       align: 'center' as const,
       render: (value) => {
-        const date = dayjs(value);
-        return date.isValid() ? date.format(DateTimeFormat.viDate) : '';
+        return formatDate(value);
       },
     },
   ];
@@ -111,14 +109,13 @@ const PermissionList = (
       columns={columns}
       scroll={{ x: 1000 }}
       pagination={{
-        hideOnSinglePage: true,
         total: permissionQuery.data?.data.TotalRecord,
         current: props?.searchParams?.pageIndex,
         pageSize: props.searchParams?.pageSize,
         ...props.pagination,
       }}
       locale={{
-        emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có dữ liệu" />,
+        emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('Common.NoData')} />,
       }}
     />
   );

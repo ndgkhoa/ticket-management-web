@@ -14,7 +14,7 @@ interface Props {
   permission?: Permission;
 }
 
-interface FormValues extends CreatePermissionBody {}
+type FormValues = CreatePermissionBody;
 
 const PermissionForm = (props: Props) => {
   const { t } = useTranslation();

@@ -16,7 +16,7 @@ const UpdatePermissionModal = ({ permission }: { permission?: Permission }) => {
   return (
     <Modal>
       <Modal.Opens opens={modalName}>
-        <Tooltip title={t('Common.Update', { name: t('Fields.Permission') })}>
+        <Tooltip title={t('Common.Update', { name: t('Fields.Permission', { count: 1 }) })}>
           <Button
             size="small"
             type="text"
@@ -26,7 +26,7 @@ const UpdatePermissionModal = ({ permission }: { permission?: Permission }) => {
       </Modal.Opens>
       <Modal.Window
         name={modalName}
-        modalProps={{ title: t('Common.Update', { name: t('Fields.Permission') }) }}
+        modalProps={{ title: t('Common.Update', { name: t('Fields.Permission', { count: 1 }) }) }}
       >
         <PermissionForm permission={permission} />
       </Modal.Window>

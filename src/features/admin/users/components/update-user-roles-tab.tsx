@@ -1,8 +1,8 @@
 import { forwardRef, useImperativeHandle } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Table } from 'antd';
-import type { TableProps } from 'antd';
 import { useQuery } from '@tanstack/react-query';
+import type { TableProps } from 'antd';
 
 import { userApi } from '~/features/admin/users/api/user-api';
 import type { User, UserRole } from '~/features/admin/users/types/User';

@@ -16,7 +16,7 @@ const UpdateUserModal = ({ user }: { user?: User }) => {
   return (
     <Modal>
       <Modal.Opens opens={modalName}>
-        <Tooltip title={t('Common.Update', { name: t('Fields.User') })}>
+        <Tooltip title={t('Common.Update', { name: t('Fields.User', { count: 1 }) })}>
           <Button
             size="small"
             type="text"
@@ -26,7 +26,10 @@ const UpdateUserModal = ({ user }: { user?: User }) => {
       </Modal.Opens>
       <Modal.Window
         name={modalName}
-        modalProps={{ title: t('Common.Update', { name: t('Fields.User') }), width: '900px' }}
+        modalProps={{
+          title: t('Common.Update', { name: t('Fields.User', { count: 1 }) }),
+          width: '900px',
+        }}
       >
         <UserForm user={user} />
       </Modal.Window>

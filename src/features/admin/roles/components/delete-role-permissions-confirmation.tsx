@@ -6,7 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Notification } from '~/utils';
 import { Popconfirm, Tooltip } from '~/components/ui';
 import type { RolePermission } from '~/features/admin/roles/types/Role';
-import { queryClient } from '~/config/query-client';
+import { queryClient } from '~/lib/query-client';
 import { roleApi } from '~/features/admin/roles/api/role-api';
 
 const DeleteRolePermissionsConfirmation = ({
@@ -37,11 +37,11 @@ const DeleteRolePermissionsConfirmation = ({
 
   return (
     <Popconfirm
-      title={t('Common.Delete', { name: t('Fields.Permission') })}
-      description={t('Common.ConfirmDelete', { name: t('Fields.Permission') })}
+      title={t('Common.Delete', { name: t('Fields.Permission', { count: 1 }) })}
+      description={t('Common.ConfirmDelete', { name: t('Fields.Permission', { count: 1 }) })}
       onConfirm={() => onDeleteClick([rolePermissionId!])}
     >
-      <Tooltip title={t('Common.Delete', { name: t('Fields.Permission') })}>
+      <Tooltip title={t('Common.Delete', { name: t('Fields.Permission', { count: 1 }) })}>
         <Button
           danger
           size="small"

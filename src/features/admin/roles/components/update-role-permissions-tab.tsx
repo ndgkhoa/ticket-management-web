@@ -1,11 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { App, Checkbox, Table } from 'antd';
-import type { TableProps } from 'antd';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import type { TableProps } from 'antd';
 
 import { Notification } from '~/utils';
-import { queryClient } from '~/config/query-client';
+import { queryClient } from '~/lib/query-client';
 import { roleApi } from '~/features/admin/roles/api/role-api';
 import type {
   Role,
@@ -80,7 +80,7 @@ const UpdateRolePermissionsTab = forwardRef<RolePermissionsTabRef, Props>((props
 
   const renderCheckbox =
     (key: keyof Pick<RolePermission, 'C' | 'R' | 'U' | 'D'>) =>
-    (_: any, record: RolePermission) => (
+    (_: unknown, record: RolePermission) => (
       <Checkbox
         checked={record[key]}
         onChange={(e) => handleCheck(record.Id, key, e.target.checked)}

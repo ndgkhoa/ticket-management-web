@@ -1,11 +1,11 @@
 import { App, Button } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 import { Notification } from '~/utils';
 import { Popconfirm, Tooltip } from '~/components/ui';
 import { useDeletePermission } from '~/features/admin/permissions/hooks/mutations/use-delete-permission';
 import type { Permission } from '~/features/admin/permissions/types/Permission';
-import { useTranslation } from 'react-i18next';
 
 const DeletePermissionConfirmation = ({
   permissionId,
@@ -34,11 +34,11 @@ const DeletePermissionConfirmation = ({
 
   return (
     <Popconfirm
-      title={t('Common.Delete', { name: t('Fields.Permission') })}
-      description={t('Common.ConfirmDelete', { name: t('Fields.Permission') })}
+      title={t('Common.Delete', { name: t('Fields.Permission', { count: 1 }) })}
+      description={t('Common.ConfirmDelete', { name: t('Fields.Permission', { count: 1 }) })}
       onConfirm={() => onDeleteClick(permissionId)}
     >
-      <Tooltip title={t('Common.Delete', { name: t('Fields.Permission') })}>
+      <Tooltip title={t('Common.Delete', { name: t('Fields.Permission', { count: 1 }) })}>
         <Button
           danger
           size="small"

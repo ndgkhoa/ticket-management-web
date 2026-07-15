@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Flex, Modal, Tabs } from 'antd';
-import type { TabsProps } from 'antd';
 import { SecurityScanOutlined } from '@ant-design/icons';
+import type { TabsProps } from 'antd';
 
 import { Tooltip } from '~/components/ui';
 import type { Role } from '~/features/admin/roles/types/Role';
@@ -16,9 +16,6 @@ export interface RolePermissionsTabRef {
 
 const RolePermissionsModal = ({ role }: { role?: Role }) => {
   const { t } = useTranslation();
-
-  if (!role) return null;
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState('1');
   const updateTabRef = useRef<RolePermissionsTabRef>(null);
@@ -48,6 +45,10 @@ const RolePermissionsModal = ({ role }: { role?: Role }) => {
     }
     setIsModalOpen(false);
   };
+
+  // Guard *after* the hooks: an early return above them would change the hook
+  // order the first time `role` arrives, which React rejects outright.
+  if (!role) return null;
 
   const items: TabsProps['items'] = [
     {

@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import type { TableProps } from 'antd';
 import { Empty, Space, Table } from 'antd';
-import dayjs from 'dayjs';
+import type { TableProps } from 'antd';
 
-import { DateTimeFormat } from '~/utils';
+import { formatDate } from '~/utils';
 import { ErrorPage } from '~/components/errors';
 import { useQueryParams } from '~/hooks/use-query-params';
 import { useUserList } from '~/features/admin/users/hooks/queries/use-user-list';
@@ -99,10 +98,7 @@ const UserList = (props: TableProps<User> & { searchParams?: UserSearchParams })
       key: 'CreatedDate',
       width: 200,
       align: 'center' as const,
-      render: (value) => {
-        const date = dayjs(value);
-        return date.isValid() ? date.format(DateTimeFormat.viDate) : '';
-      },
+      render: (value) => formatDate(value),
     },
   ];
 
@@ -120,14 +116,13 @@ const UserList = (props: TableProps<User> & { searchParams?: UserSearchParams })
       columns={columns}
       scroll={{ x: 1300 }}
       pagination={{
-        hideOnSinglePage: true,
         total: userQuery.data?.data.TotalRecord,
         current: props?.searchParams?.pageIndex,
         pageSize: props.searchParams?.pageSize,
         ...props.pagination,
       }}
       locale={{
-        emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Không có dữ liệu" />,
+        emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('Common.NoData')} />,
       }}
     />
   );

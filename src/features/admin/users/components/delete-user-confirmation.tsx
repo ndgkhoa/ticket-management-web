@@ -34,11 +34,11 @@ const DeleteUserConfirmation = ({
 
   return (
     <Popconfirm
-      title={t('Common.Delete', { name: t('Fields.User') })}
-      description={t('Common.ConfirmDelete', { name: t('Fields.User') })}
+      title={t('Common.Delete', { name: t('Fields.User', { count: 1 }) })}
+      description={t('Common.ConfirmDelete', { name: t('Fields.User', { count: 1 }) })}
       onConfirm={() => onDeleteClick(userId)}
     >
-      <Tooltip title={t('Common.Delete', { name: t('Fields.User') })}>
+      <Tooltip title={t('Common.Delete', { name: t('Fields.User', { count: 1 }) })}>
         <Button
           danger
           size="small"

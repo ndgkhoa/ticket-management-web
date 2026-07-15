@@ -11,7 +11,7 @@ interface Props {
   role?: Role;
 }
 
-interface FormValues extends CreateRoleBody {}
+type FormValues = CreateRoleBody;
 
 const RoleForm = (props: Props) => {
   const { t } = useTranslation();
