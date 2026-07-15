@@ -1,6 +1,6 @@
-import type { ModalFuncProps } from 'antd';
 import { App } from 'antd';
 import React from 'react';
+import type { ModalFuncProps } from 'antd';
 
 interface Props {
   children: React.ReactElement<{ onClick: () => void }>;

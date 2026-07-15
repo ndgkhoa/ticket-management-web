@@ -1,5 +1,5 @@
-import type { ResultProps } from 'antd';
 import { Button, Result } from 'antd';
+import type { ResultProps } from 'antd';
 
 export const ErrorPage = (props: ResultProps) => {
   return (

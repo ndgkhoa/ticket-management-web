@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react';
 import { CircleChevronLeft } from 'lucide-react';
 import { Tooltip } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import Sider from 'antd/es/layout/Sider';
+import type { ReactNode } from 'react';
 
 import { Button, Footer } from '~/components/ui';
 

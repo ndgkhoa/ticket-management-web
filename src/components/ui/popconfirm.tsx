@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { PopconfirmProps } from 'antd';
 import { Popconfirm as AntPopconfirm } from 'antd';
+import type { PopconfirmProps } from 'antd';
 
 export const Popconfirm = memo((props: PopconfirmProps) => {
   const { t } = useTranslation();
