@@ -1,9 +1,9 @@
 import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HomeOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
 import { Menu, Layout, Flex } from 'antd';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import type { MenuProps } from 'antd';
 
 import viagsLogoFull from '/images/viags-logo-full-2.png';
 import viagsLogo from '/images/viags-logo.png';
@@ -34,12 +34,14 @@ export const Sidebar = memo(() => {
     },
   ];
 
+  // The logo is the only content of this link, so its alt text is what a screen
+  // reader announces for "go home" — it must name the app, not be empty.
   const renderedLogo = (
     <Link to="/" className="flex h-16 items-center justify-center">
       {collapsed ? (
-        <img src={viagsLogo} className="h-10" />
+        <img src={viagsLogo} alt={t('App.Name')} className="h-10" />
       ) : (
-        <img src={viagsLogoFull} className="h-11" />
+        <img src={viagsLogoFull} alt={t('App.Name')} className="h-11" />
       )}
     </Link>
   );
