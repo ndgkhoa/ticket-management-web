@@ -13,7 +13,6 @@ node_modules
 # Build outputs
 dist
 dist-ssr
-build
 
 # Local files
 *.local
@@ -29,10 +28,14 @@ build
 *.sln
 *.sw?
 
-# Lock files
+# Lock files — bun.lock IS committed on purpose.
+# This is an application, not a library: the lockfile is what makes CI and a
+# teammate's install reproduce the exact tree that was tested. Only the lockfiles
+# of package managers this project doesn't use are ignored, so a stray `npm i`
+# can't smuggle a second source of truth into the repo.
 package-lock.json
 yarn.lock
-bun.lock
+pnpm-lock.yaml
 
 # Environment files
 .env
