@@ -1,0 +1,52 @@
+name: Bug report
+description: Something behaves incorrectly
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: The actual behaviour, plus any console or network error.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to /admin/users
+        2. Type in the search box
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: URL
+      description: Lists put their state in the URL — pasting it captures page, pageSize, and keyword exactly.
+      placeholder: /admin/users?page=2&pageSize=10&keyword=abc
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - en
+        - vi
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser / OS
+      placeholder: Chrome 141 on macOS 15

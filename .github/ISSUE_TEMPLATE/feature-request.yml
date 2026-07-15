@@ -1,0 +1,30 @@
+name: Feature request
+description: Propose new behaviour
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: The user-facing problem. Not the solution — the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: input
+    id: phase
+    attributes:
+      label: Related plan phase
+      description: Which refactor phase this belongs to, if any.
+      placeholder: phase-06-helpdesk-features
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
