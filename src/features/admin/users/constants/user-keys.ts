@@ -7,5 +7,4 @@ export const userKeys = {
   create: () => [...userKeys.all, 'create'],
   update: () => [...userKeys.all, 'update'],
   delete: () => [...userKeys.all, 'delete'],
-  infoMine: () => [...userKeys.all, 'info-mine'],
 };

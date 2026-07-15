@@ -19,9 +19,6 @@ export const userApi = {
   getOne: (id: User['Id'], config?: AxiosRequestConfig) => {
     return axiosClient.get(`${BASE_PATH}/get-by-id/${id}`, { ...config });
   },
-  getInfoMine: () => {
-    return axiosClient.get<{ User: User; Permissions: unknown[] }>(`${BASE_PATH}/get-info-mine`);
-  },
   create: (formData: FormData) => {
     return axiosClient.post(`${BASE_PATH}/create`, formData, {
       headers: {
