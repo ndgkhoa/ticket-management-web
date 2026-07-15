@@ -16,9 +16,7 @@ export type AuthDataType = AuthType & {
 
 export type AuthStoreType = {
   auth: AuthDataType | null;
-  perms: unknown[] | null;
   setAuth: (auth: AuthDataType | null) => void;
-  setPerms: (perms: unknown[] | null) => void;
   logout: () => void;
 };
 
@@ -27,21 +25,21 @@ export const useAuthStore = create<AuthStoreType>()(
     persist(
       (set) => ({
         auth: null,
-        perms: null,
         setAuth: (auth) => {
           set({ auth });
         },
-        setPerms: (perms) => {
-          set({ perms });
-        },
         logout: () => {
-          set((state) => ({ ...state, auth: null, perms: null }));
+          set({ auth: null });
         },
       }),
       {
-        name: 'local-storage',
+        // Each persisted store needs its OWN key. Both this store and the
+        // preferences store used to persist under 'local-storage', so whichever
+        // wrote last replaced the other's entry wholesale — logging in and then
+        // toggling the theme silently destroyed the session.
+        name: 'auth-storage',
       }
     ),
-    { name: 'ZustandStore' }
+    { name: 'AuthStore' }
   )
 );

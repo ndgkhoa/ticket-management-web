@@ -1,27 +1,34 @@
 import { message } from 'antd';
-import type { AxiosInstance } from 'axios';
 import axios from 'axios';
 
 import { env } from '~/config/env';
-
-interface CustomAxiosInstance extends AxiosInstance {
-  setAccessToken(token?: string): void;
-}
+import { useAuthStore } from '~/stores/auth';
 
 const instance = axios.create({
   baseURL: env.VITE_BASE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-}) as CustomAxiosInstance;
+});
 
-instance.setAccessToken = (token?: string) => {
+/**
+ * Read the token from the store on every request.
+ *
+ * The previous design pushed the token onto `defaults.headers` from a `useEffect`
+ * that only ever *set* it — logging out left the header on this singleton until a
+ * full page reload, so the next request still carried the old identity. Pulling the
+ * token at request time means the store is the single source of truth and there is
+ * no second copy to keep in sync.
+ */
+instance.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().auth?.AccessToken;
+
   if (token) {
-    instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  } else {
-    delete instance.defaults.headers.common['Authorization'];
+    config.headers.Authorization = `Bearer ${token}`;
   }
-};
+
+  return config;
+});
 
 instance.interceptors.response.use(
   (response) => response,

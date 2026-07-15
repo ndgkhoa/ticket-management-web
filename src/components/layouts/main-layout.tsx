@@ -4,8 +4,6 @@ import { Outlet } from 'react-router-dom';
 
 import { FullPageFallback } from '~/components/fallbacks';
 import { Sidebar, Navbar, Footer, Breadcrumb } from '~/components/ui';
-import { useAuthStore } from '~/stores/auth';
-import { useSyncAccessToken } from '~/hooks/use-sync-access-token';
 
 const LayoutContent = memo(() => {
   return (
@@ -19,12 +17,6 @@ const LayoutContent = memo(() => {
 });
 
 export const MainLayout = () => {
-  const authState = useAuthStore((state) => state.auth);
-  useSyncAccessToken(authState);
-
-  // const infoMine = useInfoMine();
-  // useSyncPermissions(infoMine);
-
   return (
     <Layout className="h-screen w-screen overflow-hidden">
       <Sidebar />
