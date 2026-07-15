@@ -1,7 +1,8 @@
 Common:
   Vi: 'Tiếng Việt'
-  E: 'English'
+  En: 'English'
   Login: 'Đăng nhập'
+  Register: 'Đăng ký'
   Logout: 'Đăng xuất'
   List: 'Danh sách {{name}}'
   Create: 'Thêm {{name}}'
@@ -12,6 +13,7 @@ Common:
   Confirm: 'Xác nhận'
   Search: 'Tìm kiếm'
   Upload: 'Tải lên'
+  NoData: 'Không có dữ liệu'
 
 App:
   Name: 'Quản lý người dùng và phân quyền'
@@ -37,18 +39,17 @@ Sidebar:
 
 Fields:
   Permissions: 'Quyền'
-  Permission: 'quyền'
-  Permission2: 'quyền'
+  # Vietnamese has a single plural category ('other'), so `_one` must not be
+  # defined here — Intl would never select it.
+  Permission_other: 'quyền'
   PermissionCode: 'Mã quyền'
   PermissionName: 'Tên quyền'
   Roles: 'Vai trò'
-  Role: 'vai trò'
-  Role2: 'vai trò'
+  Role_other: 'vai trò'
   RolePermissions: 'quyền của vai trò'
   RoleName: 'Tên vai trò'
   Users: 'Người dùng'
-  User: 'người dùng'
-  User2: 'người dùng'
+  User_other: 'người dùng'
   UserRoles: 'vai trò của người dùng'
   FullName: 'Họ và tên'
   Email: 'Email'
