@@ -4,7 +4,7 @@ import { Space } from 'antd';
 import { useQueryParams } from '~/hooks/use-query-params';
 import { SearchKeyword } from '~/components/inputs';
 import { Container } from '~/components/ui';
-import CreateUserModal from '~/features/admin/users/components/create-user-model';
+import CreateUserModal from '~/features/admin/users/components/create-user-modal';
 import UserList from '~/features/admin/users/components/user-list';
 
 const Users = () => {
@@ -13,7 +13,7 @@ const Users = () => {
 
   return (
     <Container
-      title={t('Common.List', { name: t('Fields.User2') })}
+      title={t('Common.List', { name: t('Fields.User', { count: 2 }) })}
       extraRight={
         <Space>
           <CreateUserModal />

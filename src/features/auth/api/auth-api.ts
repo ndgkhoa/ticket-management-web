@@ -1,6 +1,5 @@
-import { axiosClient } from '~/config/axios';
+import { axiosClient } from '~/lib/axios';
 import type { BaseResponse } from '~/types';
-
 import type { AuthType } from '~/stores/auth';
 
 const BASE_PATH = '/users';

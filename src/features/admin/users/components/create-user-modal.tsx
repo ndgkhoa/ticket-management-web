@@ -11,13 +11,16 @@ const CreateUserModal = () => {
   return (
     <Modal>
       <Modal.Opens opens="create-user-modal">
-        <Tooltip title={t('Common.Create', { name: t('Fields.User') })}>
+        <Tooltip title={t('Common.Create', { name: t('Fields.User', { count: 1 }) })}>
           <Button size="large" type="primary" icon={<PlusOutlined />} />
         </Tooltip>
       </Modal.Opens>
       <Modal.Window
         name="create-user-modal"
-        modalProps={{ title: t('Common.Create', { name: t('Fields.User') }), width: '900px' }}
+        modalProps={{
+          title: t('Common.Create', { name: t('Fields.User', { count: 1 }) }),
+          width: '900px',
+        }}
       >
         <UserForm />
       </Modal.Window>

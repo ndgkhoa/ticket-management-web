@@ -11,13 +11,13 @@ const CreateRoleModal = () => {
   return (
     <Modal>
       <Modal.Opens opens="create-role-modal">
-        <Tooltip title={t('Common.Create', { name: t('Fields.Role') })}>
+        <Tooltip title={t('Common.Create', { name: t('Fields.Role', { count: 1 }) })}>
           <Button size="large" type="primary" icon={<PlusOutlined />} />
         </Tooltip>
       </Modal.Opens>
       <Modal.Window
         name="create-role-modal"
-        modalProps={{ title: t('Common.Create', { name: t('Fields.Permission') }) }}
+        modalProps={{ title: t('Common.Create', { name: t('Fields.Permission', { count: 1 }) }) }}
       >
         <RoleForm />
       </Modal.Window>

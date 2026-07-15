@@ -11,13 +11,13 @@ const CreatePermissonModal = () => {
   return (
     <Modal>
       <Modal.Opens opens="create-permission-modal">
-        <Tooltip title={t('Common.Create', { name: t('Fields.Permission') })}>
+        <Tooltip title={t('Common.Create', { name: t('Fields.Permission', { count: 1 }) })}>
           <Button size="large" type="primary" icon={<PlusOutlined />} />
         </Tooltip>
       </Modal.Opens>
       <Modal.Window
         name="create-permission-modal"
-        modalProps={{ title: t('Common.Create', { name: t('Fields.Permission') }) }}
+        modalProps={{ title: t('Common.Create', { name: t('Fields.Permission', { count: 1 }) }) }}
       >
         <PermissionForm />
       </Modal.Window>

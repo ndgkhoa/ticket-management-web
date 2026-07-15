@@ -1,5 +1,5 @@
-import type { QueryClientConfig } from '@tanstack/react-query';
 import { keepPreviousData, QueryClient } from '@tanstack/react-query';
+import type { QueryClientConfig } from '@tanstack/react-query';
 
 const queryClientConfigs: QueryClientConfig = {
   defaultOptions: {

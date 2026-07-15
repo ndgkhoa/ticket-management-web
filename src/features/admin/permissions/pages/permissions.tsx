@@ -4,7 +4,7 @@ import { Space } from 'antd';
 import { useQueryParams } from '~/hooks/use-query-params';
 import { SearchKeyword } from '~/components/inputs';
 import { Container } from '~/components/ui';
-import CreatePermissonModal from '~/features/admin/permissions/components/create-permission-model';
+import CreatePermissonModal from '~/features/admin/permissions/components/create-permission-modal';
 import PermissionList from '~/features/admin/permissions/components/permission-list';
 
 const Permissions = () => {
@@ -13,7 +13,7 @@ const Permissions = () => {
 
   return (
     <Container
-      title={t('Common.List', { name: t('Fields.Permission2') })}
+      title={t('Common.List', { name: t('Fields.Permission', { count: 2 }) })}
       extraRight={
         <Space>
           <CreatePermissonModal />

@@ -1,6 +1,6 @@
 import type { AxiosRequestConfig } from 'axios';
 
-import { axiosClient } from '~/config/axios';
+import { axiosClient } from '~/lib/axios';
 import { env } from '~/config/env';
 import type {
   CreatePermissionBody,
