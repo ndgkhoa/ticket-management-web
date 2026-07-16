@@ -1,6 +1,6 @@
 # Phase 04 — Routing: TanStack Router
 
-**Priority:** P1 · **Status:** ⬜ todo · **Depends:** Phase 03
+**Priority:** P1 · **Status:** ✅ done (2026-07-17) · **Depends:** Phase 03
 
 ## Overview
 
@@ -95,14 +95,29 @@ The URL _is_ the list state (`code-standards.md` → List UX contract). This pha
 
 ## Todo
 
-- [ ] TanStack Router + Vite plugin + devtools
-- [ ] Root/layout routes + providers mounted
-- [ ] All routes ported, typed search params (Zod 4 direct, no zod-adapter)
-- [ ] Central param updater: spread-prev, page→1 reset, debounced replace-nav
-- [ ] stripSearchParams defaults + retainSearchParams
-- [ ] beforeLoad auth + RBAC guards
-- [ ] Loaders with ensureQueryData + loaderDeps on list routes
-- [ ] RRD + use-query-params removed, tests updated
+- [x] TanStack Router 1.170 + Vite plugin (autoCodeSplitting) + devtools (dev-only, lazy)
+- [x] Root/layout routes + providers mounted — `__root` holds no providers; QueryClient/antd/error
+      boundary wrap `RouterProvider` in `provider.tsx`, mounted only after the initial session resolves
+      (`status !== 'loading'`) so no guard runs against an unknown session. Error split written down:
+      route/data → router `defaultErrorComponent`, shell render errors → react-error-boundary.
+- [x] All routes ported, typed search params (Zod 4 direct, no zod-adapter) — dashboard, auth/sign-in,
+      admin/{permissions,roles,users}, tickets; committed `routeTree.gen.ts`. 404 via `defaultNotFoundComponent`.
+- [x] Central param updater (`use-ticket-search-params`): spread-prev, page→1 reset on q/filter/pageSize,
+      replace-nav for keystrokes. Debounce is the caller's job (Phase 06 search input); the hook owns merge+reset.
+- [x] stripSearchParams defaults (clean `/tickets`).
+      **retainSearchParams deferred** — it earns its place once there are multiple ticket sub-routes to
+      carry filters across (Phase 06); with one list route there is nothing to retain across yet.
+- [x] beforeLoad auth + RBAC guards — `requireAuth` on `_app`; `requirePermission('user.manage')` on the
+      admin layout. The auth store loads the user's permission set (nested query) before `status` reaches
+      `authenticated`, so guards read it synchronously. Verified live per role; e2e confirms the unauth redirect.
+- [x] Loaders with ensureQueryData + loaderDeps on list routes — ticket route `loaderDeps: ({search}) => search`.
+- [x] RRD + use-query-params + query-string removed; test harness rewritten to a TanStack memory router
+      (`render` is now async); use-query-params/clean-search-params/SearchKeyword deleted. e2e green on the
+      real bundle (6/6).
+
+**Bonus:** the ticket search schema validates filter values against the enums at the URL boundary, which
+closes the Stage 3 M1 note — an invalid status/priority now falls back to no filter instead of reaching
+the data layer and raising a Postgres 22P02.
 
 ## Success criteria
 

@@ -1,6 +1,6 @@
 # Phase 03 — Data Layer: Supabase + MSW
 
-**Priority:** P0 · **Status:** ⬜ todo · **Depends:** Phase 01, 02
+**Priority:** P0 · **Status:** ✅ done (2026-07-17) · **Depends:** Phase 01, 02
 
 ## Overview
 
