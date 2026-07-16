@@ -129,9 +129,17 @@ created_at`, so there is **no `username`** (auth is email/OAuth — Supabase has
       are gone. Reads use `.throwOnError()` (SDK's own bridge; preserves `PostgrestError`) not a
       hand-rolled unwrap. Admin CRUD UI (26 antd components) deleted — data model diverged from the
       schema and Phase 05/06 rebuilds them; admin pages are read-only lists on the new layer for now.
-- [ ] MSW handlers + fixtures + shared list-query applier, VITE_API_MODE switch
-      — Stage 4. Client is already msw-safe (placeholder host, MSW intercepts supabase-js's fetch);
-      `VITE_API_MODE` enum already switched to `supabase|msw`.
+- [~] MSW handlers + fixtures + shared list-query applier, VITE_API_MODE switch
+      — **applier + parity done; app-facing wiring deferred to Phase 06** (user-approved lean scope +
+      Approach A: msw-mode data comes from `apply-list-query` over fixtures, not a PostgREST emulation).
+      `src/mocks/lib/apply-list-query.ts` mirrors the Supabase builder (filter→search→sort→slice) and a
+      parity test (`bun run test:parity`, needs local stack) asserts identical `{rows,totalCount,pageCount}`
+      across filter/enum-order-sort/FTS/fallback/pagination. `VITE_API_MODE` enum switched to
+      `supabase|msw` in Stage 2; client already msw-safe. The dataClient mode-branch that routes the
+      feature apis to the applier in msw mode lands in Phase 06 with the screens that consume it.
+      **Parity caught a real Stage-2 FTS bug:** `.textSearch()` omitted the config, defaulting supabase-js
+      to `'english'` against a `'simple'` tsvector — every stemmed word ("invoice"→"invoic") silently
+      FTS-missed and fell to trigram. Fixed by carrying `searchConfig: 'simple'` on the list config.
 - [x] Supabase auth session (retire axios auth)
       — SDK owns session/refresh; store mirrors `onAuthStateChange` (no hand-rolled tokens). Email/
       password + Google OAuth entry. axios, `types/index.ts`, `regexes.ts`, `VITE_BASE_API_URL` all
