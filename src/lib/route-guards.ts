@@ -25,3 +25,16 @@ export function redirectIfAuthenticated() {
     throw redirect({ to: '/' });
   }
 }
+
+/**
+ * Require a permission code. For an authenticated user who lacks it, redirect home
+ * rather than to sign-in — they are logged in, just not entitled to this area. The
+ * permission set is already loaded by the time any guard runs (see the auth store),
+ * so this reads it synchronously. RLS is the real enforcement; this guard is the
+ * early, friendly redirect that keeps an unauthorised screen from ever rendering.
+ */
+export function requirePermission(code: string) {
+  if (!useAuthStore.getState().hasPermission(code)) {
+    throw redirect({ to: '/' });
+  }
+}
