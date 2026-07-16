@@ -95,8 +95,18 @@ created_at`, so there is **no `username`** (auth is email/OAuth — Supabase has
 
 ## Todo
 
-- [ ] Migrations (16 tables + enums + filter/FTS indexes) + RLS + has_permission + pgvector
-- [ ] Seed roles/permissions/demo/tickets (~500+ tickets so pagination/search are real)
+- [x] Migrations (16 tables + enums + filter/FTS indexes) + RLS + has_permission + pgvector
+      — 7 migrations. Two things the spec did not anticipate, both found by attacking the schema
+      rather than reading it: RLS is inert without table `GRANT`s, and a permission-only UPDATE
+      policy matches **every** row (Postgres applies the SELECT policy to an UPDATE only when the
+      statement reads columns), so ticket visibility now lives in one shared `can_access_ticket()`.
+      Also: default ACLs hand `anon` TRUNCATE on arrival, which RLS does not cover — revoked.
+      `ticket.assign` dropped (RLS cannot gate a single column); agent has no `user.read.all`.
+- [x] Seed roles/permissions/demo/tickets (~500+ tickets so pagination/search are real)
+      — 3,671 rows: 52 users (4 demo accounts), 500 tickets, 1,020 messages (106 internal notes),
+      1,210 events. Generated from `src/mocks/fixtures/` (the source MSW will share) via
+      `bun run seed:gen`; `seed:check` fails CI on drift. Attachments deliberately unseeded — the
+      rows would point at Storage objects that do not exist until Phase 06.
 - [ ] Generated DB types + supabase client
 - [ ] Zod schemas + camelCase domain mapping
 - [ ] Shared list-query contract (`list-query.ts`): params/response + range/count/order/textSearch builder
