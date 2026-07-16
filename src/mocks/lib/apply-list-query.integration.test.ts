@@ -76,10 +76,24 @@ const CASES: Record<string, Partial<ListParams>> = {
   'search q=invoice (FTS)': { q: 'invoice' },
   'search q=payme (FTS miss -> trgm)': { q: 'payme' },
   'search q=in (short -> trgm)': { q: 'in' },
+  'search q=time-sensitive (hyphenated)': { q: 'time-sensitive' },
+  'sort due_at desc (nullable column)': { sort: { field: 'due_at', dir: 'desc' } },
   'page 2': { page: 2 },
+  'page beyond last': { page: 999 },
   'combined: open + sort priority desc + page 1': {
     filters: { status: 'open' },
     sort: { field: 'priority', dir: 'desc' },
+  },
+  'combined: search + filter + sort': {
+    filters: { status: 'solved' },
+    q: 'refund',
+    sort: { field: 'priority', dir: 'desc' },
+  },
+  'combined: search + sort + page 2': {
+    q: 'invoice',
+    sort: { field: 'priority', dir: 'desc' },
+    page: 2,
+    pageSize: 10,
   },
 };
 

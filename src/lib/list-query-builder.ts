@@ -21,7 +21,7 @@ import {
 interface SupabaseListQuery<Row> extends PromiseLike<{
   data: Row[] | null;
   count: number | null;
-  error: { message: string } | null;
+  error: { message: string; code?: string } | null;
 }> {
   textSearch(
     column: string,
@@ -29,7 +29,10 @@ interface SupabaseListQuery<Row> extends PromiseLike<{
     options: { type: 'websearch'; config?: string }
   ): SupabaseListQuery<Row>;
   ilike(column: string, pattern: string): SupabaseListQuery<Row>;
-  order(column: string, options: { ascending: boolean }): SupabaseListQuery<Row>;
+  order(
+    column: string,
+    options: { ascending: boolean; nullsFirst?: boolean }
+  ): SupabaseListQuery<Row>;
   range(from: number, to: number): SupabaseListQuery<Row>;
 }
 
@@ -88,8 +91,13 @@ function applySort<Row>(
   // Primary first, then each tiebreaker that isn't already the primary column.
   const orderings = [primary, ...config.tiebreakers.filter((t) => t.field !== primary.field)];
 
+  // `nullsFirst: false` on every column, not Postgres's direction-dependent default
+  // (NULLS FIRST for DESC, LAST for ASC). Pinned so null placement is one rule the
+  // MSW applier can match by construction, instead of parity depending on which
+  // direction a nullable column happens to be sorted.
   return orderings.reduce(
-    (acc, ordering) => acc.order(ordering.field, { ascending: ordering.dir === 'asc' }),
+    (acc, ordering) =>
+      acc.order(ordering.field, { ascending: ordering.dir === 'asc', nullsFirst: false }),
     query
   );
 }
@@ -107,26 +115,42 @@ async function runOnce<Row>(
   config: ListQueryConfig,
   mode: 'fts' | 'trgm' | 'none'
 ): Promise<{ rows: Row[]; totalCount: number }> {
-  let query = buildBase();
+  // The searched + sorted query, rebuildable: a PostgREST builder is single-use, and
+  // the out-of-range recovery below needs a second one with the SAME search and sort
+  // so its count reflects the same result set, not just the filtered base.
+  const buildSearchedSorted = () => {
+    let query = buildBase();
 
-  if (mode === 'fts' && params.q && config.searchColumn) {
-    // `websearch` accepts human syntax ("exact phrase", -exclude) and never throws on
-    // malformed input, unlike plainto/raw tsquery. `config` must match the column's
-    // tsvector config — see `searchConfig`.
-    query = query.textSearch(config.searchColumn, params.q, {
-      type: 'websearch',
-      config: config.searchConfig,
-    });
-  } else if (mode === 'trgm' && params.q && config.fallbackColumn) {
-    query = query.ilike(config.fallbackColumn, `%${escapeLike(params.q)}%`);
-  }
+    if (mode === 'fts' && params.q && config.searchColumn) {
+      // `websearch` accepts human syntax ("exact phrase", -exclude) and never throws
+      // on malformed input, unlike plainto/raw tsquery. `config` must match the
+      // column's tsvector config — see `searchConfig`.
+      query = query.textSearch(config.searchColumn, params.q, {
+        type: 'websearch',
+        config: config.searchConfig,
+      });
+    } else if (mode === 'trgm' && params.q && config.fallbackColumn) {
+      query = query.ilike(config.fallbackColumn, `%${escapeLike(params.q)}%`);
+    }
 
-  query = applySort(query, params, config);
+    return applySort(query, params, config);
+  };
 
   const { from, to } = pageToRange(params.page, params.pageSize);
-  const { data, count, error } = await query.range(from, to);
+  const { data, count, error } = await buildSearchedSorted().range(from, to);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    // PGRST103: the requested offset is past the last row. PostgREST answers 416 with
+    // no count instead of an empty page — so a user who lands on page 12 after a
+    // filter narrows the result to 2 pages would get an error, not an empty table.
+    // Re-read the count from a range that always exists (offset 0) and report the
+    // empty page, matching how the in-memory applier answers the same request.
+    if (error.code === 'PGRST103') {
+      const { count: total } = await buildSearchedSorted().range(0, 0);
+      return { rows: [], totalCount: total ?? 0 };
+    }
+    throw new Error(error.message);
+  }
 
   // With `{ count: 'estimated' }` set, PostgREST always returns a numeric count;
   // `null` means the caller's `buildBase` forgot the option. Left as `count ?? 0`

@@ -32,19 +32,34 @@ export type ApplyListConfig<Row> = {
 };
 
 /**
+ * Split on non-word runs, Unicode-aware. `\p{L}\p{N}` keeps accented and non-Latin
+ * letters as word characters — the content is mixed en/vi (why the column uses the
+ * `'simple'` config), and a plain `[^a-z0-9]` would shred every Vietnamese diacritic
+ * into separate tokens, diverging from Postgres on exactly that content.
+ */
+const NON_WORD = /[^\p{L}\p{N}]+/u;
+const HYPHENATED = /[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)+/gu;
+
+function splitWords(text: string): string[] {
+  return text.toLowerCase().split(NON_WORD).filter(Boolean);
+}
+
+/**
  * Tokenise like Postgres `to_tsvector('simple', …)` closely enough for the queries a
- * help desk actually receives: lowercase, split on non-alphanumeric runs, drop
- * empties. 'simple' does no stemming, so this needs none either — it is presence of a
- * lexeme, not a stemmed match. Ranking (the A/B weights) is irrelevant here because
- * the list orders by `created_at`, never by search rank, so only matching matters.
+ * help desk actually receives. 'simple' does no stemming, so this needs none — it is
+ * presence of a lexeme, not a stemmed match. Ranking (the A/B weights) is irrelevant
+ * because the list orders by `created_at`, never by search rank.
+ *
+ * Hyphenated words get both the parts (from the split) AND the compound: Postgres
+ * emits `time-sensitive` as its own lexeme alongside `time` and `sensitive`, so a
+ * query for the single lexeme "time-sensitive" would otherwise match nothing here
+ * even though the parts are present.
  */
 function tokenize(text: string): Set<string> {
-  return new Set(
-    text
-      .toLowerCase()
-      .split(/[^a-z0-9]+/)
-      .filter(Boolean)
-  );
+  const lower = text.toLowerCase();
+  const tokens = new Set(splitWords(lower));
+  for (const compound of lower.matchAll(HYPHENATED)) tokens.add(compound[0]);
+  return tokens;
 }
 
 /**
@@ -55,10 +70,7 @@ function tokenize(text: string): Set<string> {
  */
 function matchesFullText(text: string, query: string): boolean {
   const tokens = tokenize(text);
-  const lowerTokens = text
-    .toLowerCase()
-    .split(/[^a-z0-9]+/)
-    .filter(Boolean);
+  const lowerTokens = splitWords(text);
 
   const phrases = [...query.matchAll(/"([^"]+)"/g)].map((m) => m[1]);
   const withoutPhrases = query.replace(/"[^"]*"/g, ' ');
@@ -73,11 +85,7 @@ function matchesFullText(text: string, query: string): boolean {
   }
 
   for (const phrase of phrases) {
-    const phraseTokens = phrase
-      .toLowerCase()
-      .split(/[^a-z0-9]+/)
-      .filter(Boolean);
-    if (!containsSequence(lowerTokens, phraseTokens)) return false;
+    if (!containsSequence(lowerTokens, splitWords(phrase))) return false;
   }
 
   return true;
@@ -104,7 +112,9 @@ function compareRows<Row>(
     const av = get(a);
     const bv = get(b);
     if (av === bv) continue;
-    // nulls last, matching Postgres default for DESC ordering on these columns.
+    // Nulls last in both directions — the Supabase builder pins `nullsFirst: false`
+    // to match this, rather than the two relying on Postgres's direction-dependent
+    // default (NULLS FIRST for DESC), which would only agree by luck.
     if (av === null) return 1;
     if (bv === null) return -1;
     const cmp = av < bv ? -1 : 1;
