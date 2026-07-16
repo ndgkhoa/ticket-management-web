@@ -1,54 +1,23 @@
-import type { AxiosRequestConfig } from 'axios';
+import { z } from 'zod';
 
-import { axiosClient } from '~/lib/axios';
-import { env } from '~/config/env';
-import type {
-  CreateUserRolesBody,
-  User,
-  UserSearchParams,
-} from '~/features/admin/users/types/User';
-import type { BaseResponse } from '~/types';
+import { supabase } from '~/lib/supabase';
+import { USER_COLUMNS, userSchema } from '~/features/admin/users/schemas/user-schema';
 
-const BASE_PATH = `${env.VITE_BASE_API_URL}/users`;
-
+/**
+ * Data access for users (profiles). This stage lists the profiles a signed-in admin
+ * may see — a plain ordered read, since the read-only view has no pagination yet.
+ *
+ * The server-side paginated list (the shared `list-query` contract: search, sort,
+ * page params, `keepPreviousData`) lands with the admin UI rebuild that renders it;
+ * the query key already carries params so that upgrade doesn't reshape the cache.
+ */
 export const userApi = {
-  getAll: (params?: UserSearchParams, config?: AxiosRequestConfig) => {
-    const url = `${BASE_PATH}/get-list`;
-    return axiosClient.get<BaseResponse<User[]>>(url, { params, ...config });
-  },
-  getOne: (id: User['Id'], config?: AxiosRequestConfig) => {
-    return axiosClient.get(`${BASE_PATH}/get-by-id/${id}`, { ...config });
-  },
-  create: (formData: FormData) => {
-    return axiosClient.post(`${BASE_PATH}/create`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-  },
-  update: ({ Id, formData }: { Id: string; formData: FormData }) => {
-    return axiosClient.patch(`${BASE_PATH}/update/${Id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-  },
-  delete: (id: User['Id']) => {
-    return axiosClient.delete(`${BASE_PATH}/delete/${id}`);
-  },
-  getRoles: (userId: User['Id']) => {
-    return axiosClient.get(`user-roles/get-user-roles/${userId}`);
-  },
-  createRoles(
-    { userId, body }: { userId: string; body: CreateUserRolesBody },
-    config?: AxiosRequestConfig
-  ) {
-    return axiosClient.post(`user-roles/create-user-roles/${userId}`, body, config);
-  },
-  deleteRoles: (roleIds: string[], config?: AxiosRequestConfig) => {
-    return axiosClient.delete(`user-roles/delete-user-roles`, {
-      data: roleIds,
-      ...config,
-    });
+  list: async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select(USER_COLUMNS)
+      .order('created_at', { ascending: false })
+      .throwOnError();
+    return z.array(userSchema).parse(data);
   },
 };

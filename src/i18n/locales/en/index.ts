@@ -5,6 +5,7 @@ const en = {
     "Login": "Login",
     "Register": "Register",
     "Logout": "Logout",
+    "System": "System",
     "List": "List of {{name}}",
     "Create": "Create {{name}}",
     "Update": "Update {{name}}",

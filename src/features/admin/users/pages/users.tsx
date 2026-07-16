@@ -1,36 +1,59 @@
 import { useTranslation } from 'react-i18next';
-import { Space } from 'antd';
+import { Avatar, Empty, Table } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
+import type { TableProps } from 'antd';
 
-import { useQueryParams } from '~/hooks/use-query-params';
-import { SearchKeyword } from '~/components/inputs';
 import { Container } from '~/components/ui';
-import CreateUserModal from '~/features/admin/users/components/create-user-modal';
-import UserList from '~/features/admin/users/components/user-list';
+import { ErrorPage } from '~/components/errors';
+import { useUserList } from '~/features/admin/users/api/user-queries';
+import type { User } from '~/features/admin/users/schemas/user-schema';
 
+/**
+ * Read-only user list on the Supabase data layer. Role assignment, invites and the
+ * server-side paginated DataTable arrive with the design-system rebuild; this proves
+ * the profiles query and RLS work for a signed-in admin.
+ */
 const Users = () => {
   const { t } = useTranslation();
-  const { queryParams, setQueryParams } = useQueryParams();
+  const userQuery = useUserList();
+
+  const columns: TableProps<User>['columns'] = [
+    {
+      title: t('Fields.FullName'),
+      dataIndex: 'fullName',
+      key: 'fullName',
+      width: 320,
+      render: (fullName: string | null, user) => (
+        <span className="inline-flex items-center gap-2">
+          <Avatar size="small" src={user.avatarUrl} icon={<UserOutlined />} />
+          {fullName ?? '—'}
+        </span>
+      ),
+    },
+    {
+      title: t('Fields.Email'),
+      dataIndex: 'email',
+      key: 'email',
+    },
+  ];
+
+  if (userQuery.isError) {
+    return <ErrorPage subTitle={userQuery.error.message} />;
+  }
 
   return (
-    <Container
-      title={t('Common.List', { name: t('Fields.User', { count: 2 }) })}
-      extraRight={
-        <Space>
-          <CreateUserModal />
-          <SearchKeyword size="large" className="max-w-[12rem]" placeholder={t('Common.Search')} />
-        </Space>
-      }
-    >
-      <UserList
-        searchParams={{
-          keyword: queryParams.keyword,
-          pageIndex: queryParams.page,
-          pageSize: queryParams.pageSize,
-        }}
-        pagination={{
-          current: queryParams.page,
-          pageSize: queryParams.pageSize,
-          onChange: (page: number, pageSize: number) => setQueryParams({ page, pageSize }),
+    <Container title={t('Common.List', { name: t('Fields.User_other') })}>
+      <Table
+        bordered
+        rowKey="id"
+        loading={userQuery.isPending}
+        dataSource={userQuery.data}
+        columns={columns}
+        pagination={false}
+        locale={{
+          emptyText: (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('Common.NoData')} />
+          ),
         }}
       />
     </Container>

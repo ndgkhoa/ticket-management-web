@@ -1,10 +1,13 @@
+/**
+ * Query-key factory for permissions.
+ *
+ * `as const` so the keys are readonly tuples TanStack Query compares structurally,
+ * and so `invalidateQueries({ queryKey: permissionKeys.all })` matches every derived
+ * key beneath it. The list is client-side (the permission catalogue is bounded to
+ * tens of rows), so it takes no params — there is one list, not one per page.
+ */
 export const permissionKeys = {
-  all: ['permission'],
-  lists: () => [...permissionKeys.all, 'list'],
-  list: (params?: unknown) => [...permissionKeys.lists(), params],
-  details: () => [...permissionKeys.all, 'details'],
-  detail: (id?: string) => [...permissionKeys.details(), id],
-  create: () => [...permissionKeys.all, 'create'],
-  update: () => [...permissionKeys.all, 'update'],
-  delete: () => [...permissionKeys.all, 'delete'],
+  all: ['permissions'] as const,
+  list: () => [...permissionKeys.all, 'list'] as const,
+  detail: (id: string) => [...permissionKeys.all, 'detail', id] as const,
 };

@@ -5,6 +5,7 @@ const vi = {
     "Login": "Đăng nhập",
     "Register": "Đăng ký",
     "Logout": "Đăng xuất",
+    "System": "Hệ thống",
     "List": "Danh sách {{name}}",
     "Create": "Thêm {{name}}",
     "Update": "Cập nhật {{name}}",
