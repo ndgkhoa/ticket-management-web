@@ -107,9 +107,22 @@ created_at`, so there is **no `username`** (auth is email/OAuth — Supabase has
       1,210 events. Generated from `src/mocks/fixtures/` (the source MSW will share) via
       `bun run seed:gen`; `seed:check` fails CI on drift. Attachments deliberately unseeded — the
       rows would point at Storage objects that do not exist until Phase 06.
-- [ ] Generated DB types + supabase client
-- [ ] Zod schemas + camelCase domain mapping
-- [ ] Shared list-query contract (`list-query.ts`): params/response + range/count/order/textSearch builder
+- [x] Generated DB types + supabase client
+      — `bun run db:types` → `src/lib/database.types.ts`; `src/lib/supabase.ts` typed with `Database`,
+      SDK owns session/refresh. `VITE_API_MODE` switched `live`→`supabase`; anon key required only in
+      that mode (msw needs none). `vitest.config` pins `VITE_API_MODE=msw` so CI (no `.env.local`) does
+      not throw on `env.ts`'s new refinement.
+- [~] Zod schemas + camelCase domain mapping
+      — pattern established + proven on the reference case: `features/tickets/schemas/` (enums derived
+      from generated `Constants`; row→domain camelCase `.transform`, `search_vector`/`embedding`
+      dropped; input schema pinned to `Tables<'tickets'>` so a migration drift fails typecheck). The
+      remaining feature schemas (auth/admin) land in Stage 3 **with** their api rewrite — schema + fetcher
+      change together, reviewed together.
+- [x] Shared list-query contract (`list-query.ts`): params/response + range/count/order/textSearch builder
+      — `lib/list-query.ts` (Zod params/response, pageSize allowlist, page/q coercion, range+pageCount
+      math) + `lib/list-query-builder.ts` (Supabase FTS→trgm fallback, sort allowlist + total-order
+      tiebreaker, `ilike` wildcard escaping). 16 unit tests on a fake builder; proven end-to-end against
+      live Supabase (admin 500 vs customer RLS ~14, FTS `refund`, `invoic` fallback, page-2 zero overlap).
 - [ ] Query-key + queryOptions factories (list params in key), hooks rewritten
 - [ ] MSW handlers + fixtures + shared list-query applier, VITE_API_MODE switch
 - [ ] Supabase auth session (retire axios auth)
