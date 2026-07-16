@@ -10,30 +10,27 @@ import type { Database } from '~/lib/database.types';
  * knows its columns and every row comes back typed straight from the schema. The
  * generated types are the contract; hand-writing a second copy is how the two drift.
  *
- * `env` has already refined that both values exist when `VITE_API_MODE=supabase`, so
- * the non-null assertions are discharged by that check rather than hopeful.
- *
- * In `msw` mode those vars may be absent, and `createClient(undefined, …)` throws
- * `supabaseUrl is required` **at import**, not on first use — so this module must
- * never be on a msw-reachable import path. The data-client indirection (Stage 3) is
- * responsible for that: it selects the mock path without importing this file. If a
- * lazier guarantee is ever needed, construct the client behind that switch rather
- * than at module scope.
+ * In `supabase` mode `env` has already refined that both values exist. In `msw` mode
+ * they may be absent, and `createClient(undefined, …)` throws `supabaseUrl is required`
+ * **at import** — so a placeholder URL/key stands in there. The app still talks to
+ * supabase-js in both modes; MSW intercepts the HTTP at the network layer, so the
+ * placeholder host is never actually contacted. That is what lets the same feature
+ * code run unchanged against the live project and against the mock contract, which is
+ * the whole point of the mode switch.
  */
-export const supabase = createClient<Database>(
-  env.VITE_SUPABASE_URL!,
-  env.VITE_SUPABASE_ANON_KEY!,
-  {
-    auth: {
-      // Persist the session and refresh it in the background — the SDK owns token
-      // lifetime so the app never hand-rolls refresh (the bug the axios layer had).
-      persistSession: true,
-      autoRefreshToken: true,
-      // Read the session back out of the redirect URL after an OAuth round-trip.
-      detectSessionInUrl: true,
-      // Distinct storage key, matching the convention the Zustand stores follow, so
-      // nothing collides with them in localStorage.
-      storageKey: 'ticket-management-auth',
-    },
-  }
-);
+const supabaseUrl = env.VITE_SUPABASE_URL ?? 'http://msw.local';
+const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY ?? 'msw-placeholder-anon-key';
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    // Persist the session and refresh it in the background — the SDK owns token
+    // lifetime so the app never hand-rolls refresh (the bug the axios layer had).
+    persistSession: true,
+    autoRefreshToken: true,
+    // Read the session back out of the redirect URL after an OAuth round-trip.
+    detectSessionInUrl: true,
+    // Distinct storage key, matching the convention the Zustand stores follow, so
+    // nothing collides with them in localStorage.
+    storageKey: 'ticket-management-auth',
+  },
+});
