@@ -13,6 +13,9 @@ import { TICKET_COLUMNS, ticketSchema } from '~/features/tickets/schemas/ticket-
  */
 const ticketListConfig: ListQueryConfig = {
   searchColumn: 'search_vector',
+  // The tsvector is built with 'simple' (mixed en/vi content — see database-schema);
+  // the query config must match or the stemmer silently mismatches the column.
+  searchConfig: 'simple',
   fallbackColumn: 'subject',
   sortableFields: ['created_at', 'updated_at', 'priority', 'status', 'due_at'],
   defaultSort: { field: 'created_at', dir: 'desc' },

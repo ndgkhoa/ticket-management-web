@@ -23,7 +23,11 @@ interface SupabaseListQuery<Row> extends PromiseLike<{
   count: number | null;
   error: { message: string } | null;
 }> {
-  textSearch(column: string, query: string, options: { type: 'websearch' }): SupabaseListQuery<Row>;
+  textSearch(
+    column: string,
+    query: string,
+    options: { type: 'websearch'; config?: string }
+  ): SupabaseListQuery<Row>;
   ilike(column: string, pattern: string): SupabaseListQuery<Row>;
   order(column: string, options: { ascending: boolean }): SupabaseListQuery<Row>;
   range(from: number, to: number): SupabaseListQuery<Row>;
@@ -35,6 +39,15 @@ export type ListQueryConfig = {
    * table with no FTS — search then uses the trigram fallback directly.
    */
   searchColumn?: string;
+  /**
+   * The text-search config the tsvector column was built with. This MUST match, and
+   * is not optional in practice: the column uses `'simple'`, and omitting this lets
+   * supabase-js default the query to `'english'`, whose stemmer turns "invoice" into
+   * "invoic" — which matches nothing in a `'simple'` vector, so FTS silently returns
+   * zero and every stemmed word falls through to the trigram fallback. The mismatch is
+   * invisible for un-stemmed words ("refund") and wrong for the rest.
+   */
+  searchConfig?: string;
   /**
    * Column for the trigram `ilike` fallback (`subject` on tickets). Used for short
    * queries and whenever FTS returns nothing. Required for any table that accepts
@@ -98,8 +111,12 @@ async function runOnce<Row>(
 
   if (mode === 'fts' && params.q && config.searchColumn) {
     // `websearch` accepts human syntax ("exact phrase", -exclude) and never throws on
-    // malformed input, unlike plainto/raw tsquery.
-    query = query.textSearch(config.searchColumn, params.q, { type: 'websearch' });
+    // malformed input, unlike plainto/raw tsquery. `config` must match the column's
+    // tsvector config — see `searchConfig`.
+    query = query.textSearch(config.searchColumn, params.q, {
+      type: 'websearch',
+      config: config.searchConfig,
+    });
   } else if (mode === 'trgm' && params.q && config.fallbackColumn) {
     query = query.ilike(config.fallbackColumn, `%${escapeLike(params.q)}%`);
   }
