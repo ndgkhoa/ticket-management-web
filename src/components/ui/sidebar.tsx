@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HomeOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import { ContainerOutlined, HomeOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { Menu, Layout, Flex } from 'antd';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import type { MenuProps } from 'antd';
@@ -14,7 +14,7 @@ import logoMark from '/images/logo-mark.svg';
  * sidebar is replaced by the design-system nav in a later phase — until then the cast
  * bridges antd's string-keyed menu to type-safe navigation.
  */
-type NavKey = '/' | '/admin/permissions' | '/admin/roles' | '/admin/users';
+type NavKey = '/' | '/tickets' | '/admin/permissions' | '/admin/roles' | '/admin/users';
 
 export const Sidebar = memo(() => {
   const { t } = useTranslation();
@@ -32,6 +32,7 @@ export const Sidebar = memo(() => {
 
   const items: MenuProps['items'] = [
     { key: '/', icon: <HomeOutlined />, label: t('Sidebar.Home') },
+    { key: '/tickets', icon: <ContainerOutlined />, label: t('Fields.Ticket_other') },
     {
       key: '/admin',
       icon: <SafetyCertificateOutlined />,
