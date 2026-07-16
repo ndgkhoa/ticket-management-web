@@ -2,11 +2,19 @@ import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { HomeOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { Menu, Layout, Flex } from 'antd';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import type { MenuProps } from 'antd';
 
 import logoFull from '/images/logo-full.svg';
 import logoMark from '/images/logo-mark.svg';
+
+/**
+ * The menu keys, which are also route paths. antd's `onClick` hands back a plain
+ * `string` key; this union lets it navigate through the typed router. The whole
+ * sidebar is replaced by the design-system nav in a later phase — until then the cast
+ * bridges antd's string-keyed menu to type-safe navigation.
+ */
+type NavKey = '/' | '/admin/permissions' | '/admin/roles' | '/admin/users';
 
 export const Sidebar = memo(() => {
   const { t } = useTranslation();
@@ -18,7 +26,9 @@ export const Sidebar = memo(() => {
 
   const [openKeys, setOpenKeys] = useState<string[]>([parentKey]);
 
-  const onClick: MenuProps['onClick'] = (e) => navigate(e.key);
+  const onClick: MenuProps['onClick'] = (e) => {
+    void navigate({ to: e.key as NavKey });
+  };
 
   const items: MenuProps['items'] = [
     { key: '/', icon: <HomeOutlined />, label: t('Sidebar.Home') },

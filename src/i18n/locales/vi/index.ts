@@ -55,7 +55,12 @@ const vi = {
     "Email": "Email",
     "Index": "STT",
     "Description": "Mô tả",
-    "CreatedDate": "Ngày tạo"
+    "CreatedDate": "Ngày tạo",
+    "Ticket_one": "phiếu",
+    "Ticket_other": "phiếu",
+    "Subject": "Tiêu đề",
+    "Status": "Trạng thái",
+    "Priority": "Độ ưu tiên"
   },
   "Validation": {
     "Required": "Trường này là bắt buộc",

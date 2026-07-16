@@ -1,6 +1,6 @@
 import { memo, Suspense } from 'react';
 import { Layout } from 'antd';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from '@tanstack/react-router';
 
 import { FullPageFallback } from '~/components/fallbacks';
 import { Sidebar, Navbar, Footer, Breadcrumb } from '~/components/ui';

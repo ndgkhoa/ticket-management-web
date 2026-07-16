@@ -1,6 +1,6 @@
 import { CircleChevronLeft } from 'lucide-react';
 import { Tooltip } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from '@tanstack/react-router';
 import Sider from 'antd/es/layout/Sider';
 import type { ReactNode } from 'react';
 
@@ -21,7 +21,7 @@ interface PageSiderProps {
 }
 
 const PageHeaderLayout = (props: PageHeaderLayoutProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { label, extra, replace, back, children } = props;
 
   if (replace) return children;
@@ -34,7 +34,7 @@ const PageHeaderLayout = (props: PageHeaderLayoutProps) => {
               type="text"
               shape="circle"
               icon={<CircleChevronLeft size={28} strokeWidth={1.5} color="#1f2937" />}
-              onClick={() => navigate(-1)}
+              onClick={() => router.history.back()}
             />
           </Tooltip>
         )}

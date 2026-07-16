@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Divider, Input, Button, Form, Flex, App } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 
 import { GoogleIcon } from '~/components/icons';
 import { useSignIn } from '~/features/auth/api/use-sign-in';
@@ -22,7 +22,7 @@ export const LoginForm = () => {
     signIn(values, {
       // Success sets no state here: the SDK emits SIGNED_IN and the auth store
       // reacts through onAuthStateChange. This component only navigates.
-      onSuccess: () => navigate('/'),
+      onSuccess: () => navigate({ to: '/' }),
       onError: () => message.error(t('Validation.Mismatch')),
     });
   };

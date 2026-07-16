@@ -1,13 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router';
 import { render as rtlRender } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConfigProvider, App as AntApp } from 'antd';
-import queryString from 'query-string';
-import { MemoryRouter } from 'react-router-dom';
-import { QueryParamProvider } from 'use-query-params';
-import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6';
+import type { AnyRouter } from '@tanstack/react-router';
 import type { RenderOptions } from '@testing-library/react';
-import type { PropsWithChildren, ReactElement } from 'react';
+import type { ReactElement } from 'react';
 
 import { theme } from '~/styles/theme';
 
@@ -17,7 +20,7 @@ import { theme } from '~/styles/theme';
  * The singleton would carry its cache from one test into the next, so a test could
  * pass only because an earlier one warmed the data. Retries are off because a
  * deliberate error case would otherwise burn the timeout budget retrying before it
- * ever reports; the same applies to the retry-on-mount default.
+ * ever reports.
  */
 const createTestQueryClient = () =>
   new QueryClient({
@@ -28,43 +31,47 @@ const createTestQueryClient = () =>
   });
 
 type RenderConfig = Omit<RenderOptions, 'wrapper'> & {
-  /** Entries the router starts with — pass a URL to test a list's search params. */
+  /** Initial URL(s) the memory history starts at — pass to test router-dependent UI. */
   routerEntries?: string[];
 };
 
 /**
- * Renders inside the app's real providers.
+ * Renders inside the app's real providers, with a TanStack Router memory router so
+ * components using router hooks (`useNavigate`, `useLocation`, `Link`) have context.
  *
- * Two deliberate differences from `app/provider.tsx`: MemoryRouter instead of
- * BrowserRouter (a test drives navigation by argument, not by jsdom's URL bar), and
- * no devtools. Everything else matches, so a component that works here works in the
- * app — the point of a shared helper is that no test re-wires providers and quietly
- * tests a different tree than the one that ships.
+ * The router is a single root route whose component is the element under test — the
+ * standard way to unit-test a component in isolation without booting the whole route
+ * tree. A test that needs real navigation targets renders the actual route instead.
  */
-export const renderWithProviders = (
+export const renderWithProviders = async (
   ui: ReactElement,
   { routerEntries, ...options }: RenderConfig = {}
 ) => {
   const queryClient = createTestQueryClient();
 
-  const Wrapper = ({ children }: PropsWithChildren) => (
+  const rootRoute = createRootRoute({ component: () => ui });
+  const router = createRouter({
+    routeTree: rootRoute,
+    history: createMemoryHistory({ initialEntries: routerEntries ?? ['/'] }),
+    context: { queryClient },
+  });
+
+  // Resolve the initial match before rendering; RouterProvider is otherwise in its
+  // pending state on first paint and a synchronous `getByRole` sees an empty tree.
+  await router.load();
+
+  const result = rtlRender(
     <QueryClientProvider client={queryClient}>
       <ConfigProvider theme={theme}>
         <AntApp>
-          <MemoryRouter initialEntries={routerEntries ?? ['/']}>
-            <QueryParamProvider
-              adapter={ReactRouter6Adapter}
-              options={{
-                searchStringToObject: queryString.parse,
-                objectToSearchString: queryString.stringify,
-              }}
-            >
-              {children}
-            </QueryParamProvider>
-          </MemoryRouter>
+          {/* The ad-hoc test router isn't the registered app router, so its type
+              doesn't match RouterProvider's generic — a mismatch inherent to
+              rendering an arbitrary element as a route. */}
+          <RouterProvider router={router as unknown as AnyRouter} />
         </AntApp>
       </ConfigProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
+    options
   );
 
   return {
@@ -73,7 +80,7 @@ export const renderWithProviders = (
     // not firing.
     user: userEvent.setup(),
     queryClient,
-    ...rtlRender(ui, { wrapper: Wrapper, ...options }),
+    ...result,
   };
 };
 

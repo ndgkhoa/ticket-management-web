@@ -1,13 +1,12 @@
 import { Result } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 
 import { Button } from '~/components/ui';
 
 export const NotFound = () => {
   const navigate = useNavigate();
   const onBack = () => {
-    navigate('/');
-    window.location.reload();
+    void navigate({ to: '/' });
   };
   return (
     <Result

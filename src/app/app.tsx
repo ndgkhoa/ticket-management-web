@@ -1,12 +1,7 @@
 import AppProviders from '~/app/provider';
-import { AppRoutes } from '~/AppRoutes';
 
 function App() {
-  return (
-    <AppProviders>
-      <AppRoutes />
-    </AppProviders>
-  );
+  return <AppProviders />;
 }
 
 export default App;

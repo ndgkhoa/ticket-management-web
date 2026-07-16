@@ -58,7 +58,12 @@ const en = {
     "Email": "Email",
     "Index": "No.",
     "Description": "Description",
-    "CreatedDate": "Created At"
+    "CreatedDate": "Created At",
+    "Ticket_one": "ticket",
+    "Ticket_other": "tickets",
+    "Subject": "Subject",
+    "Status": "Status",
+    "Priority": "Priority"
   },
   "Validation": {
     "Required": "This field is required",

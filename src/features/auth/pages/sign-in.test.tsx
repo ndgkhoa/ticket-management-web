@@ -20,8 +20,8 @@ describe('SignIn', () => {
     await i18n.changeLanguage('en');
   });
 
-  it('renders the login form through the app providers', () => {
-    render(<SignIn />);
+  it('renders the login form through the app providers', async () => {
+    await render(<SignIn />);
 
     expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
     // getByLabelText, not getByPlaceholderText: it only passes if the label is actually
@@ -30,8 +30,8 @@ describe('SignIn', () => {
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
   });
 
-  it('renders translated copy rather than raw i18n keys', () => {
-    render(<SignIn />);
+  it('renders translated copy rather than raw i18n keys', async () => {
+    await render(<SignIn />);
 
     // A missing key renders as the key itself — that is how `Validation.Username`
     // reached real users.
@@ -40,16 +40,16 @@ describe('SignIn', () => {
   });
 
   it('renders Vietnamese copy when the language changes', async () => {
-    render(<SignIn />);
+    await render(<SignIn />);
     await i18n.changeLanguage('vi');
 
     expect(await screen.findByRole('button', { name: 'Đăng nhập' })).toBeInTheDocument();
   });
 
-  it('sets the document title natively, without a helmet provider', () => {
+  it('sets the document title natively, without a helmet provider', async () => {
     // React 19 hoists <title> from anywhere in the tree; this is what replaced
     // react-helmet-async.
-    render(<SignIn />);
+    await render(<SignIn />);
 
     expect(document.title).toBe('Login');
   });

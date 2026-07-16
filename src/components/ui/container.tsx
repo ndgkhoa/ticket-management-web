@@ -1,7 +1,6 @@
 import { Flex, Tooltip } from 'antd';
 import { Undo2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import type { To } from 'react-router-dom';
+import { useNavigate, useRouter } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
 import { cn } from '~/utils';
@@ -17,11 +16,18 @@ interface Props {
 
 export const Container = (props: Props) => {
   const navigate = useNavigate();
+  const router = useRouter();
   const { title, children, extraRight, showBack = false, stickyHeader = false } = props;
 
   const onBack = () => {
-    const backLink: To = typeof showBack === 'boolean' ? (-1 as To) : showBack?.link;
-    navigate(backLink);
+    // Boolean = go back in history; an explicit link navigates there. The cast bridges
+    // the free-form `link` prop to the typed router until this antd component is
+    // replaced in the design-system phase.
+    if (typeof showBack === 'boolean') {
+      router.history.back();
+    } else if (showBack?.link) {
+      void navigate({ to: showBack.link as '/' });
+    }
   };
 
   const showContainerHeader = Boolean(title) || Boolean(extraRight);
