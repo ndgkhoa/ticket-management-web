@@ -2,9 +2,9 @@
  * Shared validation patterns.
  *
  * Kept deliberately small: anything a Zod schema can express belongs in that
- * schema, not here. Phase 05/06 moves form validation to TanStack Form + Zod, at
- * which point `z.email()` and friends replace hand-rolled patterns entirely — a
- * self-written email regex is strictly worse than the library's.
+ * schema, not here. Once form validation moves to Zod, `z.email()` and friends
+ * replace hand-rolled patterns entirely — a self-written email regex is strictly
+ * worse than the library's.
  */
 export const Regexes = {
   username: /^[a-zA-Z0-9._-]{3,20}$/,

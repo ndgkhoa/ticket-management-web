@@ -2,10 +2,10 @@
  * Response/entity shapes of the legacy .NET API.
  *
  * These are PascalCase because they mirror the C# DTOs verbatim — they are an
- * accurate description of that backend, not a naming mistake to fix in place.
- * Phase 03 replaces the whole data layer with Supabase, where these types are
- * superseded by Zod schemas that transform rows into camelCase domain types
- * (`z.infer`), so they are deleted with the API layer rather than rewritten here.
+ * accurate description of that backend, not a naming mistake to fix in place. The
+ * data layer is being replaced by Supabase, where Zod schemas transform snake_case
+ * rows into camelCase domain types (`z.infer`) and supersede these entirely — so
+ * they are deleted with the API layer rather than rewritten here.
  *
  * Do not add to this file. New shapes belong in a feature's `schemas/`.
  */

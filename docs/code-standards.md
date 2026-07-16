@@ -7,17 +7,21 @@ follows.
 
 ## What is enforced mechanically today
 
-| Rule                                                  | Enforced by                                             |
-| ----------------------------------------------------- | ------------------------------------------------------- |
-| Conventional commits                                  | `commitlint` on `commit-msg`                            |
-| Lint + format on staged files                         | `husky` pre-commit → `lint-staged`                      |
-| Import order, no duplicate/circular imports           | `import-x/*` (ESLint)                                   |
-| Type-only imports marked explicitly                   | `@typescript-eslint/consistent-type-imports`            |
-| `config/`, `lib/`, `utils/` dependency direction      | `no-restricted-imports` (ESLint, per-directory)         |
-| Baseline a11y (incl. `img` alt text)                  | `jsx-a11y` (ESLint)                                     |
-| Unknown `t()` keys fail the build                     | `src/types/i18next.d.ts` augmenting `CustomTypeOptions` |
-| `en` / `vi` locale parity + correct plural categories | `bun run lang:check`                                    |
-| Env vars validated at boot                            | Zod schema in `src/config/env.ts`                       |
+| Rule                                                  | Enforced by                                              |
+| ----------------------------------------------------- | -------------------------------------------------------- |
+| Conventional commits                                  | `commitlint` on `commit-msg`                             |
+| Lint + format on staged files                         | `husky` pre-commit → `lint-staged`                       |
+| Import order, no duplicate/circular imports           | `import-x/*` (ESLint)                                    |
+| Type-only imports marked explicitly                   | `@typescript-eslint/consistent-type-imports`             |
+| `config/`, `lib/`, `utils/` dependency direction      | `no-restricted-imports` (ESLint, per-directory)          |
+| Baseline a11y (incl. `img` alt text)                  | `jsx-a11y` (ESLint)                                      |
+| Unknown `t()` keys fail the build                     | `src/types/i18next.d.ts` augmenting `CustomTypeOptions`  |
+| `en` / `vi` locale parity + correct plural categories | `bun run lang:check`                                     |
+| Env vars validated at boot                            | Zod schema in `src/config/env.ts`                        |
+| Unit + component tests, coverage floor                | `bun run test:cov` (Vitest) — CI, every push and PR      |
+| WCAG 2.1 AA in a real browser                         | `@axe-core/playwright` — CI, on PRs                      |
+| App boots and runs (not just compiles)                | Playwright e2e against the production build — CI, on PRs |
+| Reproducible installs                                 | committed `bun.lock` + `bun install --frozen-lockfile`   |
 
 Everything else below is convention, and is checked in review until a phase makes it
 mechanical.
@@ -200,10 +204,31 @@ Every list screen obeys all of it. Reviewers reject partial compliance.
 
 ## Testing
 
-- Unit/integration: Vitest + Testing Library, network via MSW. Test behaviour, not
-  implementation. _Status: target (Phase 02)._
-- `*.test.tsx` colocated. a11y assertions with jest-axe on key screens.
-- e2e: Playwright happy paths.
+- Unit/integration: **Vitest + Testing Library**, network via MSW. Test behaviour, not
+  implementation. `*.test.tsx` colocated with the code it covers.
+- **Always render through `src/testing/render.tsx`.** It wraps the app's real providers
+  and hands out a fresh QueryClient per render — never the app singleton, whose cache
+  would leak from one test into the next and let a test pass because an earlier one
+  warmed the data. A test file that re-wires its own providers is testing a tree that
+  does not ship.
+- **A regression test must fail on the unfixed code. Verify that, do not assume it.**
+  The first version of the debounce test here passed against the bug it was written
+  for: the bug let two writes through rather than corrupting the final value, and the
+  assertion checked the final value. A test that cannot fail is documentation wearing a
+  green tick.
+- **e2e runs against the production build**, not the dev server: Vite bundles with
+  Rolldown for `build` and a different pipeline for `dev`, so a bundler-only breakage is
+  invisible to a dev-server test.
+- **a11y is asserted in a real browser** (`@axe-core/playwright`, WCAG 2.1 AA) — never
+  in jsdom. axe cannot evaluate colour contrast without layout: it returns `incomplete`,
+  which `toHaveNoViolations` ignores, so unreadable text passes. The first real a11y bug
+  in this repo was exactly that.
+- **MSW runs with `onUnhandledRequest: 'error'`.** The default only warns, which lets a
+  test quietly reach the network — the usual root of a suite that is both slow and
+  flaky. A request without a handler should fail and name itself.
+- **Coverage thresholds are a ratchet**: set at the level the suite reaches, so CI fails
+  on a drop. Raise them when a phase adds code meant to stay; never set a number the
+  repo cannot meet, because a permanently red gate is one people learn to ignore.
 
 ## Dependencies
 

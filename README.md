@@ -1,60 +1,101 @@
-# Vite React Boilerplate
+# ticket-management-web
 
-A brief description of what this project does and who it's for
+[![CI](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml/badge.svg)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/ndgkhoa/ticket-management-web/branch/develop/graph/badge.svg)](https://codecov.io/gh/ndgkhoa/ticket-management-web)
 
-## Screenshots
+A single-tenant help desk: customers open tickets, agents resolve them by team, and
+admins manage roles and permissions.
 
-![App Screenshot](https://images.ctfassets.net/e5382hct74si/21Fjmtaeaj1PT6YLXEOcNf/bde1f4c53a829ddcd14c7600bcd710d1/CleanShot_2024-08-20_at_09.08.19_2x.png)
+> **Status: in progress.** The repo is being taken from an old React boilerplate to a
+> production-shaped app in tracked phases. What exists today is the admin surface
+> (users, roles, permissions) on a rebuilt foundation — React 19, TypeScript 6, Vite 8,
+> Zod-validated env, type-safe i18n, and a tested CI pipeline. Ticket workflows, the
+> Supabase data layer and the shadcn design system are the phases that follow. Plans
+> live in [`plans/`](plans/), conventions in [`docs/code-standards.md`](docs/code-standards.md).
 
-## Run Locally
+## Requirements
 
-Clone the project
+- **Bun** — package manager and script runner; CI runs every script through it
+- **Node** `>=22.12` — the floor Vite 8 (Rolldown) needs. Node 24 is the Active LTS and
+  what this is developed against; 22 is in maintenance and 26 does not reach LTS until
+  October 2026.
 
-```bash
-  git clone https://link-to-project
-```
-
-Go to the project directory
-
-```bash
-  cd my-project
-```
-
-Install dependencies
-
-```bash
-  bun install
-```
-
-Start the server
+## Getting started
 
 ```bash
-  bun run dev
+git clone git@github.com:ndgkhoa/ticket-management-web.git
+cd ticket-management-web
+bun install
+
+cp .env.example .env    # env is Zod-validated and fails fast at boot
+bun run dev             # http://localhost:5173
 ```
 
-## Build and Start Locally
+The app has no backend yet. `VITE_API_MODE=msw` starts Mock Service Worker, which is
+what will let the app run with no backend at all — the handler registry is still empty,
+so today it registers the worker and passes requests through with a warning. Handlers
+land with the data layer.
 
-To deploy this project run
+## Scripts
 
-```bash
-  bun build
+| Script               | What it does                                          |
+| -------------------- | ----------------------------------------------------- |
+| `bun run dev`        | Dev server on Vite's default port (5173)              |
+| `bun run build`      | Typecheck, then production build to `dist/`           |
+| `bun run preview`    | Serve the production build                            |
+| `bun run lint`       | ESLint (import order, a11y, architectural boundaries) |
+| `bun run test`       | Unit + component tests (Vitest)                       |
+| `bun run test:watch` | Same, in watch mode                                   |
+| `bun run test:cov`   | Tests with coverage; fails below the threshold        |
+| `bun run e2e`        | End-to-end + accessibility tests (Playwright)         |
+| `bun run e2e:ui`     | Playwright UI mode                                    |
+| `bun run lang:gen`   | Generate locale bundles from `scripts/data/*.yaml`    |
+| `bun run lang:check` | Fail if `en`/`vi` drift apart                         |
+
+## Testing
+
+| Layer            | Tool                                                                                                      | Runs on           |
+| ---------------- | --------------------------------------------------------------------------------------------------------- | ----------------- |
+| Unit + component | Vitest · Testing Library · jsdom                                                                          | every push and PR |
+| Mock API         | MSW — one handler registry shared by tests and the demo build (registry empty until the data layer lands) | every push and PR |
+| End-to-end       | Playwright, against the **production build**                                                              | PRs               |
+| Accessibility    | axe-core via Playwright, WCAG 2.1 AA                                                                      | PRs               |
+
+Two choices worth knowing about:
+
+- **e2e runs against `vite build` output, not the dev server.** Vite 8 bundles with
+  Rolldown for builds and a different pipeline for dev, so a bundler-only breakage is
+  invisible to a dev-server test.
+- **Accessibility is checked in a real browser, not jsdom.** axe cannot evaluate colour
+  contrast without layout — in jsdom it reports `incomplete`, which the usual matcher
+  ignores, so unreadable text passes silently. The first real violation found here was
+  exactly that: antd's default primary button is 4.10:1, under the 4.5:1 AA needs.
+
+The coverage threshold is a floor with headroom, not the current number. Coverage is a
+ratio, so setting it at the measured value would fail CI whenever untested code is
+_added_ — even with no regression at all. It is deliberately low while most of `src/` is
+legacy screens awaiting replacement, and it rises as each phase lands code meant to stay.
+
+## Architecture
+
+```
+src/
+  app/          application shell — provider, app
+  components/   shared UI (ui primitives, layouts, fallbacks)
+  config/       values — Zod-validated env
+  lib/          configured clients — axios, query-client
+  utils/        pure helpers, zero app deps
+  stores/       global client state (Zustand)
+  features/     feature-based: api, components, pages, hooks, constants
+  mocks/        MSW handlers, node server, browser worker
+  testing/      test setup and the shared render helper
+  i18n/         i18next + generated locale bundles
 ```
 
-Start the server
+The dependency arrow only points one way: features may use `config/`, `lib/` and
+`utils/`; none of the three may reach back. ESLint enforces it rather than a paragraph
+asking nicely.
 
-```bash
-  bun start
-```
+## License
 
-## Technologies Used
-
-- [ReactJS](https://react.dev/): The library for web and native user interfaces
-- [Tailwind CSS](https://tailwindcss.com/): A utility-first CSS framework for rapid UI development.
-- [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview): is often described as the missing data-fetching library for web applications, but in more technical terms, it makes fetching, caching, synchronizing and updating server state in your web applications a breeze.
-
-## Features
-
-- Light/dark mode toggle
-- Live previews
-- Fullscreen mode
-- Cross platform
+Private, portfolio project.

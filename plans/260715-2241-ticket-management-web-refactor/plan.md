@@ -41,7 +41,7 @@ See `code-standards.md`. Key rules:
 | #   | Phase                                                              | Status  |
 | --- | ------------------------------------------------------------------ | ------- |
 | 01  | [Foundation & tooling](phase-01-foundation-tooling.md)             | ✅ done |
-| 02  | [Testing & CI infrastructure](phase-02-testing-ci.md)              | ⬜ todo |
+| 02  | [Testing & CI infrastructure](phase-02-testing-ci.md)              | ✅ done |
 | 03  | [Data layer — Supabase + MSW](phase-03-data-layer-supabase-msw.md) | ⬜ todo |
 | 04  | [Routing — TanStack Router](phase-04-routing-tanstack-router.md)   | ⬜ todo |
 | 05  | [Design system — shadcn/ui](phase-05-design-system-shadcn.md)      | ⬜ todo |
