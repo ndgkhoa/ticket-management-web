@@ -113,11 +113,11 @@ created_at`, so there is **no `username`** (auth is email/OAuth — Supabase has
       that mode (msw needs none). `vitest.config` pins `VITE_API_MODE=msw` so CI (no `.env.local`) does
       not throw on `env.ts`'s new refinement.
 - [~] Zod schemas + camelCase domain mapping
-      — pattern established + proven on the reference case: `features/tickets/schemas/` (enums derived
-      from generated `Constants`; row→domain camelCase `.transform`, `search_vector`/`embedding`
-      dropped; input schema pinned to `Tables<'tickets'>` so a migration drift fails typecheck). The
-      remaining feature schemas (auth/admin) land in Stage 3 **with** their api rewrite — schema + fetcher
-      change together, reviewed together.
+  — pattern established + proven on the reference case: `features/tickets/schemas/` (enums derived
+  from generated `Constants`; row→domain camelCase `.transform`, `search_vector`/`embedding`
+  dropped; input schema pinned to `Tables<'tickets'>` so a migration drift fails typecheck). The
+  remaining feature schemas (auth/admin) land in Stage 3 **with** their api rewrite — schema + fetcher
+  change together, reviewed together.
 - [x] Shared list-query contract (`list-query.ts`): params/response + range/count/order/textSearch builder
       — `lib/list-query.ts` (Zod params/response, pageSize allowlist, page/q coercion, range+pageCount
       math) + `lib/list-query-builder.ts` (Supabase FTS→trgm fallback, sort allowlist + total-order
@@ -140,6 +140,19 @@ created_at`, so there is **no `username`** (auth is email/OAuth — Supabase has
 ## Success criteria
 
 Same feature hooks work against MSW and Supabase unchanged; RLS blocks cross-role access (tested); tests run fully on MSW without network. **List parity test passes:** identical params → identical `{ rows, totalCount, pageCount }` from MSW and Supabase, incl. filter+search+sort combined.
+
+## Stage 3 review follow-ups (open)
+
+- **Filter values are unvalidated against their column domain** (`ticket-api.ts` `applyFilters`).
+  Injection is impossible — `.eq`/`.in` treat a crafted string as one literal (confirmed) — but an
+  invalid enum/uuid value (`status=open,resolved`) raises Postgres `22P02`, which `runListQuery`
+  rethrows to the error boundary. **This is a Stage 4 parity requirement, not just a Phase 04 one:**
+  Supabase errors on a bad enum value while the in-memory MSW applier would return empty, so the two
+  sources diverge unless the value is validated out at the boundary. Decide in Stage 4 — a ticket
+  filter schema that rejects values outside `ticket-enums` before dispatch is the shared fix.
+- **Raw `PostgrestError.message` is rendered to the UI** (admin read-only pages). Leaks table/column
+  names (`permission denied for table profiles`). Admin-only now → low; add a generic fallback in
+  Phase 06 before the customer-facing ticket screens inherit the pattern.
 
 ## Risks
 

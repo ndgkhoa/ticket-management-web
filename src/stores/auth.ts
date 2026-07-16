@@ -53,9 +53,14 @@ export const useAuthStore = create<AuthStore>((set) => ({
  * sign-out and silent token refresh. Returns the unsubscribe for effect cleanup.
  */
 export function subscribeToAuth() {
-  void supabase.auth.getSession().then(({ data }) => {
-    useAuthStore.getState().setSession(data.session);
-  });
+  supabase.auth
+    .getSession()
+    .then(({ data }) => useAuthStore.getState().setSession(data.session))
+    // If the initial read ever rejects, resolve to unauthenticated rather than
+    // leaving `status` stuck on `loading` — an infinite spinner behind the guard.
+    // `onAuthStateChange` also fires INITIAL_SESSION, but relying on that alone
+    // leaves this guarantee implicit.
+    .catch(() => useAuthStore.getState().setSession(null));
 
   const { data } = supabase.auth.onAuthStateChange((_event, session) => {
     useAuthStore.getState().setSession(session);
