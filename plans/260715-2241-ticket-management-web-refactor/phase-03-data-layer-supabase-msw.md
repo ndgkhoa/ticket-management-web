@@ -149,6 +149,16 @@ created_at`, so there is **no `username`** (auth is email/OAuth — Supabase has
 
 Same feature hooks work against MSW and Supabase unchanged; RLS blocks cross-role access (tested); tests run fully on MSW without network. **List parity test passes:** identical params → identical `{ rows, totalCount, pageCount }` from MSW and Supabase, incl. filter+search+sort combined.
 
+## Stage 4 review follow-ups (accepted, not fixed)
+
+- **`searchConfig` is optional on the list config.** A future FTS table that forgets to set it
+  re-triggers the english-stemmer-vs-simple-column bug. Left optional because the tickets parity test
+  is the guard, and tickets is the only FTS list; revisit if a second FTS list appears.
+- **Applier compares an exact count against Supabase's `count: 'estimated'`.** They agree at seed scale
+  (the estimate is exact at 500), so the parity test is valid today. If the corpus grows past where the
+  planner estimate diverges, the totalCount assertion could flake — which would correctly reflect a real
+  MSW-vs-Supabase divergence, since `estimated` is a deliberate perf choice. Bound noted, not a bug.
+
 ## Stage 3 review follow-ups (open)
 
 - **Filter values are unvalidated against their column domain** (`ticket-api.ts` `applyFilters`).
