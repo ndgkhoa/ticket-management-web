@@ -1,4 +1,4 @@
-import { Suspense, type PropsWithChildren } from 'react';
+import { Suspense, useEffect, type PropsWithChildren } from 'react';
 import { QueryErrorResetBoundary, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ConfigProvider, App } from 'antd';
@@ -9,10 +9,15 @@ import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6';
 import queryString from 'query-string';
 
 import { queryClient } from '~/lib/query-client';
+import { subscribeToAuth } from '~/stores/auth';
 import { FullscreenFallback, ErrorBoundaryFallback } from '~/components/fallbacks';
 import { theme } from '~/styles/theme';
 
 const AppProviders = ({ children }: PropsWithChildren) => {
+  // Wire the auth store to the Supabase session once, for the app's lifetime. The
+  // returned unsubscribe tears the listener down if the provider ever unmounts.
+  useEffect(() => subscribeToAuth(), []);
+
   return (
     <Suspense fallback={<FullscreenFallback />}>
       <QueryErrorResetBoundary>

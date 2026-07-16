@@ -3,48 +3,35 @@ import { Divider, Input, Button, Form, Flex, App } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
 import { GoogleIcon } from '~/components/icons';
-import { useLoginWithUserName } from '~/features/auth/hooks/mutations/use-login-with-username';
-import { useAuthStore } from '~/stores/auth';
-import { AuthProviders } from '~/features/auth/types/AuthProviders';
+import { useSignIn } from '~/features/auth/api/use-sign-in';
 
-type LoginFormType = {
-  UserName: string;
-  Password: string;
+type LoginFormValues = {
+  email: string;
+  password: string;
 };
 
 export const LoginForm = () => {
   const { t } = useTranslation();
   const { message } = App.useApp();
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<LoginFormValues>();
   const navigate = useNavigate();
 
-  const { mutate: loginWithUserName, isPending: isLoginWithUserNamePending } =
-    useLoginWithUserName();
-  const { setAuth } = useAuthStore();
+  const { mutate: signIn, isPending } = useSignIn();
 
-  const onLogin = (values: LoginFormType) => {
-    loginWithUserName(values, {
-      onSuccess: (response) => {
-        setAuth({
-          ...response.data.Data,
-          isAuthenticated: true,
-          provider: AuthProviders.Local,
-        });
-        navigate('/');
-      },
-      onError: () => {
-        message.error(t('Validation.Mismatch'));
-      },
+  const onLogin = (values: LoginFormValues) => {
+    signIn(values, {
+      // Success sets no state here: the SDK emits SIGNED_IN and the auth store
+      // reacts through onAuthStateChange. This component only navigates.
+      onSuccess: () => navigate('/'),
+      onError: () => message.error(t('Validation.Mismatch')),
     });
   };
-
-  const disabled = isLoginWithUserNamePending;
 
   return (
     <>
       <Flex wrap align="center" gap="small">
         <Button
-          disabled={disabled}
+          disabled={isPending}
           className="flex-1"
           size="large"
           icon={<GoogleIcon className="h-6 w-6 max-w-6 min-w-6" />}
@@ -55,23 +42,26 @@ export const LoginForm = () => {
         </Button>
       </Flex>
       <Divider plain>{t('Login.Or')}</Divider>
-      <Form disabled={disabled} form={form} size="large" layout="vertical" onFinish={onLogin}>
-        <Form.Item<LoginFormType>
-          name="UserName"
-          label={t('Login.UserName')}
-          rules={[{ required: true, message: t('Validation.Required') }]}
+      <Form disabled={isPending} form={form} size="large" layout="vertical" onFinish={onLogin}>
+        <Form.Item<LoginFormValues>
+          name="email"
+          label={t('Login.Email')}
+          rules={[
+            { required: true, message: t('Validation.Required') },
+            { type: 'email', message: t('Validation.Email') },
+          ]}
         >
           <Input autoComplete="username" size="large" />
         </Form.Item>
-        <Form.Item<LoginFormType>
-          name="Password"
+        <Form.Item<LoginFormValues>
+          name="password"
           label={t('Login.Password')}
           rules={[{ required: true, message: t('Validation.Required') }]}
         >
           <Input.Password autoComplete="current-password" size="large" />
         </Form.Item>
         <Button
-          loading={isLoginWithUserNamePending}
+          loading={isPending}
           block
           className="mt-2"
           htmlType="submit"
@@ -81,16 +71,6 @@ export const LoginForm = () => {
           {t('Common.Login')}
         </Button>
       </Form>
-      {/* <div className="mt-8 flex justify-center">
-        <Select
-          defaultValue="en"
-          onChange={(value) => setLanguage(value)}
-          options={[
-            { value: 'vi', label: t('Common.Vi') },
-            { value: 'en', label: t('Common.En') },
-          ]}
-        />
-      </div> */}
     </>
   );
 };

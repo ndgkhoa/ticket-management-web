@@ -26,7 +26,7 @@ describe('SignIn', () => {
     expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
     // getByLabelText, not getByPlaceholderText: it only passes if the label is actually
     // associated with the input, so the query doubles as an a11y assertion.
-    expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
   });
 

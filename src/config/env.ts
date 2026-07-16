@@ -11,13 +11,6 @@ import { z } from 'zod';
 const envSchema = z
   .object({
     /**
-     * Base URL of the API. An empty value is valid and means "same origin" — requests
-     * go to relative paths, which is how the app runs against a dev proxy or a static
-     * demo build.
-     */
-    VITE_BASE_API_URL: z.union([z.literal(''), z.url()]).default(''),
-
-    /**
      * Where the app gets its data.
      *
      * `supabase` talks to the real project (`VITE_SUPABASE_*` below). `msw` starts the

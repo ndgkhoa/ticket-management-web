@@ -1,19 +1,24 @@
-import { axiosClient } from '~/lib/axios';
-import type { BaseResponse } from '~/types';
-import type { AuthType } from '~/stores/auth';
+import { supabase } from '~/lib/supabase';
 
-const BASE_PATH = '/users';
-
+/**
+ * Auth operations, thin wrappers over the Supabase SDK.
+ *
+ * Sign-in is email/password (Supabase has no username concept) plus Google OAuth.
+ * The session that results is owned by the SDK and observed by the auth store — none
+ * of these functions touch app state directly, so there is one path in and one
+ * source of truth.
+ */
 export const authApi = {
-  loginWithUserName: (body: { UserName: string; Password: string }) => {
-    return axiosClient.post<BaseResponse<AuthType>>(`${BASE_PATH}/login`, body, {
-      headers: { X_DEVICE_UDID: '00000000-0000-0000-0000-000000000000' },
-    });
-  },
-  loginWithGoogle: async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return {
-      Message: 'Đăng nhập bằng Google thành công!',
-    };
-  },
+  signInWithPassword: (email: string, password: string) =>
+    supabase.auth.signInWithPassword({ email, password }),
+
+  signInWithGoogle: () =>
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      // Return to the app root after the provider round-trip; the SDK reads the
+      // session back out of the URL (`detectSessionInUrl`).
+      options: { redirectTo: `${window.location.origin}/` },
+    }),
+
+  signOut: () => supabase.auth.signOut(),
 };

@@ -1,45 +1,65 @@
-import { persist, devtools } from 'zustand/middleware';
 import { create } from 'zustand';
+import type { Session, User } from '@supabase/supabase-js';
 
-import type { AuthProviders } from '~/features/auth/types/AuthProviders';
+import { supabase } from '~/lib/supabase';
 
-export type AuthType = {
-  UserId?: string;
-  AccessToken?: string;
-  RefreshToken?: string;
+/**
+ * Reactive auth state, derived from the Supabase session.
+ *
+ * The SDK owns the session — it persists it, refreshes the token in the background,
+ * and is the single source of truth. This store does NOT duplicate that; it mirrors
+ * the SDK's `onAuthStateChange` so the UI and route guards have something reactive to
+ * read. That is why there is no `persist` middleware and no token field: the previous
+ * store hand-rolled `AccessToken`/`RefreshToken` in localStorage and had to clear
+ * them on logout (and forgot to), which is exactly the class of bug the SDK removes.
+ *
+ * `status` starts at `loading` so a guard can show a spinner rather than briefly
+ * bouncing a signed-in user to the login screen before the persisted session
+ * resolves — the flash-of-unauthenticated problem.
+ */
+type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
+
+type AuthStore = {
+  session: Session | null;
+  user: User | null;
+  status: AuthStatus;
+  setSession: (session: Session | null) => void;
+  signOut: () => Promise<void>;
 };
 
-export type AuthDataType = AuthType & {
-  isAuthenticated: boolean;
-  provider: AuthProviders;
-};
+export const useAuthStore = create<AuthStore>((set) => ({
+  session: null,
+  user: null,
+  status: 'loading',
+  setSession: (session) =>
+    set({
+      session,
+      user: session?.user ?? null,
+      status: session ? 'authenticated' : 'unauthenticated',
+    }),
+  signOut: async () => {
+    // Sign out through the SDK; the `onAuthStateChange` listener below sees
+    // SIGNED_OUT and sets the store to unauthenticated. No manual state clear, so
+    // there is no second copy to forget.
+    await supabase.auth.signOut();
+  },
+}));
 
-export type AuthStoreType = {
-  auth: AuthDataType | null;
-  setAuth: (auth: AuthDataType | null) => void;
-  logout: () => void;
-};
+/**
+ * Wire the store to the SDK. Called once from the app provider.
+ *
+ * `getSession` resolves the persisted session on boot (moving `status` off
+ * `loading`); `onAuthStateChange` then keeps the store in step with every sign-in,
+ * sign-out and silent token refresh. Returns the unsubscribe for effect cleanup.
+ */
+export function subscribeToAuth() {
+  void supabase.auth.getSession().then(({ data }) => {
+    useAuthStore.getState().setSession(data.session);
+  });
 
-export const useAuthStore = create<AuthStoreType>()(
-  devtools(
-    persist(
-      (set) => ({
-        auth: null,
-        setAuth: (auth) => {
-          set({ auth });
-        },
-        logout: () => {
-          set({ auth: null });
-        },
-      }),
-      {
-        // Each persisted store needs its OWN key. Both this store and the
-        // preferences store used to persist under 'local-storage', so whichever
-        // wrote last replaced the other's entry wholesale — logging in and then
-        // toggling the theme silently destroyed the session.
-        name: 'auth-storage',
-      }
-    ),
-    { name: 'AuthStore' }
-  )
-);
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    useAuthStore.getState().setSession(session);
+  });
+
+  return () => data.subscription.unsubscribe();
+}

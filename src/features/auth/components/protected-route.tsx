@@ -2,19 +2,22 @@ import { type PropsWithChildren } from 'react';
 import { Navigate } from 'react-router-dom';
 
 import { useAuthStore } from '~/stores/auth';
-import { AuthProviders } from '~/features/auth/types/AuthProviders';
+import { FullscreenFallback } from '~/components/fallbacks';
 
-interface Props extends PropsWithChildren {
-  allowed?: string;
-}
+/**
+ * Gate a subtree on an authenticated session.
+ *
+ * While the persisted session is still resolving (`status === 'loading'`) it holds a
+ * fallback rather than redirecting — otherwise a signed-in user is bounced to the
+ * login screen for a frame before the session loads. This guard is replaced by the
+ * router's `beforeLoad` in the routing phase; it is kept faithful to the new store
+ * shape only so the app compiles until then.
+ */
+export const ProtectedRoute = ({ children }: PropsWithChildren) => {
+  const status = useAuthStore((state) => state.status);
 
-export const ProtectedRoute = ({ children }: Props) => {
-  const authState = useAuthStore((state) => state.auth);
-  const { isAuthenticated, provider } = authState || {};
-
-  if (isAuthenticated && provider === AuthProviders.Local) {
-    return children;
-  }
+  if (status === 'loading') return <FullscreenFallback />;
+  if (status === 'authenticated') return children;
 
   return <Navigate to="/auth/sign-in" replace />;
 };

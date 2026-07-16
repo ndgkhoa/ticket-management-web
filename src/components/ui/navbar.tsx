@@ -5,27 +5,22 @@ import { Button, Dropdown, Flex, Layout, Select, theme as AntTheme } from 'antd'
 import type { MenuProps } from 'antd';
 
 import { useAuthStore } from '~/stores/auth';
-import { AuthProviders } from '~/features/auth/types/AuthProviders';
 
 export const Navbar = memo(() => {
   const { t, i18n } = useTranslation();
-  const { auth: authState, logout } = useAuthStore();
+  const signOut = useAuthStore((state) => state.signOut);
   const {
     token: { colorBgContainer },
   } = AntTheme.useToken();
-
-  const onLogoutClick = () => {
-    if (authState?.provider === AuthProviders.Local) {
-      logout();
-    }
-  };
 
   const items: MenuProps['items'] = [
     {
       key: 'logout',
       icon: <LogoutOutlined />,
       label: t('Common.Logout'),
-      onClick: onLogoutClick,
+      onClick: () => {
+        void signOut();
+      },
     },
   ];
 
