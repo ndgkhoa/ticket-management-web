@@ -9,8 +9,19 @@ import tseslint from 'typescript-eslint';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 
 export default tseslint.config(
-  // Vite's default output dir, plus the generated locale bundles.
-  { ignores: ['dist', 'src/i18n/locales/**'] },
+  // Generated output: build artefacts, coverage and Playwright reports, the locale
+  // bundles emitted from scripts/data/*.yaml, and MSW's worker (vendored verbatim by
+  // `msw init` — linting it would only ever report on someone else's code).
+  {
+    ignores: [
+      'dist',
+      'coverage',
+      'playwright-report',
+      'test-results',
+      'src/i18n/locales/**',
+      'public/mockServiceWorker.js',
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -77,9 +88,9 @@ export default tseslint.config(
    *
    * Deep cross-feature imports are deliberately NOT restricted yet: today the
    * `features/*​/index.tsx` files are react-router route modules, not public-API
-   * barrels, so there is no boundary to point the rule at. Phase 04 replaces that
-   * routing and Phase 03 gives each feature a real public surface — the rule lands
-   * there, against a structure that can actually satisfy it.
+   * barrels, so there is no boundary to point the rule at. That rule lands together
+   * with the routing migration and the per-feature public surface, against a
+   * structure that can actually satisfy it.
    */
   {
     files: ['src/utils/**/*.{ts,tsx}'],
@@ -131,10 +142,21 @@ export default tseslint.config(
     },
   },
 
-  // Config and scripts run in Node, not the browser.
+  // Config, scripts and e2e run in Node, not the browser.
   {
-    files: ['*.config.{js,ts}', 'scripts/**/*.ts'],
+    files: ['*.config.{js,ts}', 'scripts/**/*.ts', 'e2e/**/*.ts'],
     languageOptions: { globals: globals.node },
+  },
+
+  /**
+   * Test infrastructure is not shipped, so the rules that protect the bundle and Fast
+   * Refresh do not apply. `render.tsx` deliberately re-exports Testing Library's
+   * surface so a test file has one import — react-refresh cannot see through
+   * `export *`, and there is no HMR boundary here to protect.
+   */
+  {
+    files: ['src/testing/**/*.{ts,tsx}'],
+    rules: { 'react-refresh/only-export-components': 'off' },
   },
 
   eslintConfigPrettier

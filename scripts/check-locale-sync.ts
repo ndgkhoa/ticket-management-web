@@ -22,11 +22,18 @@ const REFERENCE_LOCALE = 'en';
 const LOCALES = ['en', 'vi'] as const;
 const PLURAL_SUFFIXES = ['zero', 'one', 'two', 'few', 'many', 'other'] as const;
 
+/**
+ * The plural categories `Intl.PluralRules` can return. Naming the type — rather than
+ * carrying `string` around — is what lets `required.has(category)` typecheck against
+ * `Set<LDMLPluralRule>` without a cast.
+ */
+type PluralCategory = (typeof PLURAL_SUFFIXES)[number];
+
 type KeyInfo = {
   /** Key path with any plural suffix stripped, e.g. `Fields.Role`. */
   base: string;
   /** Plural category, when the key carried one. */
-  category?: string;
+  category?: PluralCategory;
 };
 
 const localesDir = path.resolve(import.meta.dirname, 'data');
@@ -39,12 +46,16 @@ const flatten = (node: unknown, prefix = ''): string[] => {
   );
 };
 
+/** Narrows a raw key suffix to a plural category, so callers keep the precise type. */
+const isPluralCategory = (value: string): value is PluralCategory =>
+  (PLURAL_SUFFIXES as readonly string[]).includes(value);
+
 const parseKey = (key: string): KeyInfo => {
   const lastUnderscore = key.lastIndexOf('_');
   if (lastUnderscore === -1) return { base: key };
 
   const suffix = key.slice(lastUnderscore + 1);
-  if (!PLURAL_SUFFIXES.includes(suffix as (typeof PLURAL_SUFFIXES)[number])) return { base: key };
+  if (!isPluralCategory(suffix)) return { base: key };
 
   return { base: key.slice(0, lastUnderscore), category: suffix };
 };

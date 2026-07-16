@@ -48,8 +48,17 @@ updates:
       - dependency-name: typescript
         versions:
           - '>=7.0.0'
-      # Removed in the Phase 05 design-system work — bumping it now is wasted review.
+      # @types/node tracks the Node runtime, not npm's newest tag. Development runs on
+      # Node 24 (the Active LTS); @types/node@26 would describe APIs that are not there
+      # and hide ones that are. Raise this when the project moves to Node 26 — it
+      # becomes LTS in October 2026.
+      - dependency-name: '@types/node'
+        versions:
+          - '>=25.0.0'
+      # Both are being replaced by an owned design system, so a bump is wasted review.
+      # @ant-design/icons is versioned in lockstep with antd and leaves with it.
       - dependency-name: antd
+      - dependency-name: '@ant-design/icons'
 
   - package-ecosystem: github-actions
     directory: /
