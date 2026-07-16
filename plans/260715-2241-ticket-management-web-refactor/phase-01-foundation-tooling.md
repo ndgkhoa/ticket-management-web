@@ -71,8 +71,9 @@ React is 16 ~ 18`. Fixed with the official `@ant-design/v5-patch-for-react-19` i
   (ES2022). Masked by an early config error; surfaced once `baseUrl` was fixed. Now ES2022 /
   lib ES2023, matching `tsconfig.node.json`.
 - `.husky/pre-commit` was **empty** — husky ran and enforced nothing.
-- No lockfile is tracked (`bun.lock` is not committed), so CI cannot install reproducibly.
-  **Open — hand to Phase 02 (CI).**
+- `bun.lock` is committed (landed in this phase's first commit, `a37dd6d`), so CI installs
+  reproducibly with `--frozen-lockfile`. (An earlier draft of this file called it untracked;
+  that was never true after the first commit.)
 
 **Decisions taken during implementation:**
 
@@ -160,7 +161,16 @@ Bump to latest **and** adopt the current API for each; a version bump without a 
 | antd                                                                                      | 5.25        | **freeze**              | Deleted in Phase 05 — do not spend a bump on it.                                                                                                                                                                                         |
 | axios, envalid, use-query-params, react-router-dom, @types/react-router-dom, query-string | —           | **removed**             | Phases 01/03/04 retire them.                                                                                                                                                                                                             |
 
-**TypeScript 7 is deliberately deferred — this is the one "latest" we skip.** 7.0.2 is stable (the Go/native port), but `typescript-eslint@8.64` peers `typescript >=4.8.4 <6.1.0`, and there is no 9.x. Adopting TS 7 today means the type-aware lint rules — a core CV signal of this repo — stop running. **Target TS 6.0.3** (newest supported stable) and re-evaluate TS 7 when typescript-eslint ships support. Record this as a dated decision, not an oversight.
+**TypeScript 7 is deliberately deferred — this is the one "latest" we skip.** 7.0.2 is stable (the Go/native port), but `typescript-eslint@8.64` peers `typescript >=4.8.4 <6.1.0`, and there is no 9.x. Adopting TS 7 today breaks typescript-eslint's supported range entirely — the _parser_ stops guaranteeing correct results, not just the type-aware rules. **Target TS 6.0.3** (newest supported stable) and re-evaluate TS 7 when typescript-eslint ships support. Record this as a dated decision, not an oversight.
+
+> **Correction (2026-07-16 audit):** an earlier version of this note justified the cap by
+> "keeping type-aware lint running". That was misleading — the ESLint config uses
+> `tseslint.configs.recommended`, **not** `recommendedTypeChecked`, and sets no
+> `projectService`/`parserOptions.project`, so type-aware rules (`no-floating-promises`,
+> `no-unsafe-*`) are **not running today** and TS 7 would not "stop" them. The real reason to
+> cap is the peer-dependency range above. Enabling type-aware lint is a separate decision,
+> deferred to Phase 05: switching it on now floods the legacy `features/**` (which Phase 05
+> rewrites) with errors, so it lands when that code is replaced, not before.
 
 - ESLint flat config tightened (import order, a11y-ready), Prettier, `prettier-plugin-tailwindcss`.
 - Husky + lint-staged (run eslint/prettier on staged) + commitlint (conventional commits).
@@ -209,8 +219,10 @@ Bump to latest **and** adopt the current API for each; a version bump without a 
 - [x] Dependabot + GitHub templates (PR template, CODEOWNERS, bug/feature issue forms)
 - [x] Dead code removed, docs/code-standards seeded
 - [x] **Extra:** `lang:check` locale-sync script (catches the `vi.Common.E` class of bug in CI)
-- [ ] **Open → Phase 02:** commit a lockfile (`bun.lock` untracked — CI cannot install reproducibly)
+- [x] **Done (was mis-tracked as open):** `bun.lock` committed in `a37dd6d`; CI installs with `--frozen-lockfile`
 - [ ] **Open → Phase 05:** 5 `exhaustive-deps` warnings in two antd tabs; enable `--max-warnings 0` once removed
+- [ ] **Open → Phase 05:** enable type-aware lint (`recommendedTypeChecked` + `projectService`) once legacy `features/**` is rewritten — it is off today, see the TS 7 note above
+- [ ] **Open → Phase 03:** axios 401 handler calls `localStorage.clear()`, which now also wipes the i18next language preference — use `useAuthStore.logout()` in the Supabase rewrite instead of clearing all storage
 
 ## Success criteria
 

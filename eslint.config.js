@@ -117,8 +117,9 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ['~/lib/*', '~/features/*', '~/components/*'],
-              message: 'config/ holds values only — it must not depend on clients or features.',
+              group: ['~/lib/*', '~/features/*', '~/components/*', '~/stores/*'],
+              message:
+                'config/ holds values only — it must not depend on clients, features or stateful stores.',
             },
           ],
         },

@@ -71,6 +71,14 @@ Two choices worth knowing about:
   contrast without layout — in jsdom it reports `incomplete`, which the usual matcher
   ignores, so unreadable text passes silently. The first real violation found here was
   exactly that: antd's default primary button is 4.10:1, under the 4.5:1 AA needs.
+  - **Caveat — a real browser is necessary but not sufficient.** axe still returns
+    `incomplete` (not `violation`) for contrast when it cannot resolve the effective
+    background — which is the case on any element whose background is painted by an
+    absolutely-positioned `::before`/`::after`, as the sign-in screen's is. The suite
+    asserts on `violations` only, so a contrast failure on sign-in passes silently even
+    in the browser. The `not-found` scan (plain background) does catch contrast. Closing
+    this properly — assert on `incomplete`, or give the scanned surface a real
+    background — is deferred to the Phase 05 UI rebuild, which replaces these screens.
 
 The coverage threshold is a floor with headroom, not the current number. Coverage is a
 ratio, so setting it at the measured value would fail CI whenever untested code is

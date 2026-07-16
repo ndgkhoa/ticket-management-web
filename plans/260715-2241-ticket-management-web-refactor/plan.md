@@ -10,7 +10,7 @@ Repo: `ticket-management-web` (GitHub `ndgkhoa/ticket-management-web`, already r
 
 ## Target Stack
 
-Versions verified against npm on 2026-07-15 — full table + required usage changes in [phase-01](phase-01-foundation-tooling.md). Latest is adopted **only where the ecosystem supports it** (TypeScript 7 is deferred: `typescript-eslint` doesn't support it yet, and losing type-aware lint costs more than the version gains).
+Versions verified against npm on 2026-07-15 — full table + required usage changes in [phase-01](phase-01-foundation-tooling.md). Latest is adopted **only where the ecosystem supports it** (TypeScript 7 is deferred: `typescript-eslint@8` peers `typescript <6.1.0`, so TS 7 falls outside its supported range — see the phase-01 note; type-aware lint itself is off today and enabled in Phase 05).
 
 - **Core:** React 19.2, TypeScript 6.0 (strict), Vite 8 (Rolldown)
 - **TanStack:** Router 1.170 · Query 5.101 · Table 8.21 · Form 1.33
