@@ -56,7 +56,6 @@ const vi = {
     "Index": "STT",
     "Description": "Mô tả",
     "CreatedDate": "Ngày tạo",
-    "Ticket_one": "phiếu",
     "Ticket_other": "phiếu",
     "Subject": "Tiêu đề",
     "Status": "Trạng thái",
