@@ -3,7 +3,7 @@ import { createRouter } from '@tanstack/react-router';
 import { routeTree } from '~/routeTree.gen';
 import { queryClient } from '~/lib/query-client';
 import { FullPageFallback } from '~/components/fallbacks';
-import { ErrorPage } from '~/components/errors';
+import { ErrorPage, NotFound } from '~/components/errors';
 
 /**
  * The router.
@@ -25,6 +25,10 @@ export const router = createRouter({
   defaultPreload: 'intent',
   defaultPendingComponent: FullPageFallback,
   defaultErrorComponent: ({ error }) => <ErrorPage subTitle={error.message} />,
+  // Unmatched paths render the 404 outside the auth guard (it is on `_app`, which an
+  // unmatched path never enters), so a bad URL shows the not-found page to anyone
+  // rather than bouncing an unauthenticated visitor to sign-in.
+  defaultNotFoundComponent: NotFound,
   scrollRestoration: true,
 });
 
