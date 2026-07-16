@@ -16,9 +16,10 @@ admins manage roles and permissions.
 ## Requirements
 
 - **Bun** — package manager and script runner; CI runs every script through it
-- **Node** `>=22.12` — the floor Vite 8 (Rolldown) needs. Node 24 is the Active LTS and
-  what this is developed against; 22 is in maintenance and 26 does not reach LTS until
-  October 2026.
+- **Node** `>=24` — the Active LTS, and what this is actually developed and tested
+  against. Vite 8 would run on 22.12, but 22 is in maintenance (security fixes only,
+  EOL April 2027) and nothing here is tested on it, so `engines` declares what is
+  supported rather than what might work. Node 26 does not reach LTS until October 2026.
 
 ## Getting started
 
@@ -98,4 +99,4 @@ asking nicely.
 
 ## License
 
-Private, portfolio project.
+[MIT](LICENSE) © ndgkhoa
