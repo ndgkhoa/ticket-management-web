@@ -123,9 +123,19 @@ created_at`, so there is **no `username`** (auth is email/OAuth — Supabase has
       math) + `lib/list-query-builder.ts` (Supabase FTS→trgm fallback, sort allowlist + total-order
       tiebreaker, `ilike` wildcard escaping). 16 unit tests on a fake builder; proven end-to-end against
       live Supabase (admin 500 vs customer RLS ~14, FTS `refund`, `invoic` fallback, page-2 zero overlap).
-- [ ] Query-key + queryOptions factories (list params in key), hooks rewritten
+- [x] Query-key + queryOptions factories (list params in key), hooks rewritten
+      — admin (users/roles/permissions) + tickets. Fetcher + queryOptions + hook colocated in `api/`;
+      the old `hooks/queries` + `hooks/mutations` split and the 11 module-scope `setMutationDefaults`
+      are gone. Reads use `.throwOnError()` (SDK's own bridge; preserves `PostgrestError`) not a
+      hand-rolled unwrap. Admin CRUD UI (26 antd components) deleted — data model diverged from the
+      schema and Phase 05/06 rebuilds them; admin pages are read-only lists on the new layer for now.
 - [ ] MSW handlers + fixtures + shared list-query applier, VITE_API_MODE switch
-- [ ] Supabase auth session (retire axios auth)
+      — Stage 4. Client is already msw-safe (placeholder host, MSW intercepts supabase-js's fetch);
+      `VITE_API_MODE` enum already switched to `supabase|msw`.
+- [x] Supabase auth session (retire axios auth)
+      — SDK owns session/refresh; store mirrors `onAuthStateChange` (no hand-rolled tokens). Email/
+      password + Google OAuth entry. axios, `types/index.ts`, `regexes.ts`, `VITE_BASE_API_URL` all
+      deleted; the 3 hardcoded Vietnamese strings died with the files that held them.
 
 ## Success criteria
 
