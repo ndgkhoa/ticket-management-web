@@ -23,9 +23,12 @@ clean runs). The unit suite is verified green under UTC, UTC+7, UTC-4 and UTC+14
   Widening the include immediately surfaced two real errors that had been hiding in
   `scripts/`: `js-yaml` had no types (`@types/js-yaml` was never installed) and
   `check-locale-sync.ts` passed a `string` where `LDMLPluralRule` was required.
-- **`engines.node` allowed Node 20, which reached EOL in April 2026.** The range had
-  been copied from Vite's requirement without checking it. Now `>=22.12.0`; Node 24 is
-  the Active LTS and what development runs on.
+- **`engines.node` allowed Node 20, which reached EOL in April 2026.** The range had been
+  copied from Vite's requirement without checking it. Corrected twice: first to `>=22.12`
+  (Vite's real floor), then to **`>=24`** — because `>=22.12` was still declaring support
+  for a version nothing here has ever run. Development is on 24, CI runs every script
+  through Bun, and 22 has been in maintenance since October 2025. `engines` should state
+  what is supported, not what might work.
 - **`vite.config.ts` overrode the dev port to 3000** for no reason — Vite's default
   (5173) is what a reader expects. Override removed.
 - **README was still the Vite boilerplate**: titled "Vite React Boilerplate", a
@@ -111,10 +114,17 @@ every one of them real:**
   deploy time: Cloudflare Pages builds with Node, so the deploy runtime differs from
   the CI runtime.
 
-**Open — needs the user, cannot be done from here:** Codecov requires an account and a
-`CODECOV_TOKEN` repo secret. The upload step is skipped (not failed) while the secret is
-absent, so a fork PR does not go red over a token it cannot have. The README badge stays
-grey until the token exists.
+**Verified on a real runner, not just locally.** The first push to `develop` ran CI green
+in 40s: `lint · typecheck · test · build` passed, while `detect changes` and
+`e2e (Playwright)` skipped in 0s — the push/PR trigger split behaving exactly as designed.
+Coverage on the runner read 8.45 / 5.53 / 5.37 / 8.51, identical to local. Codecov
+accepted the upload ("Found 1 coverage files", "Upload queued for processing complete"),
+which also confirms `env` at job level can be read from a step-level `if` and that
+`./coverage/lcov.info` matches the configured reporter.
+
+**Still unproven:** the `e2e` job has never run on a runner — the Playwright cache,
+`install-deps`, the build-and-preview step and `paths-filter` are all PR-only, so the
+first pull request is where they get their first real test.
 
 ## Overview
 
@@ -174,16 +184,12 @@ Everything in this project runs on free tiers (Phase 09 has the full table). Two
       test passed against the buggy code and was rewritten: the bug does not corrupt
       the final value, it lets two writes through, and both orderings end on the last
       keystroke. Setter identity is the observable difference.
-- [ ] **Open → user:** Codecov account + `CODECOV_TOKEN` secret (badge stays grey until
-      then; CI skips the upload rather than failing). `codecov.yml` is already in place
-      so the default statuses cannot start failing PRs the moment the token lands.
-- [ ] **Open → user:** branch protection on `develop`. "A failing test blocks merge" is a
-      GitHub setting, not something any file in this repo can assert — until it is set,
-      CI is advisory. Required contexts must match the workflow's `name:` values:
-      `lint · typecheck · test · build` and `e2e (Playwright)`. Marking e2e required is
-      safe: a docs-only PR skips that job, and a skipped job satisfies a required check
-      (this is why the `changes` job exists instead of `paths-ignore`, which would leave
-      the check pending forever).
+- [x] **Codecov wired.** `CODECOV_TOKEN` is set on the repo, and `codecov.yml` makes its
+      statuses informational so the default `patch` gate cannot start failing PRs at ~8%
+      coverage the moment the token works.
+- [ ] **Deferred by decision → not a gap:** branch protection on `develop`. See Success
+      criteria — CI is advisory until it is set, and that is a conscious trade while the
+      refactor is in flight.
 - [ ] **Open → deploy phase:** CI runs on Bun, Cloudflare Pages builds on Node — same
       code, two runtimes.
 - [ ] **Open → deploy phase:** `public/_redirects` (`/*  /index.html  200`) is needed for
@@ -193,7 +199,40 @@ Everything in this project runs on free tiers (Phase 09 has the full table). Two
 
 ## Success criteria
 
-`bun run test` + `bun run e2e` pass locally; CI green on PR; a failing test blocks merge. Quota-consuming jobs (Chromatic, preview deploy, Lighthouse) run on PRs only.
+`bun run test` + `bun run e2e` pass locally; CI green on PR. Quota-consuming jobs
+(Chromatic, preview deploy, Lighthouse) run on PRs only.
+
+**"A failing test blocks merge" was dropped from this phase — deliberately, and it is
+worth being precise about why.** No file in this repo can make it true: it is GitHub
+branch protection, a repository setting. Today `develop` returns
+`Branch not protected`, so CI is a **smoke alarm, not a lock** — a PR with a red X
+still has a live Merge button, and a direct push lands the failing code on the branch
+before CI has an opinion.
+
+Left off on purpose _(user decision)_: required status checks force every change
+through a PR, because a direct push has no passing checks to satisfy them. During a
+multi-stage refactor that cost outweighs the benefit while the only contributor is the
+person reading the red X anyway.
+
+**Turn it on when the refactor settles and feature work starts going through PRs.** The
+repo is public, so protection is free (private repos need Pro). Required contexts must
+match the workflow's `name:` values exactly — not the job ids:
+
+```bash
+gh api -X PUT repos/ndgkhoa/ticket-management-web/branches/develop/protection \
+  -H "Accept: application/vnd.github+json" \
+  -f 'required_status_checks[strict]=true' \
+  -f 'required_status_checks[contexts][]=lint · typecheck · test · build' \
+  -f 'required_status_checks[contexts][]=e2e (Playwright)' \
+  -F 'enforce_admins=false' \
+  -F 'required_pull_request_reviews=null' \
+  -F 'restrictions=null'
+```
+
+Marking `e2e (Playwright)` required is safe despite being conditional: a docs-only PR
+skips the job, and a skipped job still satisfies a required check. That is exactly why
+the `changes` job exists instead of `paths-ignore` — the latter skips the whole
+workflow, leaving the check permanently _pending_ and the PR unmergeable.
 
 ## Risks
 

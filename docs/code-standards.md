@@ -23,6 +23,11 @@ follows.
 | App boots and runs (not just compiles)                | Playwright e2e against the production build — CI, on PRs |
 | Reproducible installs                                 | committed `bun.lock` + `bun install --frozen-lockfile`   |
 
+**The CI rows report; they do not yet block.** `develop` has no branch protection, so a
+red check leaves the Merge button live and a direct push lands regardless. Enabling
+required status checks is what converts those rows from a smoke alarm into a lock — see
+the testing phase's success criteria for the exact command and why it is deferred.
+
 Everything else below is convention, and is checked in review until a phase makes it
 mechanical.
 
