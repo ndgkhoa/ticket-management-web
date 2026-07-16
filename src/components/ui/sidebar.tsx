@@ -5,8 +5,8 @@ import { Menu, Layout, Flex } from 'antd';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { MenuProps } from 'antd';
 
-import viagsLogoFull from '/images/viags-logo-full-2.png';
-import viagsLogo from '/images/viags-logo.png';
+import logoFull from '/images/logo-full.svg';
+import logoMark from '/images/logo-mark.svg';
 
 export const Sidebar = memo(() => {
   const { t } = useTranslation();
@@ -39,9 +39,9 @@ export const Sidebar = memo(() => {
   const renderedLogo = (
     <Link to="/" className="flex h-16 items-center justify-center">
       {collapsed ? (
-        <img src={viagsLogo} alt={t('App.Name')} className="h-10" />
+        <img src={logoMark} alt={t('App.Name')} className="h-10" />
       ) : (
-        <img src={viagsLogoFull} alt={t('App.Name')} className="h-11" />
+        <img src={logoFull} alt={t('App.Name')} className="h-11" />
       )}
     </Link>
   );

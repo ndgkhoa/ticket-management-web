@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-hidden="true">
+  <!-- Placeholder mark: a support ticket. Authored here on purpose — the previous
+       logos were a real company's and could not be licensed or published. -->
+  <rect width="40" height="40" rx="9" fill="#0958d9" />
+  <path
+    fill="#fff"
+    d="M11 13.5A2.5 2.5 0 0 1 13.5 11h13a2.5 2.5 0 0 1 2.5 2.5v3.1a.9.9 0 0 1-.62.86 2.7 2.7 0 0 0 0 5.08.9.9 0 0 1 .62.86v3.1a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 11 26.5v-3.1a.9.9 0 0 1 .62-.86 2.7 2.7 0 0 0 0-5.08.9.9 0 0 1-.62-.86Z"
+  />
+  <path stroke="#0958d9" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="2.4 3" d="M20 14.5v11" />
+</svg>

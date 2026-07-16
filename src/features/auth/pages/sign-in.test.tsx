@@ -35,7 +35,7 @@ describe('SignIn', () => {
 
     // A missing key renders as the key itself — that is how `Validation.Username`
     // reached real users.
-    expect(screen.getByRole('heading', { name: 'User and Role Management' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Help Desk' })).toBeInTheDocument();
     expect(screen.queryByText(/^(Common|Login|App|Fields|Validation)\./)).not.toBeInTheDocument();
   });
 

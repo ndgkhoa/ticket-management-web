@@ -17,7 +17,7 @@ const en = {
     "NoData": "No data"
   },
   "App": {
-    "Name": "User and Role Management",
+    "Name": "Help Desk",
     "FeatureComingSoon": "This feature is under development. Please try again later!"
   },
   "Login": {

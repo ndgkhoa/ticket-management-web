@@ -17,7 +17,7 @@ const vi = {
     "NoData": "Không có dữ liệu"
   },
   "App": {
-    "Name": "Quản lý người dùng và phân quyền",
+    "Name": "Hỗ trợ khách hàng",
     "FeatureComingSoon": "Tính năng này đang được phát triển. Vui lòng thử lại sau!"
   },
   "Login": {
