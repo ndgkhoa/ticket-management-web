@@ -36,7 +36,16 @@ export default mergeConfig(
        * contributor west of Greenwich. The formatter is right; the test needed a
        * fixed zone to assert against.
        */
-      env: { TZ: 'UTC' },
+      /**
+       * `VITE_API_MODE: 'msw'` because the whole suite answers from MSW, never a real
+       * backend. It also discharges `env.ts`'s refinement: the default mode is
+       * `supabase`, which demands `VITE_SUPABASE_*`, and CI has neither those vars nor
+       * a `.env.local` — so any test that transitively imports `env.ts` (anything that
+       * renders the app) would throw at import. Pinning the mode here is what keeps the
+       * suite green on a runner with no environment file, matching how e2e already sets
+       * it for the preview server.
+       */
+      env: { TZ: 'UTC', VITE_API_MODE: 'msw' },
 
       coverage: {
         provider: 'v8',
