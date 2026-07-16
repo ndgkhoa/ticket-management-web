@@ -15,6 +15,18 @@ const envSchema = z.object({
    * demo build.
    */
   VITE_BASE_API_URL: z.union([z.literal(''), z.url()]).default(''),
+
+  /**
+   * Where the app gets its data.
+   *
+   * `msw` starts the Service Worker and answers every request from the mock
+   * handlers, which is what lets the demo build run with no backend at all. `live`
+   * talks to VITE_BASE_API_URL.
+   *
+   * An enum rather than a boolean flag: this grows a third source later, and
+   * `VITE_USE_MOCKS=false` reads as "off" while saying nothing about what is on.
+   */
+  VITE_API_MODE: z.enum(['live', 'msw']).default('live'),
 });
 
 const parsed = envSchema.safeParse(import.meta.env);
