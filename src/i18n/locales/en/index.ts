@@ -24,7 +24,9 @@ const en = {
     "Language": "Language",
     "Theme": "Theme",
     "Save": "Save",
-    "Edit": "Edit"
+    "Edit": "Edit",
+    "Saved": "Saved",
+    "Deleted": "Deleted"
   },
   "Errors": {
     "ServerErrorTitle": "Something went wrong",

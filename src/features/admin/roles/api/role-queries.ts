@@ -5,6 +5,7 @@ import type { Role } from '~/features/admin/roles/schemas/role-schema';
 
 const roleQueries = createCrudQueries<Role, RoleInput>({ keys: roleKeys, api: roleApi });
 
+export const roleListQuery = roleQueries.listQuery;
 export const useRoleList = roleQueries.useList;
 export const useRoleCreate = roleQueries.useCreate;
 export const useRoleUpdate = roleQueries.useUpdate;

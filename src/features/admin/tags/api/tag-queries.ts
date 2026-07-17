@@ -4,6 +4,7 @@ import { tagKeys } from '~/features/admin/tags/constants/tag-keys';
 import type { Tag } from '~/features/admin/tags/schemas/tag-schema';
 
 export const {
+  listQuery: tagListQuery,
   useList: useTagList,
   useCreate: useTagCreate,
   useUpdate: useTagUpdate,

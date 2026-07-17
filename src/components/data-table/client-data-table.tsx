@@ -1,15 +1,26 @@
 import {
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table';
+import { Search } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui';
+import {
+  Input,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '~/components/ui';
 import { DataTablePagination } from '~/components/data-table/data-table-pagination';
 import { DataTableSkeleton } from '~/components/data-table/data-table-skeleton';
 
@@ -19,47 +30,63 @@ type Props<TData, TValue> = {
   getRowId: (row: TData) => string;
   /** First load — show skeleton rows. */
   isLoading?: boolean;
-  toolbar?: ReactNode;
   /** No rows at all — an onboarding CTA. */
   emptyState?: ReactNode;
 };
 
 /**
  * The client-side twin of `DataTable`: for the bounded admin lookup tables (roles,
- * categories, tags, …) that fetch every row and sort + page in memory. Same shadcn table
- * shell and pagination bar, but the table owns its sorting/pagination rather than mirroring
- * the URL — there is no server round-trip to keep in step, and these tables are tens of
- * rows, so an in-memory model is the simpler correct thing (server paging them is
- * complexity for nothing).
+ * categories, tags, …) that fetch every row and sort + filter + page in memory. Same
+ * shadcn table shell and pagination bar, but the table owns its state rather than
+ * mirroring the URL — there is no server round-trip to keep in step, and these tables are
+ * tens of rows, so an in-memory model (and an instant, un-debounced filter) is the simpler
+ * correct thing.
  */
 export function ClientDataTable<TData, TValue>({
   columns,
   data,
   getRowId,
   isLoading = false,
-  toolbar,
   emptyState,
 }: Props<TData, TValue>) {
+  const { t } = useTranslation();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
 
   const table = useReactTable({
     data,
     columns,
     getRowId,
-    state: { sorting },
+    state: { sorting, globalFilter },
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    // Search the meaningful text columns only (name/description, plus a permission's
+    // `code`). Without this the default filter also matches numeric and colour columns
+    // (an SLA's minutes, a tag's hex), which surprises more than it helps on these tables.
+    getColumnCanGlobalFilter: (column) => ['name', 'description', 'code'].includes(column.id),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 10 } },
   });
 
   const columnCount = table.getAllLeafColumns().length;
-  const hasRows = data.length > 0;
+  const rows = table.getRowModel().rows;
+  const filteredCount = table.getFilteredRowModel().rows.length;
 
   return (
     <div className="space-y-3">
-      {toolbar}
+      <div className="relative max-w-sm">
+        <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+        <Input
+          value={globalFilter}
+          onChange={(event) => table.setGlobalFilter(event.target.value)}
+          placeholder={t('Common.Search')}
+          className="pl-8"
+          aria-label={t('Common.Search')}
+        />
+      </div>
 
       <div className="overflow-hidden rounded-md border">
         <Table>
@@ -92,8 +119,8 @@ export function ClientDataTable<TData, TValue>({
           <TableBody>
             {isLoading ? (
               <DataTableSkeleton columnCount={columnCount} rowCount={5} />
-            ) : hasRows ? (
-              table.getRowModel().rows.map((row) => (
+            ) : rows.length > 0 ? (
+              rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -104,8 +131,9 @@ export function ClientDataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columnCount} className="h-48 text-center">
-                  {emptyState}
+                <TableCell colSpan={columnCount} className="text-muted-foreground h-48 text-center">
+                  {/* No data at all vs a filter that matched nothing — distinct messages. */}
+                  {data.length === 0 ? emptyState : t('Common.NoResults')}
                 </TableCell>
               </TableRow>
             )}
@@ -113,7 +141,7 @@ export function ClientDataTable<TData, TValue>({
         </Table>
       </div>
 
-      {table.getPageCount() > 1 && <DataTablePagination table={table} totalCount={data.length} />}
+      {table.getPageCount() > 1 && <DataTablePagination table={table} totalCount={filteredCount} />}
     </div>
   );
 }

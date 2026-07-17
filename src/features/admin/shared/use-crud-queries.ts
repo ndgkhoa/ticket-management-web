@@ -1,4 +1,7 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+import i18n from '~/i18n';
 
 /**
  * The React Query half of an admin CRUD resource, built once and reused by every lookup
@@ -37,11 +40,17 @@ export function createCrudQueries<Row, Input>(config: {
     return () => queryClient.invalidateQueries({ queryKey: keys.all });
   };
 
+  // Success feedback lives here, once, so every entity toasts consistently — the caller's
+  // own onSuccess still runs (it closes the dialog). i18n via the singleton, not the hook,
+  // since this is called inside the mutation callback, not render.
   const useCreate = () => {
     const invalidate = useInvalidate();
     return useMutation({
       mutationFn: (input: Input) => api.create(input),
-      onSuccess: invalidate,
+      onSuccess: () => {
+        invalidate();
+        toast.success(i18n.t('Common.Saved'));
+      },
     });
   };
 
@@ -49,7 +58,10 @@ export function createCrudQueries<Row, Input>(config: {
     const invalidate = useInvalidate();
     return useMutation({
       mutationFn: ({ id, input }: { id: string; input: Input }) => api.update(id, input),
-      onSuccess: invalidate,
+      onSuccess: () => {
+        invalidate();
+        toast.success(i18n.t('Common.Saved'));
+      },
     });
   };
 
@@ -57,7 +69,10 @@ export function createCrudQueries<Row, Input>(config: {
     const invalidate = useInvalidate();
     return useMutation({
       mutationFn: (id: string) => api.remove(id),
-      onSuccess: invalidate,
+      onSuccess: () => {
+        invalidate();
+        toast.success(i18n.t('Common.Deleted'));
+      },
     });
   };
 

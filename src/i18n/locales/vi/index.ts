@@ -24,7 +24,9 @@ const vi = {
     "Language": "Ngôn ngữ",
     "Theme": "Giao diện",
     "Save": "Lưu",
-    "Edit": "Sửa"
+    "Edit": "Sửa",
+    "Saved": "Đã lưu",
+    "Deleted": "Đã xóa"
   },
   "Errors": {
     "ServerErrorTitle": "Đã có lỗi xảy ra",

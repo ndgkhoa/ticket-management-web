@@ -7,6 +7,7 @@ import { slaPolicyKeys } from '~/features/admin/sla-policies/constants/sla-polic
 import type { SlaPolicy } from '~/features/admin/sla-policies/schemas/sla-policy-schema';
 
 export const {
+  listQuery: slaPolicyListQuery,
   useList: useSlaPolicyList,
   useCreate: useSlaPolicyCreate,
   useUpdate: useSlaPolicyUpdate,

@@ -4,6 +4,7 @@ import { categoryKeys } from '~/features/admin/categories/constants/category-key
 import type { Category } from '~/features/admin/categories/schemas/category-schema';
 
 export const {
+  listQuery: categoryListQuery,
   useList: useCategoryList,
   useCreate: useCategoryCreate,
   useUpdate: useCategoryUpdate,

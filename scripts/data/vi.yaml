@@ -24,6 +24,8 @@ Common:
   Theme: 'Giao diện'
   Save: 'Lưu'
   Edit: 'Sửa'
+  Saved: 'Đã lưu'
+  Deleted: 'Đã xóa'
 Errors:
   ServerErrorTitle: 'Đã có lỗi xảy ra'
   ServerErrorDescription: 'Xin lỗi, đã xảy ra lỗi không mong muốn.'

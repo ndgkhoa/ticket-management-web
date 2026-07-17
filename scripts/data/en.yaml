@@ -24,6 +24,8 @@ Common:
   Theme: 'Theme'
   Save: 'Save'
   Edit: 'Edit'
+  Saved: 'Saved'
+  Deleted: 'Deleted'
 Errors:
   ServerErrorTitle: 'Something went wrong'
   ServerErrorDescription: 'Sorry, an unexpected error occurred.'
