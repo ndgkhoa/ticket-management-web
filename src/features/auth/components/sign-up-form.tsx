@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { useForm } from '@tanstack/react-form';
 import { useTranslation } from 'react-i18next';
@@ -8,10 +9,12 @@ import { Button } from '~/components/ui/button';
 import { FieldText, FieldPassword } from '~/components/form';
 import { useSignUp } from '~/features/auth/api/use-sign-up';
 import { GoogleButton } from '~/features/auth/components/google-button';
+import { TurnstileWidget, captchaEnabled } from '~/features/auth/components/turnstile-widget';
 
 export function SignUpForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const { mutate: signUp, isPending } = useSignUp();
 
   const signUpSchema = z
@@ -35,7 +38,12 @@ export function SignUpForm() {
     validators: { onSubmit: signUpSchema },
     onSubmit: ({ value }) => {
       signUp(
-        { fullName: value.fullName, email: value.email, password: value.password },
+        {
+          fullName: value.fullName,
+          email: value.email,
+          password: value.password,
+          captchaToken: captchaToken ?? undefined,
+        },
         {
           onSuccess: (data) => {
             // A session means the project auto-confirms email — the store picks up
@@ -112,7 +120,14 @@ export function SignUpForm() {
             />
           )}
         </form.Field>
-        <Button type="submit" size="lg" disabled={isPending} className="w-full">
+        <TurnstileWidget onToken={setCaptchaToken} />
+
+        <Button
+          type="submit"
+          size="lg"
+          disabled={isPending || (captchaEnabled && !captchaToken)}
+          className="w-full"
+        >
           {t('Common.Register')}
         </Button>
       </form>

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { useForm } from '@tanstack/react-form';
 import { useTranslation } from 'react-i18next';
@@ -8,10 +9,12 @@ import { Button } from '~/components/ui/button';
 import { FieldText, FieldPassword } from '~/components/form';
 import { useSignIn } from '~/features/auth/api/use-sign-in';
 import { GoogleButton } from '~/features/auth/components/google-button';
+import { TurnstileWidget, captchaEnabled } from '~/features/auth/components/turnstile-widget';
 
 export function LoginForm() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const { mutate: signIn, isPending } = useSignIn();
   // Where the guard sent them from, already validated to an internal path by the
@@ -33,13 +36,16 @@ export function LoginForm() {
     defaultValues: { email: '', password: '' },
     validators: { onSubmit: loginSchema },
     onSubmit: ({ value }) => {
-      signIn(value, {
-        // Success sets no state here: the SDK emits SIGNED_IN and the auth store reacts
-        // through onAuthStateChange. This component only navigates — back to where the
-        // user was headed, or home.
-        onSuccess: () => navigate({ to: redirect ?? '/' }),
-        onError: () => toast.error(t('Validation.Mismatch')),
-      });
+      signIn(
+        { ...value, captchaToken: captchaToken ?? undefined },
+        {
+          // Success sets no state here: the SDK emits SIGNED_IN and the auth store reacts
+          // through onAuthStateChange. This component only navigates — back to where the
+          // user was headed, or home.
+          onSuccess: () => navigate({ to: redirect ?? '/' }),
+          onError: () => toast.error(t('Validation.Mismatch')),
+        }
+      );
     },
   });
 
@@ -82,7 +88,14 @@ export function LoginForm() {
             />
           )}
         </form.Field>
-        <Button type="submit" size="lg" disabled={isPending} className="w-full">
+        <TurnstileWidget onToken={setCaptchaToken} />
+
+        <Button
+          type="submit"
+          size="lg"
+          disabled={isPending || (captchaEnabled && !captchaToken)}
+          className="w-full"
+        >
           {t('Common.Login')}
         </Button>
       </form>

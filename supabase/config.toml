@@ -217,11 +217,13 @@ token_verifications = 30
 # Number of Web3 logins that can be made in a 5 minute interval per IP address.
 web3 = 30
 
-# Configure one of the supported captcha providers: `hcaptcha`, `turnstile`.
-# [auth.captcha]
-# enabled = true
-# provider = "hcaptcha"
-# secret = ""
+# Cloudflare Turnstile captcha on sign-in/sign-up. Enabled: TURNSTILE_SECRET is REQUIRED
+# (fast-fails at start otherwise). The client must send a token — the auth forms render the
+# Turnstile widget only when VITE_TURNSTILE_SITE_KEY is set, so keep the two in step.
+[auth.captcha]
+enabled = true
+provider = "turnstile"
+secret = "env(TURNSTILE_SECRET)"
 
 [auth.email]
 # Allow/disallow new user signups via email to your project.
@@ -341,8 +343,9 @@ skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
 
-# Google OAuth. Left disabled so `supabase start` works with no credentials; flip `enabled`
-# to true and set the two env vars (see the Google OAuth setup notes) to turn it on.
+# Google OAuth. Enabled: the two env vars below are REQUIRED — set them in `.env` before
+# `supabase start` (see .env.example / the setup notes). Missing creds fail fast here at
+# start-up rather than silently at first sign-in, which is the intended behaviour.
 [auth.external.google]
 enabled = true
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"

@@ -37,6 +37,14 @@ const envSchema = z
      */
     VITE_SUPABASE_URL: z.url().optional(),
     VITE_SUPABASE_ANON_KEY: z.string().min(1).optional(),
+
+    /**
+     * Cloudflare Turnstile site key (public). Optional: when unset, the auth forms skip
+     * the captcha entirely — which is how tests, the MSW demo and a fresh checkout run
+     * without a Cloudflare account. When set, Supabase's `[auth.captcha]` must be
+     * configured to match, or sign-in rejects the (absent) token.
+     */
+    VITE_TURNSTILE_SITE_KEY: z.string().min(1).optional(),
   })
   .refine(
     (env) =>

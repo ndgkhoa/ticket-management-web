@@ -14,8 +14,8 @@ import { supabase } from '~/lib/supabase';
  * "coming soon" until then rather than redirecting into a dead flow.
  */
 export const authApi = {
-  signInWithPassword: (email: string, password: string) =>
-    supabase.auth.signInWithPassword({ email, password }),
+  signInWithPassword: (email: string, password: string, captchaToken?: string) =>
+    supabase.auth.signInWithPassword({ email, password, options: { captchaToken } }),
 
   /**
    * Email/password sign-up. `full_name` rides in `options.data` (user metadata); the
@@ -23,11 +23,11 @@ export const authApi = {
    * writes the profile itself. Whether a session comes back depends on the project's
    * email-confirmation setting — the caller handles both (navigate vs "check your inbox").
    */
-  signUp: (email: string, password: string, fullName: string) =>
+  signUp: (email: string, password: string, fullName: string, captchaToken?: string) =>
     supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: { data: { full_name: fullName }, captchaToken },
     }),
 
   signInWithGoogle: () =>
