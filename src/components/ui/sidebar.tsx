@@ -1,6 +1,17 @@
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Home, Inbox, KeyRound, ShieldCheck, UserCog, Users } from 'lucide-react';
+import {
+  FolderTree,
+  Home,
+  Inbox,
+  KeyRound,
+  ShieldCheck,
+  Tags,
+  Timer,
+  UserCog,
+  Users,
+  UsersRound,
+} from 'lucide-react';
 import { Link, useLocation } from '@tanstack/react-router';
 import type { LucideIcon } from 'lucide-react';
 
@@ -11,7 +22,16 @@ import { useAuthStore } from '~/stores/auth';
 import { usePreferencesStore } from '~/stores/preferences';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
 
-type NavPath = '/' | '/tickets' | '/admin/permissions' | '/admin/roles' | '/admin/users';
+type NavPath =
+  | '/'
+  | '/tickets'
+  | '/admin/permissions'
+  | '/admin/roles'
+  | '/admin/users'
+  | '/admin/teams'
+  | '/admin/categories'
+  | '/admin/tags'
+  | '/admin/sla-policies';
 
 type NavItem = { to: NavPath; icon: LucideIcon; label: string };
 
@@ -66,6 +86,10 @@ export const Sidebar = memo(function Sidebar() {
     { to: '/admin/permissions', icon: KeyRound, label: t('Fields.Permissions') },
     { to: '/admin/roles', icon: UserCog, label: t('Fields.Roles') },
     { to: '/admin/users', icon: Users, label: t('Fields.Users') },
+    { to: '/admin/teams', icon: UsersRound, label: t('Fields.Teams') },
+    { to: '/admin/categories', icon: FolderTree, label: t('Fields.Categories') },
+    { to: '/admin/tags', icon: Tags, label: t('Fields.Tags') },
+    { to: '/admin/sla-policies', icon: Timer, label: t('Fields.SlaPolicies') },
   ];
 
   return (

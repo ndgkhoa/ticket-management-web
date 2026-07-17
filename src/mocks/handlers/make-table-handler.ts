@@ -1,6 +1,7 @@
 import { http, type HttpHandler } from 'msw';
 
 import { applyListQuery, type ApplyListConfig } from '~/mocks/lib/apply-list-query';
+import { createTableStore } from '~/mocks/lib/table-store';
 import {
   parsePostgrestRequest,
   toListParams,
@@ -16,16 +17,15 @@ import {
 } from '~/mocks/lib/postgrest-response';
 
 /**
- * One PostgREST table endpoint over in-memory fixtures — the mechanism that makes
- * `VITE_API_MODE=msw` answer real data. supabase-js issues plain PostgREST requests in
- * every mode; this intercepts them at the network layer so feature code runs unchanged
- * against the mock and the live project.
+ * One PostgREST table endpoint over a mutable fixture store — the mechanism that makes
+ * `VITE_API_MODE=msw` answer real data AND accept writes. supabase-js issues plain
+ * PostgREST requests in every mode; this intercepts them at the network layer so feature
+ * code runs unchanged against the mock and the live project.
  *
- * A GET resolves one of three ways:
- *   - `.single()` → find one row by id (the detail read).
- *   - a paginated list (has `limit`/count) and a list config → route through
- *     `applyListQuery`, the parity-tested applier, and answer with a `Content-Range`.
- *   - anything else → a plain filtered + ordered read of every matching row.
+ * Reads resolve one of three ways: `.single()` → one row by id; a paginated list (has
+ * `limit`/count) with a list config → the parity-tested `applyListQuery` + a
+ * `Content-Range`; else a plain filtered + ordered read. Writes (POST/PATCH/DELETE)
+ * mutate the store and echo the affected row when `return=representation` is requested.
  */
 
 type TableConfig<Row extends Record<string, unknown>> = {
@@ -33,8 +33,14 @@ type TableConfig<Row extends Record<string, unknown>> = {
   rows: readonly Row[];
   /** Present only for tables with a paginated + searchable list (tickets today). */
   applyConfig?: ApplyListConfig<Row>;
-  /** Row identity for detail lookups. Defaults to the `id` column every table has. */
+  /** Row identity for detail lookups + writes. Defaults to the `id` column. */
   getId?: (row: Row) => string;
+  /**
+   * Register the POST/PATCH/DELETE verbs. Off by default so a read-only table (tickets,
+   * profiles, roles, permissions) exposes no mutable surface over its store — only the
+   * admin lookup tables opt in.
+   */
+  writable?: boolean;
 };
 
 /** eq / in matching for the plain-read and detail paths — dynamic column access, since a
@@ -68,8 +74,6 @@ function compareByOrder<Row extends Record<string, unknown>>(
     const av = a[field];
     const bv = b[field];
     if (av === bv) continue;
-    // Null placement matches the list builder's pinned `nullsFirst: false` default,
-    // overridable per term by an explicit `nullsfirst` in the order clause.
     if (av === null || av === undefined) return nullsFirst ? -1 : 1;
     if (bv === null || bv === undefined) return nullsFirst ? 1 : -1;
     const cmp = av < bv ? -1 : 1;
@@ -87,14 +91,17 @@ function plainRead<Row extends Record<string, unknown>>(
   return [...filtered].sort((a, b) => compareByOrder(a, b, query.order));
 }
 
-export function makeTableHandler<Row extends Record<string, unknown>>(
+export function makeTableHandler<Row extends Record<string, unknown> & { id: string }>(
   config: TableConfig<Row>
-): HttpHandler {
-  const { table, rows, applyConfig } = config;
+): HttpHandler[] {
+  const { table, applyConfig } = config;
   const getId = config.getId ?? ((row: Row) => String(row.id));
+  const store = createTableStore(config.rows);
+  const path = `*/rest/v1/${table}`;
 
-  return http.get(`*/rest/v1/${table}`, ({ request }) => {
+  const read = http.get(path, ({ request }) => {
     const query = parsePostgrestRequest(request);
+    const rows = store.all();
 
     if (query.single) {
       const wanted = query.filters.id?.value;
@@ -109,4 +116,37 @@ export function makeTableHandler<Row extends Record<string, unknown>>(
 
     return collectionResponse(plainRead(rows, query));
   });
+
+  // `.insert(row)` — supabase-js posts an object (or array); an absent id is server-filled.
+  const create = http.post(path, async ({ request }) => {
+    const query = parsePostgrestRequest(request);
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const rows = (Array.isArray(body) ? body : [body]).map((row) => {
+      const withId = { ...row, id: row.id ?? crypto.randomUUID() } as Row;
+      return store.insert(withId);
+    });
+    return query.single ? objectResponse(rows[0]) : collectionResponse(rows);
+  });
+
+  // `.update(patch).eq('id', …)` — apply the patch to the addressed row.
+  const modify = http.patch(path, async ({ request }) => {
+    const query = parsePostgrestRequest(request);
+    const patch = (await request.json().catch(() => ({}))) as Partial<Row>;
+    const id = query.filters.id?.value;
+    const updated = id ? store.update(id, patch) : undefined;
+    if (!updated) return notFoundResponse();
+    return query.single ? objectResponse(updated) : collectionResponse([updated]);
+  });
+
+  // `.delete().eq('id', …)` — remove the row; no body unless representation is asked for.
+  const destroy = http.delete(path, ({ request }) => {
+    const query = parsePostgrestRequest(request);
+    const id = query.filters.id?.value;
+    const removed = id ? store.remove(id) : undefined;
+    return query.single && removed
+      ? objectResponse(removed)
+      : collectionResponse(removed ? [removed] : []);
+  });
+
+  return config.writable ? [read, create, modify, destroy] : [read];
 }

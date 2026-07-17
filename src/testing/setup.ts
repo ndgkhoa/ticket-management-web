@@ -4,6 +4,7 @@ import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 
 import { server } from '~/mocks/server';
+import { resetTableStores } from '~/mocks/lib/table-store';
 
 /**
  * jsdom implements neither of these, and the Radix/shadcn primitives (and sonner) call
@@ -55,6 +56,9 @@ afterEach(() => {
   cleanup();
   // Handlers added by a single test via server.use() must not leak into the next.
   server.resetHandlers();
+  // Writes through the mock mutate in-memory stores; re-seed them so a create/delete in
+  // one test can't change what the next test reads.
+  resetTableStores();
 });
 
 afterAll(() => server.close());

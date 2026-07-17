@@ -22,7 +22,9 @@ const vi = {
     "BackToHome": "Về trang chủ",
     "Loading": "Đang tải…",
     "Language": "Ngôn ngữ",
-    "Theme": "Giao diện"
+    "Theme": "Giao diện",
+    "Save": "Lưu",
+    "Edit": "Sửa"
   },
   "Errors": {
     "ServerErrorTitle": "Đã có lỗi xảy ra",
@@ -80,7 +82,20 @@ const vi = {
     "Ticket_other": "phiếu",
     "Subject": "Tiêu đề",
     "Status": "Trạng thái",
-    "Priority": "Độ ưu tiên"
+    "Priority": "Độ ưu tiên",
+    "Name": "Tên",
+    "Color": "Màu",
+    "Actions": "Thao tác",
+    "FirstResponseMins": "Phản hồi đầu (phút)",
+    "ResolutionMins": "Xử lý xong (phút)",
+    "Categories": "Danh mục",
+    "Category_other": "danh mục",
+    "Tags": "Nhãn",
+    "Tag_other": "nhãn",
+    "Teams": "Nhóm",
+    "Team_other": "nhóm",
+    "SlaPolicies": "Chính sách SLA",
+    "SlaPolicy_other": "chính sách SLA"
   },
   "Validation": {
     "Required": "Trường này là bắt buộc",
@@ -90,7 +105,8 @@ const vi = {
     "PhoneNumber": "Trường này phải là số điện thoại",
     "SelectAtLeastOne": "Vui lòng chọn ít nhất một {{name}}.",
     "PasswordMin": "Mật khẩu phải có ít nhất 8 ký tự",
-    "PasswordMismatch": "Mật khẩu không khớp"
+    "PasswordMismatch": "Mật khẩu không khớp",
+    "PositiveInteger": "Phải là số nguyên dương"
   }
 } as const;
 export default vi;

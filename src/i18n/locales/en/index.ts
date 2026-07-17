@@ -22,7 +22,9 @@ const en = {
     "BackToHome": "Back to home",
     "Loading": "Loading…",
     "Language": "Language",
-    "Theme": "Theme"
+    "Theme": "Theme",
+    "Save": "Save",
+    "Edit": "Edit"
   },
   "Errors": {
     "ServerErrorTitle": "Something went wrong",
@@ -84,7 +86,24 @@ const en = {
     "Ticket_other": "tickets",
     "Subject": "Subject",
     "Status": "Status",
-    "Priority": "Priority"
+    "Priority": "Priority",
+    "Name": "Name",
+    "Color": "Color",
+    "Actions": "Actions",
+    "FirstResponseMins": "First response (min)",
+    "ResolutionMins": "Resolution (min)",
+    "Categories": "Categories",
+    "Category_one": "category",
+    "Category_other": "categories",
+    "Tags": "Tags",
+    "Tag_one": "tag",
+    "Tag_other": "tags",
+    "Teams": "Teams",
+    "Team_one": "team",
+    "Team_other": "teams",
+    "SlaPolicies": "SLA policies",
+    "SlaPolicy_one": "SLA policy",
+    "SlaPolicy_other": "SLA policies"
   },
   "Validation": {
     "Required": "This field is required",
@@ -94,7 +113,8 @@ const en = {
     "PhoneNumber": "This field must be a valid phone number",
     "SelectAtLeastOne": "Please select at least one {{name}}.",
     "PasswordMin": "Password must be at least 8 characters",
-    "PasswordMismatch": "Passwords do not match"
+    "PasswordMismatch": "Passwords do not match",
+    "PositiveInteger": "Must be a positive whole number"
   }
 } as const;
 export default en;

@@ -17,8 +17,12 @@ import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppTicketsIndexRouteImport } from './routes/_app/tickets/index'
 import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
+import { Route as AppAdminTeamsRouteImport } from './routes/_app/admin/teams'
+import { Route as AppAdminTagsRouteImport } from './routes/_app/admin/tags'
+import { Route as AppAdminSlaPoliciesRouteImport } from './routes/_app/admin/sla-policies'
 import { Route as AppAdminRolesRouteImport } from './routes/_app/admin/roles'
 import { Route as AppAdminPermissionsRouteImport } from './routes/_app/admin/permissions'
+import { Route as AppAdminCategoriesRouteImport } from './routes/_app/admin/categories'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/auth',
@@ -59,6 +63,21 @@ const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
+const AppAdminTeamsRoute = AppAdminTeamsRouteImport.update({
+  id: '/teams',
+  path: '/teams',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminTagsRoute = AppAdminTagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppAdminSlaPoliciesRoute = AppAdminSlaPoliciesRouteImport.update({
+  id: '/sla-policies',
+  path: '/sla-policies',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
 const AppAdminRolesRoute = AppAdminRolesRouteImport.update({
   id: '/roles',
   path: '/roles',
@@ -69,6 +88,11 @@ const AppAdminPermissionsRoute = AppAdminPermissionsRouteImport.update({
   path: '/permissions',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
+const AppAdminCategoriesRoute = AppAdminCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -76,8 +100,12 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRouteRouteWithChildren
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
+  '/admin/categories': typeof AppAdminCategoriesRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
   '/admin/roles': typeof AppAdminRolesRoute
+  '/admin/sla-policies': typeof AppAdminSlaPoliciesRoute
+  '/admin/tags': typeof AppAdminTagsRoute
+  '/admin/teams': typeof AppAdminTeamsRoute
   '/admin/users': typeof AppAdminUsersRoute
   '/tickets/': typeof AppTicketsIndexRoute
 }
@@ -87,8 +115,12 @@ export interface FileRoutesByTo {
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/': typeof AppIndexRoute
+  '/admin/categories': typeof AppAdminCategoriesRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
   '/admin/roles': typeof AppAdminRolesRoute
+  '/admin/sla-policies': typeof AppAdminSlaPoliciesRoute
+  '/admin/tags': typeof AppAdminTagsRoute
+  '/admin/teams': typeof AppAdminTeamsRoute
   '/admin/users': typeof AppAdminUsersRoute
   '/tickets': typeof AppTicketsIndexRoute
 }
@@ -100,8 +132,12 @@ export interface FileRoutesById {
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/categories': typeof AppAdminCategoriesRoute
   '/_app/admin/permissions': typeof AppAdminPermissionsRoute
   '/_app/admin/roles': typeof AppAdminRolesRoute
+  '/_app/admin/sla-policies': typeof AppAdminSlaPoliciesRoute
+  '/_app/admin/tags': typeof AppAdminTagsRoute
+  '/_app/admin/teams': typeof AppAdminTeamsRoute
   '/_app/admin/users': typeof AppAdminUsersRoute
   '/_app/tickets/': typeof AppTicketsIndexRoute
 }
@@ -113,8 +149,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth/sign-in'
     | '/auth/sign-up'
+    | '/admin/categories'
     | '/admin/permissions'
     | '/admin/roles'
+    | '/admin/sla-policies'
+    | '/admin/tags'
+    | '/admin/teams'
     | '/admin/users'
     | '/tickets/'
   fileRoutesByTo: FileRoutesByTo
@@ -124,8 +164,12 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/'
+    | '/admin/categories'
     | '/admin/permissions'
     | '/admin/roles'
+    | '/admin/sla-policies'
+    | '/admin/tags'
+    | '/admin/teams'
     | '/admin/users'
     | '/tickets'
   id:
@@ -136,8 +180,12 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/_app/'
+    | '/_app/admin/categories'
     | '/_app/admin/permissions'
     | '/_app/admin/roles'
+    | '/_app/admin/sla-policies'
+    | '/_app/admin/tags'
+    | '/_app/admin/teams'
     | '/_app/admin/users'
     | '/_app/tickets/'
   fileRoutesById: FileRoutesById
@@ -205,6 +253,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminUsersRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
+    '/_app/admin/teams': {
+      id: '/_app/admin/teams'
+      path: '/teams'
+      fullPath: '/admin/teams'
+      preLoaderRoute: typeof AppAdminTeamsRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/tags': {
+      id: '/_app/admin/tags'
+      path: '/tags'
+      fullPath: '/admin/tags'
+      preLoaderRoute: typeof AppAdminTagsRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/admin/sla-policies': {
+      id: '/_app/admin/sla-policies'
+      path: '/sla-policies'
+      fullPath: '/admin/sla-policies'
+      preLoaderRoute: typeof AppAdminSlaPoliciesRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
     '/_app/admin/roles': {
       id: '/_app/admin/roles'
       path: '/roles'
@@ -219,18 +288,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminPermissionsRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
+    '/_app/admin/categories': {
+      id: '/_app/admin/categories'
+      path: '/categories'
+      fullPath: '/admin/categories'
+      preLoaderRoute: typeof AppAdminCategoriesRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
   }
 }
 
 interface AppAdminRouteRouteChildren {
+  AppAdminCategoriesRoute: typeof AppAdminCategoriesRoute
   AppAdminPermissionsRoute: typeof AppAdminPermissionsRoute
   AppAdminRolesRoute: typeof AppAdminRolesRoute
+  AppAdminSlaPoliciesRoute: typeof AppAdminSlaPoliciesRoute
+  AppAdminTagsRoute: typeof AppAdminTagsRoute
+  AppAdminTeamsRoute: typeof AppAdminTeamsRoute
   AppAdminUsersRoute: typeof AppAdminUsersRoute
 }
 
 const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminCategoriesRoute: AppAdminCategoriesRoute,
   AppAdminPermissionsRoute: AppAdminPermissionsRoute,
   AppAdminRolesRoute: AppAdminRolesRoute,
+  AppAdminSlaPoliciesRoute: AppAdminSlaPoliciesRoute,
+  AppAdminTagsRoute: AppAdminTagsRoute,
+  AppAdminTeamsRoute: AppAdminTeamsRoute,
   AppAdminUsersRoute: AppAdminUsersRoute,
 }
 
