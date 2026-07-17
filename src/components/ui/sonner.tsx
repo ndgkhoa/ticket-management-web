@@ -8,15 +8,15 @@ import {
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 import type { CSSProperties } from 'react';
 
-import { usePreferencesStore } from '~/stores/preferences';
+import { useTheme } from '~/components/theme-provider';
 
 /**
- * Toaster wired to the preference store rather than next-themes (shadcn's default),
- * since this app owns its theme in Zustand. `system` is passed straight through —
- * sonner resolves it against the OS itself.
+ * Toaster wired to the app's ThemeProvider rather than next-themes (shadcn's default),
+ * so it matches light/dark. `system` is passed straight through — sonner resolves it
+ * against the OS itself.
  */
 const Toaster = ({ ...props }: ToasterProps) => {
-  const theme = usePreferencesStore((state) => state.theme);
+  const { theme } = useTheme();
 
   return (
     <Sonner
