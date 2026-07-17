@@ -18,10 +18,10 @@ const Dashboard = () => {
             </p>
           </div>
           <div className="space-x-4">
-            <Button size="large" type="primary">
-              {t('Dashboard.GetStarted')}
+            <Button size="lg">{t('Dashboard.GetStarted')}</Button>
+            <Button size="lg" variant="outline">
+              {t('Dashboard.LearnMore')}
             </Button>
-            <Button size="large"> {t('Dashboard.LearnMore')}</Button>
           </div>
         </div>
       </div>

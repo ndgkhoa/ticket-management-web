@@ -13,11 +13,7 @@ export const ErrorBoundaryFallback = ({ resetErrorBoundary }: FallbackProps) => 
       status="500"
       title="500"
       subTitle="Sorry, something went wrong."
-      extra={
-        <Button type="primary" onClick={onBack}>
-          Trở về trang chủ
-        </Button>
-      }
+      extra={<Button onClick={onBack}>Back to home</Button>}
     />
   );
 };

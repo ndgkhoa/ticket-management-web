@@ -13,11 +13,7 @@ export const NotFound = () => {
       status="404"
       title="404"
       subTitle="Sorry, the page you visited does not exist."
-      extra={
-        <Button type="primary" onClick={onBack}>
-          Trở về trang chủ
-        </Button>
-      }
+      extra={<Button onClick={onBack}>Back to home</Button>}
     />
   );
 };

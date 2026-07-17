@@ -46,7 +46,9 @@ export const Container = (props: Props) => {
           <Flex gap="small">
             {showBackButton && (
               <Tooltip destroyOnHidden title={tooltipTitle ?? 'Trở về'}>
-                <Button type="text" icon={<Undo2 />} onClick={onBack} />
+                <Button variant="ghost" size="icon" onClick={onBack}>
+                  <Undo2 />
+                </Button>
               </Tooltip>
             )}
             <h1 className="m-0 text-2xl font-medium">{title}</h1>

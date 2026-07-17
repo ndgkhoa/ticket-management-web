@@ -6,6 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Fallback title only: pages set their own via React 19's native metadata. -->
     <title>Ticket Management</title>
+    <!--
+      Set the theme class before React paints. A Vite SPA renders this HTML first, so
+      without this a reload in dark mode flashes light while the JS loads and the store
+      rehydrates. Reads the same localStorage key the Zustand preferences store persists
+      to, resolving `system` against the OS. Wrapped in try/catch so a blocked or
+      malformed store can never keep the app from rendering.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('preferences-storage');
+          var choice = stored ? JSON.parse(stored).state.theme : 'system';
+          var dark =
+            choice === 'dark' ||
+            (choice === 'system' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {
+          /* no stored preference — default light */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

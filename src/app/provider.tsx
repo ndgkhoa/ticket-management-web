@@ -8,7 +8,9 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { router } from '~/app/router';
 import { queryClient } from '~/lib/query-client';
 import { subscribeToAuth, useAuthStore } from '~/stores/auth';
+import { subscribeToTheme } from '~/lib/theme';
 import { FullscreenFallback, ErrorBoundaryFallback } from '~/components/fallbacks';
+import { Toaster } from '~/components/ui/sonner';
 import { theme } from '~/styles/theme';
 
 /**
@@ -31,9 +33,12 @@ const AppProviders = () => {
     const unsubscribeStore = useAuthStore.subscribe(() => {
       void router.invalidate();
     });
+    // Keep the <html> theme class in step with the preference and the OS setting.
+    const unsubscribeTheme = subscribeToTheme();
     return () => {
       unsubscribeAuth();
       unsubscribeStore();
+      unsubscribeTheme();
     };
   }, []);
 
@@ -43,6 +48,7 @@ const AppProviders = () => {
         <ConfigProvider theme={theme}>
           <App>
             {status === 'loading' ? <FullscreenFallback /> : <RouterProvider router={router} />}
+            <Toaster />
             <ReactQueryDevtools initialIsOpen={false} position="left" />
           </App>
         </ConfigProvider>
