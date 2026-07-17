@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none" role="img" aria-hidden="true">
+  <!-- Placeholder auth-panel illustration: an abstract support ticket + chat + resolved
+       badge, in translucent white so it sits on the blue gradient. Swap this file for a
+       real illustration later; the markup in the auth pages references it by path. -->
+  <circle cx="200" cy="200" r="170" fill="#ffffff" opacity="0.06" />
+  <circle cx="200" cy="200" r="120" fill="#ffffff" opacity="0.06" />
+
+  <!-- Ticket card -->
+  <rect x="96" y="120" width="208" height="150" rx="16" fill="#ffffff" opacity="0.95" />
+  <rect x="120" y="150" width="120" height="12" rx="6" fill="#0958d9" opacity="0.9" />
+  <rect x="120" y="176" width="160" height="8" rx="4" fill="#0a2e6b" opacity="0.25" />
+  <rect x="120" y="194" width="160" height="8" rx="4" fill="#0a2e6b" opacity="0.25" />
+  <rect x="120" y="212" width="96" height="8" rx="4" fill="#0a2e6b" opacity="0.25" />
+  <rect x="120" y="240" width="70" height="16" rx="8" fill="#1d4ed8" opacity="0.85" />
+
+  <!-- Chat bubble -->
+  <g opacity="0.95">
+    <rect x="228" y="238" width="96" height="64" rx="16" fill="#ffffff" />
+    <path d="M252 302 l0 20 l22 -20 Z" fill="#ffffff" />
+    <circle cx="252" cy="270" r="5" fill="#1d4ed8" />
+    <circle cx="276" cy="270" r="5" fill="#1d4ed8" />
+    <circle cx="300" cy="270" r="5" fill="#1d4ed8" />
+  </g>
+
+  <!-- Resolved badge -->
+  <g>
+    <circle cx="120" cy="120" r="26" fill="#22c55e" />
+    <path d="M108 120 l8 8 l16 -16" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+  </g>
+
+  <!-- Decorative dots -->
+  <circle cx="300" cy="120" r="6" fill="#ffffff" opacity="0.5" />
+  <circle cx="316" cy="140" r="4" fill="#ffffff" opacity="0.35" />
+  <circle cx="90" cy="286" r="5" fill="#ffffff" opacity="0.4" />
+</svg>

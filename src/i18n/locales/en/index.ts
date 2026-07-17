@@ -35,12 +35,18 @@ const en = {
     "FeatureComingSoon": "This feature is under development. Please try again later!"
   },
   "Login": {
-    "Google": "Sign in with Google",
+    "Google": "Continue with Google",
     "Or": "Or",
     "UserName": "Username",
     "Email": "Email",
     "PhoneNumber": "Phone",
-    "Password": "Password"
+    "Password": "Password",
+    "ConfirmPassword": "Confirm password",
+    "NoAccount": "Don't have an account?",
+    "HaveAccount": "Already have an account?",
+    "CheckEmail": "Check your inbox to confirm your account.",
+    "ShowPassword": "Show password",
+    "HidePassword": "Hide password"
   },
   "Dashboard": {
     "Welcome": "Welcome to Our Platform",
@@ -50,7 +56,8 @@ const en = {
   },
   "Sidebar": {
     "Home": "Home",
-    "Admin": "Admin"
+    "Admin": "Admin",
+    "Toggle": "Toggle sidebar"
   },
   "Fields": {
     "Permissions": "Permissions",
@@ -85,7 +92,9 @@ const en = {
     "Email": "This field must be a valid email address",
     "UserName": "3-20 characters, no spaces",
     "PhoneNumber": "This field must be a valid phone number",
-    "SelectAtLeastOne": "Please select at least one {{name}}."
+    "SelectAtLeastOne": "Please select at least one {{name}}.",
+    "PasswordMin": "Password must be at least 8 characters",
+    "PasswordMismatch": "Passwords do not match"
   }
 } as const;
 export default en;

@@ -17,6 +17,19 @@ export const authApi = {
   signInWithPassword: (email: string, password: string) =>
     supabase.auth.signInWithPassword({ email, password }),
 
+  /**
+   * Email/password sign-up. `full_name` rides in `options.data` (user metadata); the
+   * DB trigger on `auth.users` copies it onto the new `profiles` row, so the app never
+   * writes the profile itself. Whether a session comes back depends on the project's
+   * email-confirmation setting — the caller handles both (navigate vs "check your inbox").
+   */
+  signUp: (email: string, password: string, fullName: string) =>
+    supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName } },
+    }),
+
   signInWithGoogle: () =>
     supabase.auth.signInWithOAuth({
       provider: 'google',

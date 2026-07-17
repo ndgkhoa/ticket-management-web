@@ -21,6 +21,9 @@ export type { PageSize };
 type PreferencesStore = {
   pageSize: PageSize;
   setPageSize: (pageSize: PageSize) => void;
+  /** Whether the app sidebar is collapsed to an icon rail. Persisted across visits. */
+  sidebarCollapsed: boolean;
+  toggleSidebar: () => void;
 };
 
 export const usePreferencesStore = create<PreferencesStore>()(
@@ -28,6 +31,8 @@ export const usePreferencesStore = create<PreferencesStore>()(
     (set) => ({
       pageSize: DEFAULT_PAGE_SIZE,
       setPageSize: (pageSize) => set({ pageSize }),
+      sidebarCollapsed: false,
+      toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
     }),
     { name: 'preferences-storage' }
   )

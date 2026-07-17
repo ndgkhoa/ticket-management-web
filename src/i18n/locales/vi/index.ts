@@ -35,12 +35,18 @@ const vi = {
     "FeatureComingSoon": "Tính năng này đang được phát triển. Vui lòng thử lại sau!"
   },
   "Login": {
-    "Google": "Đăng nhập bằng Google",
+    "Google": "Tiếp tục với Google",
     "Or": "Hoặc",
     "UserName": "Tên đăng nhập",
     "Email": "Email",
     "PhoneNumber": "Số điện thoại",
-    "Password": "Mật khẩu"
+    "Password": "Mật khẩu",
+    "ConfirmPassword": "Xác nhận mật khẩu",
+    "NoAccount": "Chưa có tài khoản?",
+    "HaveAccount": "Đã có tài khoản?",
+    "CheckEmail": "Kiểm tra hộp thư để xác nhận tài khoản.",
+    "ShowPassword": "Hiện mật khẩu",
+    "HidePassword": "Ẩn mật khẩu"
   },
   "Dashboard": {
     "Welcome": "Chào mừng bạn đến với nền tảng của chúng tôi",
@@ -50,7 +56,8 @@ const vi = {
   },
   "Sidebar": {
     "Home": "Trang chủ",
-    "Admin": "Quản trị"
+    "Admin": "Quản trị",
+    "Toggle": "Thu gọn/mở rộng menu"
   },
   "Fields": {
     "Permissions": "Quyền",
@@ -81,7 +88,9 @@ const vi = {
     "Email": "Trường này phải là email",
     "UserName": "3-20 ký tự, không dấu cách",
     "PhoneNumber": "Trường này phải là số điện thoại",
-    "SelectAtLeastOne": "Vui lòng chọn ít nhất một {{name}}."
+    "SelectAtLeastOne": "Vui lòng chọn ít nhất một {{name}}.",
+    "PasswordMin": "Mật khẩu phải có ít nhất 8 ký tự",
+    "PasswordMismatch": "Mật khẩu không khớp"
   }
 } as const;
 export default vi;
