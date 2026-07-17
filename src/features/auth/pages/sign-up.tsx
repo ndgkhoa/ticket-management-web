@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 
-const SignUp = () => {
+function SignUp() {
   const { t } = useTranslation();
 
   return (
@@ -12,6 +12,6 @@ const SignUp = () => {
       <Link to="/auth/sign-in">Sign In</Link>
     </div>
   );
-};
+}
 
 export default SignUp;

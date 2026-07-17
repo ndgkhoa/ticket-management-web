@@ -1,63 +1,79 @@
+import { User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Avatar, Empty, Table } from 'antd';
-import { UserOutlined } from '@ant-design/icons';
-import type { TableProps } from 'antd';
 
 import { Container } from '~/components/ui';
 import { ErrorPage } from '~/components/errors';
+import { DataTableSkeleton } from '~/components/data-table';
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '~/components/ui/table';
 import { useUserList } from '~/features/admin/users/api/user-queries';
-import type { User } from '~/features/admin/users/schemas/user-schema';
 
 /**
  * Read-only user list on the Supabase data layer. Role assignment, invites and the
- * server-side paginated DataTable arrive with the design-system rebuild; this proves
+ * server-side paginated DataTable arrive with the help-desk feature phase; this proves
  * the profiles query and RLS work for a signed-in admin.
  */
-const Users = () => {
+function Users() {
   const { t } = useTranslation();
   const userQuery = useUserList();
-
-  const columns: TableProps<User>['columns'] = [
-    {
-      title: t('Fields.FullName'),
-      dataIndex: 'fullName',
-      key: 'fullName',
-      width: 320,
-      render: (fullName: string | null, user) => (
-        <span className="inline-flex items-center gap-2">
-          <Avatar size="small" src={user.avatarUrl} icon={<UserOutlined />} />
-          {fullName ?? '—'}
-        </span>
-      ),
-    },
-    {
-      title: t('Fields.Email'),
-      dataIndex: 'email',
-      key: 'email',
-    },
-  ];
 
   if (userQuery.isError) {
     return <ErrorPage subTitle={userQuery.error.message} />;
   }
 
+  const users = userQuery.data ?? [];
+
   return (
     <Container title={t('Common.List', { name: t('Fields.User_other') })}>
-      <Table
-        bordered
-        rowKey="id"
-        loading={userQuery.isPending}
-        dataSource={userQuery.data}
-        columns={columns}
-        pagination={false}
-        locale={{
-          emptyText: (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('Common.NoData')} />
-          ),
-        }}
-      />
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">{t('Fields.Index')}</TableHead>
+              <TableHead className="w-[320px]">{t('Fields.FullName')}</TableHead>
+              <TableHead>{t('Fields.Email')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {userQuery.isPending ? (
+              <DataTableSkeleton columnCount={3} rowCount={5} />
+            ) : users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-muted-foreground h-24 text-center">
+                  {t('Common.NoData')}
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user, index) => (
+                <TableRow key={user.id}>
+                  <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-2">
+                      <Avatar className="size-7">
+                        <AvatarImage src={user.avatarUrl ?? undefined} alt={user.fullName ?? ''} />
+                        <AvatarFallback>
+                          <User className="size-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      {user.fullName ?? '—'}
+                    </span>
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </Container>
   );
-};
+}
 
 export default Users;

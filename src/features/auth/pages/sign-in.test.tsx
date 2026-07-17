@@ -5,8 +5,8 @@ import i18n from '~/i18n';
 import { render, screen } from '~/testing/render';
 
 /**
- * Exercises the shared `render` helper against a real page: providers, i18n and antd
- * all have to work together for any component test to be worth writing.
+ * Exercises the shared `render` helper against a real page: providers and i18n all
+ * have to work together for any component test to be worth writing.
  *
  * Copy is asserted as literal strings, never as `i18n.t('Common.Login')`. Comparing
  * the render against `t()` is a tautology: if i18n breaks, `t()` returns the raw key,

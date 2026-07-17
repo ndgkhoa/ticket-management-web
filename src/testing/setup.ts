@@ -6,9 +6,9 @@ import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import { server } from '~/mocks/server';
 
 /**
- * jsdom implements neither of these, and antd's rc-* internals call both during
- * render — without them every component test throws before it asserts anything.
- * They are environment gaps, not app behaviour, so they are stubbed once here
+ * jsdom implements neither of these, and the Radix/shadcn primitives (and sonner) call
+ * both during render — without them every component test throws before it asserts
+ * anything. They are environment gaps, not app behaviour, so they are stubbed once here
  * rather than in each test.
  */
 beforeAll(() => {

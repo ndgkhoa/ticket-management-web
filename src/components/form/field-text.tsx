@@ -19,7 +19,7 @@ type Props = {
  * a screen reader announces it), and `aria-invalid` flips when a touched field has an
  * error so the invalid ring shows and assistive tech knows.
  */
-export function TextField({ field, label, className, ...inputProps }: Props) {
+export function FieldText({ field, label, className, ...inputProps }: Props) {
   const hasError = field.state.meta.isTouched && field.state.meta.errors.length > 0;
 
   return (

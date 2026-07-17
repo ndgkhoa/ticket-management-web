@@ -15,7 +15,7 @@ import { useTheme } from '~/components/theme-provider';
  * so it matches light/dark. `system` is passed straight through — sonner resolves it
  * against the OS itself.
  */
-const Toaster = ({ ...props }: ToasterProps) => {
+function Toaster({ ...props }: ToasterProps) {
   const { theme } = useTheme();
 
   return (
@@ -40,6 +40,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
       {...props}
     />
   );
-};
+}
 
 export { Toaster };

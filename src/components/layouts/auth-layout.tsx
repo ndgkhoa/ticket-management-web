@@ -8,10 +8,10 @@ import { FullscreenFallback } from '~/components/fallbacks';
  * in the route's `beforeLoad` (see `routes/auth/route.tsx`), so this only renders the
  * outlet — one mechanism for the guard, not a component-level check racing it.
  */
-export const AuthLayout = () => {
+export function AuthLayout() {
   return (
     <Suspense fallback={<FullscreenFallback />}>
       <Outlet />
     </Suspense>
   );
-};
+}

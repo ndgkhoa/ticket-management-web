@@ -1,63 +1,72 @@
 import { useTranslation } from 'react-i18next';
-import { Empty, Table, Tag } from 'antd';
-import type { TableProps } from 'antd';
 
 import { Container } from '~/components/ui';
 import { ErrorPage } from '~/components/errors';
+import { DataTableSkeleton } from '~/components/data-table';
+import { Badge } from '~/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '~/components/ui/table';
 import { useRoleList } from '~/features/admin/roles/api/role-queries';
-import type { Role } from '~/features/admin/roles/schemas/role-schema';
 
 /**
  * Read-only role list on the Supabase data layer. The role-permission matrix editor
- * and CRUD arrive with the design-system rebuild; this proves the query and RLS.
+ * and CRUD arrive with the help-desk feature phase; this proves the query and RLS.
  */
-const Roles = () => {
+function Roles() {
   const { t } = useTranslation();
   const roleQuery = useRoleList();
-
-  const columns: TableProps<Role>['columns'] = [
-    {
-      title: t('Fields.RoleName'),
-      dataIndex: 'name',
-      key: 'name',
-      width: 220,
-      render: (name: string, role) =>
-        role.isSystem ? (
-          <>
-            {name} <Tag>{t('Common.System')}</Tag>
-          </>
-        ) : (
-          name
-        ),
-    },
-    {
-      title: t('Fields.Description'),
-      dataIndex: 'description',
-      key: 'description',
-    },
-  ];
 
   if (roleQuery.isError) {
     return <ErrorPage subTitle={roleQuery.error.message} />;
   }
 
+  const roles = roleQuery.data ?? [];
+
   return (
     <Container title={t('Common.List', { name: t('Fields.Role_other') })}>
-      <Table
-        bordered
-        rowKey="id"
-        loading={roleQuery.isPending}
-        dataSource={roleQuery.data}
-        columns={columns}
-        pagination={false}
-        locale={{
-          emptyText: (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('Common.NoData')} />
-          ),
-        }}
-      />
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">{t('Fields.Index')}</TableHead>
+              <TableHead className="w-[220px]">{t('Fields.RoleName')}</TableHead>
+              <TableHead>{t('Fields.Description')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {roleQuery.isPending ? (
+              <DataTableSkeleton columnCount={3} rowCount={5} />
+            ) : roles.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-muted-foreground h-24 text-center">
+                  {t('Common.NoData')}
+                </TableCell>
+              </TableRow>
+            ) : (
+              roles.map((role, index) => (
+                <TableRow key={role.id}>
+                  <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-2">
+                      {role.name}
+                      {role.isSystem && <Badge variant="secondary">{t('Common.System')}</Badge>}
+                    </span>
+                  </TableCell>
+                  <TableCell>{role.description}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </Container>
   );
-};
+}
 
 export default Roles;

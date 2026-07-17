@@ -8,7 +8,12 @@ import { DataTableViewOptions } from '~/components/data-table/data-table-view-op
 import { useDebouncedValue } from '~/components/data-table/use-debounced-value';
 
 type Props<TData> = {
-  table: Table<TData>;
+  /**
+   * The table instance — only needed for the column-visibility menu. `DataTable` owns
+   * its table internally and doesn't expose it, so a screen using that wrapper omits
+   * this and the view-options menu is simply not rendered.
+   */
+  table?: Table<TData>;
   /** Current keyword (from the URL). Undefined when no search is active. */
   search?: string;
   onSearchChange: (value: string | undefined) => void;
@@ -22,7 +27,7 @@ type Props<TData> = {
 
 /**
  * List toolbar: a debounced search box, a slot for faceted filters, a reset button
- * when anything is active, and the column-visibility menu.
+ * when anything is active, and (when a table is supplied) the column-visibility menu.
  *
  * The search input keeps its own responsive local state and only writes the settled
  * value out through `onSearchChange` (300ms debounce), so typing doesn't fire a
@@ -44,7 +49,13 @@ export function DataTableToolbar<TData>({
   // Push the settled input out to the URL. Blank collapses to undefined so the search
   // clause is dropped, not run against ''.
   useEffect(() => {
-    onSearchChange(debounced.trim() === '' ? undefined : debounced.trim());
+    const next = debounced.trim() === '' ? undefined : debounced.trim();
+    // Only write when the settled value actually differs from the URL. Without this
+    // guard the effect fires on mount (and on every external URL sync) with the current
+    // value, and since a `{ q }` patch is page-resetting, a deep-linked `?page=N` would
+    // silently snap back to page 1.
+    if (next === (search ?? undefined)) return;
+    onSearchChange(next);
     // onSearchChange identity is the caller's concern; depending on `debounced` only
     // keeps this to "write when the settled value changes".
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,7 +81,7 @@ export function DataTableToolbar<TData>({
           <X className="ml-2 size-4" />
         </Button>
       )}
-      <DataTableViewOptions table={table} />
+      {table && <DataTableViewOptions table={table} />}
     </div>
   );
 }

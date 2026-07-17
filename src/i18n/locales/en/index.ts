@@ -15,7 +15,20 @@ const en = {
     "Confirm": "Confirm",
     "Search": "Search",
     "Upload": "Upload",
-    "NoData": "No data"
+    "NoData": "No data",
+    "NoResults": "No results match your filters",
+    "ClearFilters": "Clear filters",
+    "Back": "Back",
+    "BackToHome": "Back to home",
+    "Loading": "Loading…",
+    "Language": "Language",
+    "Theme": "Theme"
+  },
+  "Errors": {
+    "ServerErrorTitle": "Something went wrong",
+    "ServerErrorDescription": "Sorry, an unexpected error occurred.",
+    "NotFoundTitle": "Page not found",
+    "NotFoundDescription": "Sorry, the page you visited does not exist."
   },
   "App": {
     "Name": "Help Desk",
@@ -59,6 +72,7 @@ const en = {
     "Index": "No.",
     "Description": "Description",
     "CreatedDate": "Created At",
+    "Tickets": "Tickets",
     "Ticket_one": "ticket",
     "Ticket_other": "tickets",
     "Subject": "Subject",

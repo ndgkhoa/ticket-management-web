@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '~/components/ui';
 
-const Dashboard = () => {
+function Dashboard() {
   const { t } = useTranslation();
 
   return (
@@ -27,6 +27,6 @@ const Dashboard = () => {
       </div>
     </section>
   );
-};
+}
 
 export default Dashboard;

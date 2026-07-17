@@ -1,10 +1,11 @@
-import { Flex, Tooltip } from 'antd';
 import { Undo2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useRouter } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
 import { cn } from '~/utils';
 import { Button } from '~/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
 
 interface Props {
   title?: string;
@@ -14,15 +15,15 @@ interface Props {
   stickyHeader?: boolean;
 }
 
-export const Container = (props: Props) => {
+export function Container(props: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const router = useRouter();
   const { title, children, extraRight, showBack = false, stickyHeader = false } = props;
 
-  const onBack = () => {
+  const handleBack = () => {
     // Boolean = go back in history; an explicit link navigates there. The cast bridges
-    // the free-form `link` prop to the typed router until this antd component is
-    // replaced in the design-system phase.
+    // the free-form `link` prop to the typed router (the value is always a real route).
     if (typeof showBack === 'boolean') {
       router.history.back();
     } else if (showBack?.link) {
@@ -32,31 +33,38 @@ export const Container = (props: Props) => {
 
   const showContainerHeader = Boolean(title) || Boolean(extraRight);
   const showBackButton = typeof showBack === 'boolean' ? showBack : showBack?.enabled;
-  const tooltipTitle = typeof showBack === 'boolean' ? 'Trở về' : showBack?.tootipTitle;
+  const tooltipTitle =
+    typeof showBack === 'boolean' ? t('Common.Back') : (showBack?.tootipTitle ?? t('Common.Back'));
 
   return (
-    <div className="relative h-full overflow-auto">
+    // No `overflow-auto` here — the scroll lives on the layout's <main>. A second scroll
+    // container nested inside it produced two scrollbars for the same content.
+    <div className="relative h-full">
       {showContainerHeader && (
-        <Flex
-          align="center"
-          justify="space-between"
-          className={cn('!py-2', { 'sticky top-0 z-10': stickyHeader })}
-          gap="small"
+        <div
+          className={cn('flex items-center justify-between gap-2 py-2', {
+            'bg-background sticky top-0 z-10': stickyHeader,
+          })}
         >
-          <Flex gap="small">
+          <div className="flex items-center gap-2">
             {showBackButton && (
-              <Tooltip destroyOnHidden title={tooltipTitle ?? 'Trở về'}>
-                <Button variant="ghost" size="icon" onClick={onBack}>
-                  <Undo2 />
-                </Button>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={handleBack}>
+                      <Undo2 />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{tooltipTitle}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
             <h1 className="m-0 text-2xl font-medium">{title}</h1>
-          </Flex>
+          </div>
           {extraRight}
-        </Flex>
+        </div>
       )}
       {children}
     </div>
   );
-};
+}

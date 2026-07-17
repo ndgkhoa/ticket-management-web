@@ -34,10 +34,19 @@ mechanical.
 ## Naming
 
 - **Files/dirs:** kebab-case, descriptive (`use-ticket-list.ts`, not `hooks.ts`). **No
-  exceptions for entry files** — `app/provider.tsx`, not `AppProviders.tsx`. The rule is
-  worthless if the root files break it.
+  exceptions for entry files** — `app/app.tsx`, not `App.tsx`. The rule is worthless if the
+  root files break it. The kebab file name need not match the exported symbol 1:1:
+  `main-layout.tsx` exports `MainLayout`.
 - **Variables/functions:** camelCase. **Components/Types/Interfaces:** PascalCase — the
   _symbol_, not the filename: `export function TicketTable()` lives in `ticket-table.tsx`.
+- **Components are function declarations**, not arrow consts: `export function Foo()` /
+  `function Foo() {}` + `export default Foo`. It matches the React + shadcn convention,
+  hoists, and gives named stack traces. Arrow functions are for callbacks, handlers and
+  inline props; a memoised component keeps the wrapper with a named function expression:
+  `export const Foo = memo(function Foo() {})`.
+- **Folders:** a collection of peers is plural (`errors`, `fallbacks`, `icons`, `layouts`,
+  `pages`, `schemas`, `hooks`); a single cohesive subsystem or uncountable noun is singular
+  (`ui`, `form`, `data-table`, `api`, `config`, `lib`).
 - **Constants:** UPPER_SNAKE for true constants.
 - Boolean names read as predicates: `isLoading`, `hasPermission`, `canAssign`.
 - Leaked backend PascalCase fields (`Id`, `AccessToken`, `User`) map to camelCase at the
@@ -48,7 +57,7 @@ mechanical.
 
 ```
 src/
-  app/                  # application shell — provider.tsx, app.tsx (router.tsx in phase 04)
+  app/                  # application shell — app.tsx (root: providers + router), router.tsx
   routes/               # TanStack Router tree (phase 04)
   components/ui/        # shared UI primitives
   components/           # shared composed components (layouts, inputs, fallbacks)
@@ -64,7 +73,7 @@ src/
   lib/                  # configured third-party clients (axios, query-client)
   utils/                # pure helpers, zero app deps (cn, format)
   stores/               # global Zustand state (auth session, preferences)
-  i18n/, styles/, assets/, types/   # global-only
+  i18n/, styles/, types/            # global-only
 ```
 
 **Boundary rules** — these exist because the repo previously had three overlapping buckets:
@@ -151,8 +160,9 @@ Every list screen obeys all of it. Reviewers reject partial compliance.
 
 ## Forms
 
-- TanStack Form + Zod schema colocated in `schemas/`; types via `z.infer`. _Status: target
-  (Phase 05/06); forms are antd `Form` today._
+- TanStack Form + Zod schema colocated in `schemas/`; types via `z.infer`. _Status: adopted in
+  Phase 05 — the sign-in form uses TanStack Form + Zod + the `FieldText`/`FieldError` family
+  (`components/form/`); antd `Form` is gone._
 - **Validation lives in the schema, next to the field it guards** — not in a shared bucket of
   patterns. A separate regex file is a second source of truth for validation: reading the form
   no longer tells you the rule.

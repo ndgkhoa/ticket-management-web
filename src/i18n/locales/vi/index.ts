@@ -15,7 +15,20 @@ const vi = {
     "Confirm": "Xác nhận",
     "Search": "Tìm kiếm",
     "Upload": "Tải lên",
-    "NoData": "Không có dữ liệu"
+    "NoData": "Không có dữ liệu",
+    "NoResults": "Không có kết quả phù hợp với bộ lọc",
+    "ClearFilters": "Xóa bộ lọc",
+    "Back": "Trở về",
+    "BackToHome": "Về trang chủ",
+    "Loading": "Đang tải…",
+    "Language": "Ngôn ngữ",
+    "Theme": "Giao diện"
+  },
+  "Errors": {
+    "ServerErrorTitle": "Đã có lỗi xảy ra",
+    "ServerErrorDescription": "Xin lỗi, đã xảy ra lỗi không mong muốn.",
+    "NotFoundTitle": "Không tìm thấy trang",
+    "NotFoundDescription": "Xin lỗi, trang bạn truy cập không tồn tại."
   },
   "App": {
     "Name": "Hỗ trợ khách hàng",
@@ -56,6 +69,7 @@ const vi = {
     "Index": "STT",
     "Description": "Mô tả",
     "CreatedDate": "Ngày tạo",
+    "Tickets": "Phiếu",
     "Ticket_other": "phiếu",
     "Subject": "Tiêu đề",
     "Status": "Trạng thái",

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import logoMark from '/images/logo-mark.svg';
 import { LoginForm } from '~/features/auth/components/login-form';
 
-const SignIn = () => {
+function SignIn() {
   const { t } = useTranslation();
 
   return (
@@ -34,6 +34,6 @@ const SignIn = () => {
       </div>
     </>
   );
-};
+}
 
 export default SignIn;

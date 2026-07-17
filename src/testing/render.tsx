@@ -7,12 +7,11 @@ import {
 } from '@tanstack/react-router';
 import { render as rtlRender } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ConfigProvider, App as AntApp } from 'antd';
 import type { AnyRouter } from '@tanstack/react-router';
 import type { RenderOptions } from '@testing-library/react';
 import type { ReactElement } from 'react';
 
-import { theme } from '~/styles/theme';
+import { ThemeProvider } from '~/components/theme-provider';
 
 /**
  * A fresh QueryClient per render — never the app singleton from `lib/query-client`.
@@ -61,16 +60,14 @@ export const renderWithProviders = async (
   await router.load();
 
   const result = rtlRender(
-    <QueryClientProvider client={queryClient}>
-      <ConfigProvider theme={theme}>
-        <AntApp>
-          {/* The ad-hoc test router isn't the registered app router, so its type
-              doesn't match RouterProvider's generic — a mismatch inherent to
-              rendering an arbitrary element as a route. */}
-          <RouterProvider router={router as unknown as AnyRouter} />
-        </AntApp>
-      </ConfigProvider>
-    </QueryClientProvider>,
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        {/* The ad-hoc test router isn't the registered app router, so its type
+            doesn't match RouterProvider's generic — a mismatch inherent to
+            rendering an arbitrary element as a route. */}
+        <RouterProvider router={router as unknown as AnyRouter} />
+      </QueryClientProvider>
+    </ThemeProvider>,
     options
   );
 

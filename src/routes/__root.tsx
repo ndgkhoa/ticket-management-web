@@ -29,12 +29,12 @@ function RootComponent() {
     <>
       <Outlet />
       <Suspense fallback={null}>
-        <RouterDevtools position="bottom-right" />
+        <RouterDevtools position="bottom-left" />
       </Suspense>
     </>
   );
 }
 
-// The root intentionally renders no providers: QueryClient, antd's ConfigProvider and
-// the outer error boundary wrap `RouterProvider` in `app/provider.tsx`, so they exist
-// above the router and cover it.
+// The root intentionally renders no providers: the ThemeProvider, QueryClient and the
+// outer error boundary wrap `RouterProvider` in `app/provider.tsx`, so they exist above
+// the router and cover it.
