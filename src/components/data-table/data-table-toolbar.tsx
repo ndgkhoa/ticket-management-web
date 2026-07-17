@@ -2,8 +2,7 @@ import { X } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Table } from '@tanstack/react-table';
 
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
+import { Button, Input } from '~/components/ui';
 import { DataTableViewOptions } from '~/components/data-table/data-table-view-options';
 import { useDebouncedValue } from '~/components/data-table/use-debounced-value';
 

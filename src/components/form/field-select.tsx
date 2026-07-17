@@ -1,14 +1,14 @@
 import type { AnyFieldApi } from '@tanstack/react-form';
 
-import { Label } from '~/components/ui/label';
 import { FieldError } from '~/components/form/field-error';
 import {
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select';
+} from '~/components/ui';
 
 type Option = { value: string; label: string };
 

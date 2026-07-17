@@ -1,5 +1,4 @@
-import { Skeleton } from '~/components/ui/skeleton';
-import { TableCell, TableRow } from '~/components/ui/table';
+import { Skeleton, TableCell, TableRow } from '~/components/ui';
 
 type Props = {
   columnCount: number;

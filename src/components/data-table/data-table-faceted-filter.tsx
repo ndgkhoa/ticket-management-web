@@ -1,9 +1,9 @@
 import { Check, PlusCircle } from 'lucide-react';
 
 import { cn } from '~/utils/cn';
-import { Badge } from '~/components/ui/badge';
-import { Button } from '~/components/ui/button';
 import {
+  Badge,
+  Button,
   Command,
   CommandEmpty,
   CommandGroup,
@@ -11,9 +11,11 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from '~/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
-import { Separator } from '~/components/ui/separator';
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Separator,
+} from '~/components/ui';
 
 export type FacetOption = {
   label: string;

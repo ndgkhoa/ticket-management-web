@@ -5,14 +5,14 @@ import { useTranslation } from 'react-i18next';
 
 import { Constants } from '~/lib/database.types';
 import { FieldSelect, FieldText } from '~/components/form';
-import { Button } from '~/components/ui/button';
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog';
+} from '~/components/ui';
 import {
   useSlaPolicyCreate,
   useSlaPolicyUpdate,

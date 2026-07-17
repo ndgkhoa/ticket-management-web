@@ -2,8 +2,7 @@ import type { AnyFieldApi } from '@tanstack/react-form';
 import type { ComponentProps } from 'react';
 
 import { cn } from '~/utils/cn';
-import { Label } from '~/components/ui/label';
-import { Textarea } from '~/components/ui/textarea';
+import { Label, Textarea } from '~/components/ui';
 import { FieldError } from '~/components/form/field-error';
 
 type Props = {

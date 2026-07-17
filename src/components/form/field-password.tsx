@@ -5,8 +5,7 @@ import type { AnyFieldApi } from '@tanstack/react-form';
 import type { ComponentProps } from 'react';
 
 import { cn } from '~/utils/cn';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
+import { Input, Label } from '~/components/ui';
 import { FieldError } from '~/components/form/field-error';
 
 type Props = {

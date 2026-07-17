@@ -1,15 +1,15 @@
 import { SlidersHorizontal } from 'lucide-react';
 import type { Table } from '@tanstack/react-table';
 
-import { Button } from '~/components/ui/button';
 import {
+  Button,
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu';
+} from '~/components/ui';
 
 type Props<TData> = {
   table: Table<TData>;

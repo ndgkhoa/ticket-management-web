@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from '@tanstack/react-router';
 
 import { env } from '~/config/env';
-import { Button } from '~/components/ui/button';
+import { Button } from '~/components/ui';
 import { authApi } from '~/features/auth/api/auth-api';
 import { DEMO_LOGIN } from '~/features/auth/constants/demo-login';
 

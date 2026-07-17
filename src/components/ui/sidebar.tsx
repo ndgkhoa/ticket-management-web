@@ -5,7 +5,6 @@ import {
   Home,
   Inbox,
   KeyRound,
-  ShieldCheck,
   Tags,
   Timer,
   UserCog,
@@ -82,10 +81,12 @@ export const Sidebar = memo(function Sidebar() {
     { to: '/tickets', icon: Inbox, label: t('Fields.Tickets') },
   ];
 
+  // Access control first (users → their roles → the permissions those roles grant), then
+  // the help-desk configuration tables. Permissions is read-only, so it trails the trio.
   const admin: NavItem[] = [
-    { to: '/admin/permissions', icon: KeyRound, label: t('Fields.Permissions') },
-    { to: '/admin/roles', icon: UserCog, label: t('Fields.Roles') },
     { to: '/admin/users', icon: Users, label: t('Fields.Users') },
+    { to: '/admin/roles', icon: UserCog, label: t('Fields.Roles') },
+    { to: '/admin/permissions', icon: KeyRound, label: t('Fields.Permissions') },
     { to: '/admin/teams', icon: UsersRound, label: t('Fields.Teams') },
     { to: '/admin/categories', icon: FolderTree, label: t('Fields.Categories') },
     { to: '/admin/tags', icon: Tags, label: t('Fields.Tags') },
@@ -120,8 +121,7 @@ export const Sidebar = memo(function Sidebar() {
               {collapsed ? (
                 <div className="border-sidebar-border/50 my-2 border-t" />
               ) : (
-                <div className="text-sidebar-foreground/60 flex items-center gap-2 px-3 pt-4 pb-1 text-xs font-medium tracking-wide uppercase">
-                  <ShieldCheck className="size-3.5" />
+                <div className="text-sidebar-foreground/60 px-3 pt-4 pb-1 text-xs font-medium tracking-wide uppercase">
                   {t('Sidebar.Admin')}
                 </div>
               )}

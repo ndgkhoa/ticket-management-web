@@ -1,4 +1,4 @@
-import { Badge } from '~/components/ui/badge';
+import { Badge } from '~/components/ui';
 import type { TicketPriority } from '~/features/tickets/schemas/ticket-enums';
 
 // Colour per priority, typed by the enum so a new priority is a compile error until styled.

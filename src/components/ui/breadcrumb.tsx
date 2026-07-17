@@ -1,18 +1,43 @@
 import { Fragment } from 'react';
-import { ChevronRight, Home, ShieldCheck } from 'lucide-react';
+import { ChevronRight, Home } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from '@tanstack/react-router';
-import type { ReactNode } from 'react';
 
-// Derived from the current path. The `admin` group has no page of its own, so it maps
-// back to home; the derived string is cast to a router path since every value here is a
-// real, currently-navigable route.
+// The derived path is cast to a router path since every navigable value here is a real,
+// currently-navigable route.
 type RoutePath = '/';
 
-const specialSegments: Record<string, ReactNode> = {
-  admin: <ShieldCheck className="size-4" />,
+// Path segments that are group prefixes without a page of their own — rendered as plain
+// text, never a link (`/admin` only redirects to its first child).
+const NON_NAVIGABLE_SEGMENTS = new Set(['admin']);
+
+// Path segment → i18n key, so a crumb reads in the active language. A segment with no
+// entry (a future id, say) falls back to its capitalised raw value — never a raw key.
+type LabelKey =
+  | 'Sidebar.Admin'
+  | 'Fields.Tickets'
+  | 'Fields.Users'
+  | 'Fields.Roles'
+  | 'Fields.Permissions'
+  | 'Fields.Teams'
+  | 'Fields.Categories'
+  | 'Fields.Tags'
+  | 'Fields.SlaPolicies';
+
+const SEGMENT_LABELS: Record<string, LabelKey> = {
+  admin: 'Sidebar.Admin',
+  tickets: 'Fields.Tickets',
+  users: 'Fields.Users',
+  roles: 'Fields.Roles',
+  permissions: 'Fields.Permissions',
+  teams: 'Fields.Teams',
+  categories: 'Fields.Categories',
+  tags: 'Fields.Tags',
+  'sla-policies': 'Fields.SlaPolicies',
 };
 
 export function Breadcrumb() {
+  const { t } = useTranslation();
   const { pathname } = useLocation();
   const segments = pathname.split('/').filter(Boolean);
 
@@ -20,11 +45,17 @@ export function Breadcrumb() {
 
   const items = segments.map((value, index) => {
     const isLast = index === segments.length - 1;
-    const special = specialSegments[value];
-    const to = special ? '/' : `/${segments.slice(0, index + 1).join('/')}`;
-    const label = special ?? <span className="capitalize">{value}</span>;
+    const labelKey = SEGMENT_LABELS[value];
 
-    return { key: `${value}-${index}`, isLast, to, label };
+    return {
+      key: `${value}-${index}`,
+      isLast,
+      navigable: !isLast && !NON_NAVIGABLE_SEGMENTS.has(value),
+      to: `/${segments.slice(0, index + 1).join('/')}`,
+      label: labelKey ? t(labelKey) : value,
+      // Only the raw-value fallback needs title-casing; translated labels are already cased.
+      isFallback: labelKey === undefined,
+    };
   });
 
   return (
@@ -39,17 +70,20 @@ export function Breadcrumb() {
           <Fragment key={item.key}>
             <ChevronRight className="size-3.5" />
             <li>
-              {item.isLast ? (
-                <span aria-current="page" className="text-foreground flex items-center font-medium">
-                  {item.label}
-                </span>
-              ) : (
+              {item.navigable ? (
                 <Link
                   to={item.to as RoutePath}
-                  className="hover:text-foreground flex items-center transition-colors"
+                  className={`hover:text-foreground flex items-center transition-colors ${item.isFallback ? 'capitalize' : ''}`}
                 >
                   {item.label}
                 </Link>
+              ) : (
+                <span
+                  aria-current={item.isLast ? 'page' : undefined}
+                  className={`text-foreground flex items-center font-medium ${item.isFallback ? 'capitalize' : ''}`}
+                >
+                  {item.label}
+                </span>
               )}
             </li>
           </Fragment>

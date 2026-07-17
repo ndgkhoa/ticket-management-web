@@ -4,14 +4,14 @@ import { useForm } from '@tanstack/react-form';
 import { useTranslation } from 'react-i18next';
 
 import { FieldText } from '~/components/form';
-import { Button } from '~/components/ui/button';
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog';
+} from '~/components/ui';
 import { useTagCreate, useTagUpdate } from '~/features/admin/tags/api/tag-queries';
 import type { Tag } from '~/features/admin/tags/schemas/tag-schema';
 

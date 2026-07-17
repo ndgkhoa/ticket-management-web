@@ -2,8 +2,7 @@ import { Inbox, SearchX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
 
-import { Button } from '~/components/ui/button';
-import { Container } from '~/components/ui';
+import { Button, Container } from '~/components/ui';
 import { TicketStatusBadge } from '~/features/tickets/components/ticket-status-badge';
 import { TicketPriorityBadge } from '~/features/tickets/components/ticket-priority-badge';
 import { ErrorPage } from '~/components/errors';

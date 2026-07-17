@@ -2,7 +2,7 @@ import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
 import type { Column } from '@tanstack/react-table';
 
 import { cn } from '~/utils/cn';
-import { Button } from '~/components/ui/button';
+import { Button } from '~/components/ui';
 
 type Props<TData, TValue> = {
   column: Column<TData, TValue>;

@@ -3,14 +3,14 @@ import type { Table } from '@tanstack/react-table';
 
 import { PAGE_SIZES, type PageSize } from '~/lib/list-query';
 import { usePreferencesStore } from '~/stores/preferences';
-import { Button } from '~/components/ui/button';
 import {
+  Button,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '~/components/ui/select';
+} from '~/components/ui';
 
 type Props<TData> = {
   table: Table<TData>;

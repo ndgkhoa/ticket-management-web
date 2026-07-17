@@ -1,18 +1,20 @@
 import { User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { Container } from '~/components/ui';
 import { ErrorPage } from '~/components/errors';
 import { DataTableSkeleton } from '~/components/data-table';
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Container,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '~/components/ui/table';
+} from '~/components/ui';
 import { useUserList } from '~/features/admin/users/api/user-queries';
 
 /**

@@ -9,7 +9,7 @@ import { queryClient } from '~/lib/query-client';
 import { subscribeToAuth, useAuthStore } from '~/stores/auth';
 import { ThemeProvider } from '~/components/theme-provider';
 import { FullscreenFallback, ErrorBoundaryFallback } from '~/components/fallbacks';
-import { Toaster } from '~/components/ui/sonner';
+import { Toaster } from '~/components/ui';
 
 /**
  * App shell. The provider order, outermost first: the ThemeProvider (owns light/dark),

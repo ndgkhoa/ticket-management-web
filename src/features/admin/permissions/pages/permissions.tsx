@@ -1,16 +1,16 @@
 import { useTranslation } from 'react-i18next';
 
-import { Container } from '~/components/ui';
 import { ErrorPage } from '~/components/errors';
 import { DataTableSkeleton } from '~/components/data-table';
 import {
+  Container,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '~/components/ui/table';
+} from '~/components/ui';
 import { usePermissionList } from '~/features/admin/permissions/api/permission-queries';
 
 /**

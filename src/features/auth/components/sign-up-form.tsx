@@ -5,7 +5,7 @@ import { useForm } from '@tanstack/react-form';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from '@tanstack/react-router';
 
-import { Button } from '~/components/ui/button';
+import { Button } from '~/components/ui';
 import { FieldText, FieldPassword } from '~/components/form';
 import { useSignUp } from '~/features/auth/api/use-sign-up';
 import { GoogleButton } from '~/features/auth/components/google-button';

@@ -3,15 +3,15 @@ import { toast } from 'sonner';
 import { useForm } from '@tanstack/react-form';
 import { useTranslation } from 'react-i18next';
 
-import { Button } from '~/components/ui/button';
 import { FieldText, FieldTextarea } from '~/components/form';
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '~/components/ui/dialog';
+} from '~/components/ui';
 import { useTeamCreate, useTeamUpdate } from '~/features/admin/teams/api/team-queries';
 import type { Team } from '~/features/admin/teams/schemas/team-schema';
 

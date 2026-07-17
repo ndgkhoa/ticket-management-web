@@ -10,14 +10,7 @@ import {
 import type { ReactNode } from 'react';
 
 import { cn } from '~/utils/cn';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '~/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui';
 import { DataTablePagination } from '~/components/data-table/data-table-pagination';
 import { DataTableSkeleton } from '~/components/data-table/data-table-skeleton';
 

@@ -1,4 +1,4 @@
-import { Badge } from '~/components/ui/badge';
+import { Badge } from '~/components/ui';
 import type { TicketStatus } from '~/features/tickets/schemas/ticket-enums';
 
 // Colour per status, typed by the enum so a new status is a compile error until styled.

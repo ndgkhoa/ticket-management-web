@@ -2,7 +2,7 @@ import { Inbox, SearchX } from 'lucide-react';
 import type { Meta, StoryObj } from '@storybook/tanstack-react';
 import type { ColumnDef } from '@tanstack/react-table';
 
-import { Button } from '~/components/ui/button';
+import { Button } from '~/components/ui';
 import { DataTable } from '~/components/data-table/data-table';
 import { DataTableEmptyState } from '~/components/data-table/data-table-empty-state';
 
