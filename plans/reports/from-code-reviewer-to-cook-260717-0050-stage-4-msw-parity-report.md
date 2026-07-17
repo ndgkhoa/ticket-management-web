@@ -13,11 +13,11 @@ The parity test is a **REAL guard, not a vacuous one** — I broke the applier 3
 
 Broke the applier three ways, ran `bun run test:parity` each time:
 
-| Break (file:line) | Result |
-|---|---|
-| Flip sort direction — `apply-list-query.ts:111` `dir==='asc' ? -cmp : cmp` | **13/13 RED** |
-| Remove FTS→trgm fallback — `apply-list-query.ts:141` `result = ftsMatches` | **1 RED** (`search q=payme`) |
-| Enum sort → string order (`status: r => r.status` in test config) | **1 RED** (`sort status asc`) |
+| Break (file:line)                                                          | Result                        |
+| -------------------------------------------------------------------------- | ----------------------------- |
+| Flip sort direction — `apply-list-query.ts:111` `dir==='asc' ? -cmp : cmp` | **13/13 RED**                 |
+| Remove FTS→trgm fallback — `apply-list-query.ts:141` `result = ftsMatches` | **1 RED** (`search q=payme`)  |
+| Enum sort → string order (`status: r => r.status` in test config)          | **1 RED** (`sort status asc`) |
 
 If the Supabase side were secretly the applier (doMock failure, swallowed error), breaking the applier would keep both sides equal → green. It went red. Also: `beforeAll` throws on sign-in error, `runOnce` throws on query error, `server.close()` disables MSW, and an un-authed client would hit RLS and return 0 rows ≠ applier. **No vacuous-pass path found.** Harness is sound.
 
@@ -39,7 +39,7 @@ q = "time-sensitive"
 
 Verified end-to-end via a temp integration test (now deleted): `ticketApi.list({q:'time-sensitive'}).totalCount = 27`, `applyListQuery(...).totalCount = 0`. The word lives only in descriptions; the applier's hyphen-tokenization miss drops it to a subject-only trgm scan that finds nothing.
 
-`sign-in` (20) and `two-factor` (18) happen to match (those words appear in *subjects*, so the subject-only trgm fallback coincidentally equals the FTS count). Corpus has 122 rows with hyphenated words (`sign-in`, `two-factor`, `one-off`, `month-end`, `time-sensitive`). A help-desk user WILL search these. When search is wired to the UI (Phase 06), demo (MSW) and prod (Supabase) return different result sets for the same query.
+`sign-in` (20) and `two-factor` (18) happen to match (those words appear in _subjects_, so the subject-only trgm fallback coincidentally equals the FTS count). Corpus has 122 rows with hyphenated words (`sign-in`, `two-factor`, `one-off`, `month-end`, `time-sensitive`). A help-desk user WILL search these. When search is wired to the UI (Phase 06), demo (MSW) and prod (Supabase) return different result sets for the same query.
 
 Impact: real correctness gap, not a demo-only curiosity. **Fix options:** (a) mirror Postgres hyphen handling in `tokenize` (also emit the compound token and the leading-hyphen numeric form), or (b) accept the gap explicitly and add hyphenated-word cases to the parity matrix so it's a known, asserted divergence rather than a silent one. The bare-number case is also affected: PG keeps `-18905` as the lexeme, JS produces `18905`; `websearch('18905')` FTS-misses in PG but the applier's tokens contain `18905` — currently same count only because no 5-digit number appears in any description.
 
@@ -48,6 +48,7 @@ Impact: real correctness gap, not a demo-only curiosity. **Fix options:** (a) mi
 `apply-list-query.ts:107-109` forces **nulls last for every direction**, with a comment claiming this "matches Postgres default for DESC ordering." That claim is false. PostgREST/Postgres default is NULLS **LAST for ASC, NULLS FIRST for DESC** (no `nullsfirst` is emitted — builder `list-query-builder.ts:92` calls `.order(field,{ascending})` only).
 
 Proof (live PostgREST, `resolved_at` has 204 nulls):
+
 ```
 GET /rest/v1/tickets?order=resolved_at.desc  → first 3 rows all resolved_at=null  (NULLS FIRST)
 applier compareRows for desc                 → nulls forced to the end            (NULLS LAST)
@@ -60,11 +61,12 @@ Why the parity test stays green: the only **nullable + sortable** column is `due
 ### MEDIUM-1 — 13 cases miss the combination dimensions that break sorts/paging — SUSPECTED
 
 Coverage gaps (none currently red, but they're where the remaining divergences would hide):
+
 - No **search + sort** case (e.g. `q=refund` + `sort priority desc`) — search changes the set, then the enum-tiebreak sort runs over it; untested.
 - No **search + filter + sort** triple.
 - No **page beyond last** / last-page-of-a-filtered-search (keepPreviousData paging over a short result).
 - No **null in the sorted column** (blocked by seed — see HIGH-2).
-- `page 2` uses default pageSize 20; no non-default pageSize case, and pagination bugs often only appear at page N>1 of a *non-unique* primary sort (status/priority) — the `combined` case sorts priority desc but only checks page 1.
+- `page 2` uses default pageSize 20; no non-default pageSize case, and pagination bugs often only appear at page N>1 of a _non-unique_ primary sort (status/priority) — the `combined` case sorts priority desc but only checks page 1.
 
 Add a handful of these; they're cheap and target exactly the untested interactions.
 

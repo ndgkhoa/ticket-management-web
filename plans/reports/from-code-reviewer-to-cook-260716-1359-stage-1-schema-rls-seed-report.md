@@ -27,7 +27,7 @@ with check (public.has_permission((select auth.uid()), 'ticket.update'));
 
 The predicate is a pure permission check with **no reference to `assignee_id`, `team_id` or
 `requester_id`**. It relies entirely on the `tickets_select` policy to scope the rows — and Postgres
-only applies SELECT policies to an UPDATE when the statement *references table columns* (i.e. has a
+only applies SELECT policies to an UPDATE when the statement _references table columns_ (i.e. has a
 WHERE clause). An UPDATE with no filter references nothing, so `tickets_select` never runs and
 `tickets_update` matches every row in the table.
 
@@ -54,7 +54,7 @@ begin;
 rollback;
 ```
 
-Contrast, same agent, same intent, *with* a filter — proving the mechanism:
+Contrast, same agent, same intent, _with_ a filter — proving the mechanism:
 
 ```sql
   select count(*) from public.tickets where id='00000009-0000-4000-8000-000000000002';  -- 0 (invisible)
@@ -69,10 +69,11 @@ with their own JWT; an honest developer needs one missing filter in Stage 3.
 `Prefer: return=representation` does **not** save you — I tested `returning`, still 500 rows.
 
 What holds up, and why it matters for the fix:
+
 - Customers are safe (`UPDATE 0`) — decision 3 (no customer update policy) is load-bearing, keep it.
 - `delete from public.tickets` as agent → `DELETE 0`, agents lack `ticket.delete`. But note the same
   shape exists in `tickets_delete` (`:235-237`): permission-only, no row scope. An admin has
-  `ticket.read.all` so it is not an escalation *today*; it becomes one the moment any role gets
+  `ticket.read.all` so it is not an escalation _today_; it becomes one the moment any role gets
   `ticket.delete` without `ticket.read.all`.
 
 Fix — mirror the select policy's row scope into the update policy:
@@ -88,7 +89,7 @@ using (
 )
 ```
 
-Apply the same to `with check` (else an agent updates a visible ticket *into* invisibility, or onto
+Apply the same to `with check` (else an agent updates a visible ticket _into_ invisibility, or onto
 another team) and to `tickets_delete`. **Do not** rely on SELECT-policy composition — this test is
 exactly why.
 
@@ -136,7 +137,7 @@ begin;
 rollback;
 ```
 
-Exploitability, honestly: PostgREST never emits TRUNCATE, so there is no *current* HTTP path. This
+Exploitability, honestly: PostgREST never emits TRUNCATE, so there is no _current_ HTTP path. This
 is a latent landmine + a false comment, not a live breach — hence High, not Critical. It becomes
 live the day anyone adds a `security invoker` RPC in `public`, or connects with the anon/authenticated
 role directly. The append-only guarantee in `grants.sql:40-48` and `ticket_core.sql:76-77` is
@@ -200,7 +201,7 @@ rollback;
 
 `actor_id` pinning limits it to events attributed to themselves, so this is timeline pollution and
 dispute-time spoofing ("the system says it was solved"), not impersonation. Append-only protects the
-trail from *edits* while leaving it open to *fabrication* — an audit trail whose subject can write
+trail from _edits_ while leaving it open to _fabrication_ — an audit trail whose subject can write
 arbitrary entries is weaker than it reads. Events are a system-of-record concern: they should be
 written by triggers or a `security definer` RPC, not client inserts. If client inserts stay for
 Stage 1, gate non-`commented` event types on `ticket.update`.
@@ -217,7 +218,7 @@ begin;
 rollback;
 ```
 
-`profiles_update` is correctly self-scoped, but RLS cannot restrict *columns*, so "edit your own
+`profiles_update` is correctly self-scoped, but RLS cannot restrict _columns_, so "edit your own
 profile" includes `email`. `auth.users.email` is unaffected → the two silently desync, and
 `profiles.email` is the one the app renders. With no unique constraint, a customer can set their
 email to `admin@demo.local` and impersonate on every screen that shows a requester. Same root cause
@@ -326,6 +327,7 @@ supabase/seed.sql is out of sync with src/mocks/fixtures.
 Run `bun run seed:gen` and commit the result.
 exit=1
 ```
+
 …and the tree was left clean (`seed.sql` byte-identical to the committed version afterwards).
 
 ### L3 — attachments have zero seed rows; insert path is visibility-blind (read path holds)
@@ -359,19 +361,19 @@ Both are cohesive and I would not split them for the count alone; noting for the
 
 Executed, all correctly denied or correctly scoped:
 
-| Test | Result |
-|---|---|
-| Customer reads another customer's ticket | 14 visible, `where requester_id <> self` → **0** |
-| Customer `count(*)` leaks totals | **14**, not 500 — aggregates are RLS-filtered, no disclosure |
-| Customer reads internal notes | **0** of 1020 messages; 32 visible, all `public_reply` |
-| Customer reads `canned_responses` | **0** |
-| Customer enumerates profiles | **7** — self + 5 agents + demo agent; verified all 5 are role=`agent`, zero customers leaked |
-| Customer forges `author_id` on message | `new row violates row-level security policy` |
-| Customer posts `internal_note` | `new row violates row-level security policy` |
-| Customer inserts ticket as another requester | `new row violates row-level security policy` |
-| Customer self-escalates via `user_roles` insert | `new row violates row-level security policy` |
-| Customer mass-update (C1 trick) | **UPDATE 0** — decision 3 is load-bearing |
-| Agent unfiltered DELETE | **DELETE 0** |
+| Test                                            | Result                                                                                       |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Customer reads another customer's ticket        | 14 visible, `where requester_id <> self` → **0**                                             |
+| Customer `count(*)` leaks totals                | **14**, not 500 — aggregates are RLS-filtered, no disclosure                                 |
+| Customer reads internal notes                   | **0** of 1020 messages; 32 visible, all `public_reply`                                       |
+| Customer reads `canned_responses`               | **0**                                                                                        |
+| Customer enumerates profiles                    | **7** — self + 5 agents + demo agent; verified all 5 are role=`agent`, zero customers leaked |
+| Customer forges `author_id` on message          | `new row violates row-level security policy`                                                 |
+| Customer posts `internal_note`                  | `new row violates row-level security policy`                                                 |
+| Customer inserts ticket as another requester    | `new row violates row-level security policy`                                                 |
+| Customer self-escalates via `user_roles` insert | `new row violates row-level security policy`                                                 |
+| Customer mass-update (C1 trick)                 | **UPDATE 0** — decision 3 is load-bearing                                                    |
+| Agent unfiltered DELETE                         | **DELETE 0**                                                                                 |
 
 Grant/policy pairing: I enumerated all 16 tables. **No grant-without-policy and no
 policy-without-grant** in the DML subset — the class of bug from last time is fixed. `profiles` has
