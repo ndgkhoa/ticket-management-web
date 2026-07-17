@@ -107,24 +107,36 @@ The one component every list depends on. Build it against the `code-standards.md
 5. Set up Storybook + Chromatic; author stories + visual regression baseline.
 6. Add Chromatic job to CI.
 
-## Todo
+## Progress (in flight — 5a/5b done, 5c/5d remaining)
 
-- [ ] shadcn init + Tailwind theme + dark mode — decide Zustand store vs ThemeProvider (one, not
-      both), union-typed, `pageSize` default persisted, **no FOUC on hard refresh**
-- [ ] Core primitives owned
-- [ ] Reusable DataTable — manual pagination/sorting/filtering, URL-controlled, `getRowId`, `rowCount`
-- [ ] Toolbar: debounced search (300ms), faceted filters, filter chips, column visibility
-- [ ] Pagination bar: page-size select (persisted preference), `x–y of N`, boundary-disabled controls
-- [ ] Empty / no-results / skeleton / placeholder-dimmed states
-- [ ] Reusable Form (TanStack Form + Zod)
-- [ ] antd fully removed — **plus its orbit**: `@ant-design/icons` (20 files → lucide-react),
-      `@ant-design/v5-patch-for-react-19`, `lodash` + `@types/lodash`
-- [ ] `forwardRef` gone — `ref` passed as a normal prop (React 19)
-- [ ] **No Vietnamese string literals left in `src/`** — the audit found 8 outside the locale
-      files (`notification.ts`, `confirmation-button.tsx`, `permission-form.tsx`,
-      `update-user-roles-modal.tsx`). They are scattered and no lint rule catches them, so make
-      it a done-check: grep `src/` for Vietnamese diacritics, expect 0 hits outside `i18n/`.
-- [ ] Storybook + Chromatic + CI job
+Staged 5a→5d, one commit per stage. **Decisions taken:** dark mode = **shadcn ThemeProvider**
+(Vite guide) not Zustand — user reversed the initial Zustand pick to follow the docs; theme lives
+under `vite-ui-theme`, pageSize stays in the Zustand preferences store, FOUC script in index.html
+kept. Storybook only, **Chromatic deferred** (needs the user's token).
+
+- [x] shadcn init + Tailwind theme + dark mode — ThemeProvider + ModeToggle (Vite guide), `pageSize`
+      persisted, FOUC script verified (no flash on hard refresh).
+- [x] Core primitives owned — button, input, select, dialog, dropdown-menu, popover, tooltip, badge,
+      avatar, tabs, sheet, skeleton, label, checkbox, command, table, separator, sonner.
+- [x] Reusable DataTable — manual pagination/sorting/filtering, URL-controlled, `getRowId`, `rowCount`.
+- [x] Toolbar (debounced 300ms search + view options + faceted filter slot), faceted filter (URL-controlled).
+- [x] Pagination bar: page-size select (persisted preference), `x–y of N`, boundary-disabled controls.
+- [x] Empty / no-results / skeleton / placeholder-dimmed states — 5 DataTable tests prove them.
+- [x] Reusable Form (TanStack Form + Zod) — TextField + FieldError.
+- [ ] **5c — antd fully removed** — plus its orbit: `@ant-design/icons` (→ lucide-react),
+      `@ant-design/v5-patch-for-react-19`, `lodash` + `@types/lodash`. Migrate 26 antd sites screen by
+      screen onto the shadcn primitives + DataTable; provider drops antd `ConfigProvider`/`App` and the
+      test harness (`render.tsx`) drops them too; delete `styles/theme.ts`.
+- [ ] **5c — `forwardRef` gone** — `ref` passed as a normal prop (React 19). NOTE: the shadcn primitives
+      already avoid it; check remaining app code.
+- [ ] **5c — No Vietnamese string literals in `src/`** — done-check: grep `src/` for VN diacritics → 0
+      outside `i18n/`. Known spots survived into shadcn-era throwaway (not-found/error-fallback now use
+      plain English placeholders — localise properly when rebuilt).
+- [ ] **5d — Storybook + stories** (Chromatic deferred, document the wire-up).
+
+**Next session starts at 5c.** Groundwork (primitives, DataTable, Form, theme) is committed and green;
+5c wires screens + removes antd. Verify a **production build** after `bun remove antd` (resolution differs
+from dev), and re-run e2e.
 
 ## Success criteria
 
