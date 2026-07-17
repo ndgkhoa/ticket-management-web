@@ -1,71 +1,73 @@
+import { KeyRound } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { ColumnDef } from '@tanstack/react-table';
 
-import { Container } from '~/components/ui';
-import { ErrorPage } from '~/components/errors';
-import { DataTableSkeleton } from '~/components/data-table';
-import { Badge } from '~/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '~/components/ui/table';
-import { useRoleList } from '~/features/admin/roles/api/role-queries';
+import { Badge, Button } from '~/components/ui';
+import { DataTableColumnHeader } from '~/components/data-table';
+import { AdminCrudPage } from '~/features/admin/shared/admin-crud-page';
+import { useRoleList, useRoleRemove } from '~/features/admin/roles/api/role-queries';
+import { RoleFormDialog } from '~/features/admin/roles/components/role-form-dialog';
+import { RolePermissionsDialog } from '~/features/admin/roles/components/role-permissions-dialog';
+import type { Role } from '~/features/admin/roles/schemas/role-schema';
 
-/**
- * Read-only role list on the Supabase data layer. The role-permission matrix editor
- * and CRUD arrive with the help-desk feature phase; this proves the query and RLS.
- */
 function Roles() {
   const { t } = useTranslation();
-  const roleQuery = useRoleList();
+  const query = useRoleList();
+  const remove = useRoleRemove();
+  // The role whose permission matrix is open (null = closed).
+  const [permissionsRole, setPermissionsRole] = useState<Role | null>(null);
 
-  if (roleQuery.isError) {
-    return <ErrorPage subTitle={roleQuery.error.message} />;
-  }
-
-  const roles = roleQuery.data ?? [];
+  const columns: ColumnDef<Role>[] = [
+    {
+      accessorKey: 'name',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('Fields.RoleName')} />
+      ),
+      cell: ({ row }) => (
+        <span className="inline-flex items-center gap-2">
+          {row.original.name}
+          {row.original.isSystem && <Badge variant="secondary">{t('Common.System')}</Badge>}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'description',
+      header: t('Fields.Description'),
+      cell: ({ row }) => row.original.description ?? '—',
+    },
+  ];
 
   return (
-    <Container title={t('Common.List', { name: t('Fields.Role_other') })}>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">{t('Fields.Index')}</TableHead>
-              <TableHead className="w-[220px]">{t('Fields.RoleName')}</TableHead>
-              <TableHead>{t('Fields.Description')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {roleQuery.isPending ? (
-              <DataTableSkeleton columnCount={3} rowCount={5} />
-            ) : roles.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={3} className="text-muted-foreground h-24 text-center">
-                  {t('Common.NoData')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              roles.map((role, index) => (
-                <TableRow key={role.id}>
-                  <TableCell className="text-muted-foreground">{index + 1}</TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center gap-2">
-                      {role.name}
-                      {role.isSystem && <Badge variant="secondary">{t('Common.System')}</Badge>}
-                    </span>
-                  </TableCell>
-                  <TableCell>{role.description}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </Container>
+    <>
+      <AdminCrudPage
+        entityKey="Fields.Role"
+        query={query}
+        remove={remove}
+        columns={columns}
+        // Seeded roles are load-bearing for RLS — the UI refuses to delete them.
+        canDelete={(role) => !role.isSystem}
+        rowActions={(role) => (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t('Fields.RolePermissions')}
+            onClick={() => setPermissionsRole(role)}
+          >
+            <KeyRound className="size-4" />
+          </Button>
+        )}
+        renderForm={(props) => <RoleFormDialog {...props} role={props.entity} />}
+      />
+
+      {permissionsRole && (
+        <RolePermissionsDialog
+          open
+          onOpenChange={(open) => !open && setPermissionsRole(null)}
+          role={permissionsRole}
+        />
+      )}
+    </>
   );
 }
 

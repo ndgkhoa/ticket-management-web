@@ -5,17 +5,16 @@ import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 
-import { Container } from '~/components/ui';
-import { Button } from '~/components/ui/button';
+import { Button, ConfirmDialog, Container } from '~/components/ui';
 import { ErrorPage } from '~/components/errors';
 import { ClientDataTable } from '~/components/data-table';
-import { ConfirmDialog } from '~/components/ui/confirm-dialog';
 
 type Entity = { id: string };
 
 /** The lookup entities this shell serves — a plural i18n base key (`Fields.Category`
  *  resolves `_one`/`_other` via `count`). Kept a literal union so `t()` stays type-safe. */
-export type AdminEntityKey = 'Fields.Category' | 'Fields.Tag' | 'Fields.Team' | 'Fields.SlaPolicy';
+export type AdminEntityKey =
+  'Fields.Category' | 'Fields.Tag' | 'Fields.Team' | 'Fields.SlaPolicy' | 'Fields.Role';
 
 type Props<T extends Entity> = {
   /** i18n key for the entity name, e.g. `Fields.Category` — pluralised via `count`. */
@@ -29,6 +28,10 @@ type Props<T extends Entity> = {
     onOpenChange: (open: boolean) => void;
     entity: T | null;
   }) => ReactNode;
+  /** Extra per-row action(s) rendered before edit/delete (e.g. a role's permissions). */
+  rowActions?: (entity: T) => ReactNode;
+  /** Gate the delete action per row — e.g. a seeded system role can't be removed. */
+  canDelete?: (entity: T) => boolean;
 };
 
 /**
@@ -43,6 +46,8 @@ export function AdminCrudPage<T extends Entity>({
   remove,
   columns,
   renderForm,
+  rowActions,
+  canDelete,
 }: Props<T>) {
   const { t } = useTranslation();
   const [form, setForm] = useState<{ open: boolean; entity: T | null }>({
@@ -71,6 +76,7 @@ export function AdminCrudPage<T extends Entity>({
     header: () => <div className="text-right">{t('Fields.Actions')}</div>,
     cell: ({ row }) => (
       <div className="flex justify-end gap-1">
+        {rowActions?.(row.original)}
         <Button
           variant="ghost"
           size="icon"
@@ -79,14 +85,16 @@ export function AdminCrudPage<T extends Entity>({
         >
           <Pencil className="size-4" />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t('Common.Delete', { name: singular })}
-          onClick={() => setDeleteTarget(row.original)}
-        >
-          <Trash2 className="size-4" />
-        </Button>
+        {(canDelete?.(row.original) ?? true) && (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t('Common.Delete', { name: singular })}
+            onClick={() => setDeleteTarget(row.original)}
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        )}
       </div>
     ),
   };

@@ -39,9 +39,11 @@ Full create/edit/delete for the four bounded lookup tables on a client-side tabl
 - **MSW write layer:** `mocks/lib/table-store.ts` (mutable seeded store + `resetTableStores` wired into test setup); `mocks/handlers/make-table-handler.ts` now serves POST/PATCH/DELETE (opt-in `writable`, so tickets/profiles/roles/permissions stay read-only).
 - **Shared UI/logic:** `components/data-table/client-data-table.tsx` (`manualPagination:false`), `components/form/{field-textarea,field-select}` + `components/ui/textarea`, `components/ui/confirm-dialog`, and `features/admin/shared/{use-crud-queries (list+mutations factory), admin-crud-page (generic shell)}`.
 - **Entities:** `features/admin/{categories,tags,teams,sla-policies}/**` (schema/keys/api/queries/form-dialog/page) + routes + sidebar nav. i18n namespaces extended (also reconciled a pre-existing yaml↔generated drift).
-- Tests: `write-handlers.test.ts` (CRUD over MSW) + `e2e/admin-categories.spec.ts` (in-browser create). Green: tsc, 75 unit, lint, 9 e2e, lang:check.
+- Tests: `write-handlers.test.ts` (CRUD over MSW) + `e2e/admin-categories.spec.ts` (in-browser create).
 
-**Still TODO in 6b:** users (+role assign), roles (+permission matrix), permissions, canned_responses (server-side). Then ⬜ 6c Ticket list · 6d Create/detail · 6e Realtime · 6f Tests.
+**Roles CRUD + permission matrix — DONE.** `features/admin/roles/**` rebuilt on `AdminCrudPage` (extended with `rowActions` + `canDelete`): role CRUD (name/description; created roles are non-system; **system roles can't be deleted**) + a **permission matrix** dialog (checkboxes writing the `role_permissions` junction). New MSW **junction layer** for composite-key tables (`mocks/lib/table-store.ts` `createJunctionStore` + `mocks/handlers/make-junction-handler.ts`; guards empty-match delete + dedups inserts). Tests: `role-crud.test.ts` + `e2e/admin-role-permissions.spec.ts` (in-browser toggle). Green: tsc, 79 unit, lint, 10 e2e, lang:check.
+
+**Still TODO in 6b:** users (list + role assign; **not** create/delete — auth-coupled, needs service_role), canned_responses (server-side). **permissions stays read-only** (catalogue mirrors the RLS policies; editing it from the UI can only desync — the editable thing is role→permission assignment, done above). Then ⬜ 6c Ticket list · 6d Create/detail · 6e Realtime · 6f Tests.
 
 Per-table pagination (user-confirmed): **users** = server-side (full list contract, like tickets); **roles/permissions/teams/categories/tags/sla_policies** = client-side (fetch-all, `manualPagination:false`, bounded). Realtime/Storage/bulk-RPC = live Supabase only.
 

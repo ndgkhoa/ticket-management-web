@@ -51,6 +51,55 @@ export function createTableStore<Row extends Identifiable>(seed: readonly Row[])
   };
 }
 
+export type JunctionStore<Row> = {
+  all: () => Row[];
+  insert: (row: Row) => Row;
+  /** Remove every row matching all of the given column values (composite-key delete). */
+  removeWhere: (match: Record<string, string>) => void;
+  reset: () => void;
+};
+
+/**
+ * A store for a composite-key junction table (`role_permissions`, `user_roles`) — the
+ * rows have no `id`, so membership is keyed by the pair of foreign keys. Same re-seed
+ * discipline as `createTableStore`, sharing the reset registry.
+ */
+export function createJunctionStore<Row extends Record<string, unknown>>(
+  seed: readonly Row[]
+): JunctionStore<Row> {
+  const clone = () => seed.map((row) => ({ ...row }));
+  let rows: Row[] = clone();
+
+  const reset = () => {
+    rows = clone();
+  };
+  resets.push(reset);
+
+  const matches = (row: Row, match: Record<string, string>) =>
+    Object.entries(match).every(([column, value]) => String(row[column]) === value);
+
+  return {
+    all: () => rows,
+    // Skip a duplicate composite key — the real table has a composite PK and would 409,
+    // and the matrix should never hold two of the same membership row.
+    insert: (row) => {
+      const existing = rows.find((existingRow) =>
+        Object.keys(row).every((column) => existingRow[column] === row[column])
+      );
+      if (existing) return existing;
+      rows = [...rows, row];
+      return row;
+    },
+    removeWhere: (match) => {
+      // An empty match would delete everything (`.every` over no entries is true) — the
+      // same unfiltered-delete footgun PostgREST has. Refuse it rather than truncate.
+      if (Object.keys(match).length === 0) return;
+      rows = rows.filter((row) => !matches(row, match));
+    },
+    reset,
+  };
+}
+
 /** Reset every store to its seed — called from the test setup so mutations don't leak. */
 export function resetTableStores(): void {
   for (const reset of resets) reset();

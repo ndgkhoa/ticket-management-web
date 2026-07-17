@@ -6,5 +6,6 @@
 export const roleKeys = {
   all: ['roles'] as const,
   list: () => [...roleKeys.all, 'list'] as const,
-  detail: (id: string) => [...roleKeys.all, 'detail', id] as const,
+  /** The permission-id set granted to a role (the matrix editor). */
+  permissions: (id: string) => [...roleKeys.all, 'permissions', id] as const,
 };
