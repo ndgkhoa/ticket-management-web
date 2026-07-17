@@ -85,8 +85,22 @@ async function resolveSession(session: Session | null) {
     return;
   }
 
-  const permissions = await fetchPermissions(session.user.id).catch(() => new Set<string>());
-  useAuthStore.getState().applySession(session, permissions);
+  try {
+    const permissions = await fetchPermissions(session.user.id);
+    useAuthStore.getState().applySession(session, permissions);
+  } catch {
+    // A permission fetch can fail on a transient blip — notably during a background
+    // token refresh, which re-resolves the session every ~hour. Downgrading an
+    // already-authenticated admin to zero permissions would bounce them off the admin
+    // area until a manual reload, so keep the set already loaded for this same user.
+    // Only a brand-new session with no prior set falls back to empty (correct: they
+    // are logged in but nothing has told us what they may do yet). RLS is the real
+    // guard server-side; this only governs which screens the client offers.
+    const prev = useAuthStore.getState();
+    const keptPermissions =
+      prev.user?.id === session.user.id ? prev.permissions : new Set<string>();
+    useAuthStore.getState().applySession(session, keptPermissions);
+  }
 }
 
 /**

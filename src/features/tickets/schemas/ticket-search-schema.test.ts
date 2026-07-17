@@ -29,14 +29,15 @@ describe('ticketSearchSchema', () => {
     expect(ticketSearchSchema.parse({ sort: 'not_a_column' }).sort).toBe('created_at');
   });
 
-  it('validates filter values against their enums, dropping invalid ones', () => {
+  it('validates filter values against their enums', () => {
     expect(ticketSearchSchema.parse({ status: ['open', 'pending'] }).status).toEqual([
       'open',
       'pending',
     ]);
-    // An invalid enum value falls back to undefined — it never reaches the data layer
-    // (where it would raise a Postgres 22P02 on the enum column).
+    // Any invalid member drops the WHOLE filter to undefined (all-or-nothing) — it
+    // never reaches the data layer, where it would raise a Postgres 22P02.
     expect(ticketSearchSchema.parse({ status: ['garbage'] }).status).toBeUndefined();
+    expect(ticketSearchSchema.parse({ status: ['open', 'garbage'] }).status).toBeUndefined();
     expect(ticketSearchSchema.parse({ assigneeId: 'not-a-uuid' }).assigneeId).toBeUndefined();
   });
 

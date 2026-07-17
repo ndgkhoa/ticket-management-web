@@ -6,11 +6,12 @@ import { ticketPrioritySchema, ticketStatusSchema } from '~/features/tickets/sch
 /**
  * The ticket list URL contract.
  *
- * Flat and URL-shaped on purpose (`?status=open&status=pending&sort=priority&dir=asc`)
- * rather than the nested `{ filters, sort: { field, dir } }` the data layer speaks —
- * a clean, hand-editable URL is the point. `toTicketListParams` bridges the two, so
- * URL and API stay one source of truth without forcing the URL to carry the API's
- * shape.
+ * Flat rather than the nested `{ filters, sort: { field, dir } }` the data layer
+ * speaks: `page`, `pageSize`, `sort`, `dir` are top-level, and `toTicketListParams`
+ * bridges the two so URL and API stay one source of truth without forcing the URL to
+ * carry the API's shape. Arrays (`status`, `priority`) are JSON-encoded by the
+ * router's default search serializer (`?status=%5B%22open%22%5D`), not repeated
+ * params — the URL is shareable and refresh-stable, though not hand-typed.
  *
  * `z.coerce` because search params arrive as strings, and `.catch()` everywhere a bad
  * value is survivable: hand-editing a param to garbage falls back to the default
@@ -32,9 +33,12 @@ export const ticketSearchSchema = z.object({
     .trim()
     .transform((value) => (value.length === 0 ? undefined : value))
     .optional(),
-  // Filter values are validated against the enums here, at the URL boundary, and a
-  // bad value falls back to "no filter" rather than crashing the route — which also
-  // means an invalid enum can never reach the data layer and raise a Postgres 22P02.
+  // Filter values are validated against the enums here, at the URL boundary. A filter
+  // array with ANY invalid member falls back to `undefined` (the whole filter, not
+  // just the bad element) rather than crashing the route — so an invalid enum can
+  // never reach the data layer and raise a Postgres 22P02. All-or-nothing is fine
+  // because these arrays are app-generated from valid values; a mixed array only
+  // arises from tampering, where dropping the filter is a safe response.
   status: z.array(ticketStatusSchema).optional().catch(undefined),
   priority: z.array(ticketPrioritySchema).optional().catch(undefined),
   assigneeId: z.uuid().optional().catch(undefined),

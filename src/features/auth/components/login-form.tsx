@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Divider, Input, Button, Form, Flex, App } from 'antd';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { GoogleIcon } from '~/components/icons';
 import { useSignIn } from '~/features/auth/api/use-sign-in';
@@ -17,12 +17,17 @@ export const LoginForm = () => {
   const navigate = useNavigate();
 
   const { mutate: signIn, isPending } = useSignIn();
+  // Where the guard sent them from, already validated to an internal path by the
+  // sign-in route schema. `strict: false` reads it without pinning this component to
+  // that one route, so it also renders in isolation (tests) where there is no match.
+  const { redirect } = useSearch({ strict: false }) as { redirect?: string };
 
   const onLogin = (values: LoginFormValues) => {
     signIn(values, {
       // Success sets no state here: the SDK emits SIGNED_IN and the auth store
-      // reacts through onAuthStateChange. This component only navigates.
-      onSuccess: () => navigate({ to: '/' }),
+      // reacts through onAuthStateChange. This component only navigates — back to
+      // where the user was headed, or home.
+      onSuccess: () => navigate({ to: redirect ?? '/' }),
       onError: () => message.error(t('Validation.Mismatch')),
     });
   };

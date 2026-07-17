@@ -123,6 +123,27 @@ the data layer and raising a Postgres 22P02.
 
 Type-safe `<Link>`/navigation (compile-time route + params checking); guards block unauthorized routes; no react-router-dom left. Deep-linking a filtered+sorted+paged list URL reproduces the exact same view after refresh; hand-editing a param to garbage falls back to defaults instead of crashing.
 
+## Review follow-ups
+
+Fixed from the Phase 04 review:
+
+- **H1** — a permission fetch failing during a background token refresh downgraded an authenticated
+  admin to zero permissions and bounced them off `/admin`. `resolveSession` now keeps the prior
+  permission set on failure for the same user; only a brand-new session with no prior set falls to empty.
+- **M1** — redirect-after-login was dead (guard set `?redirect`, form always went home) and the param
+  was unvalidated (latent open-redirect). The form now navigates to it, and the route schema constrains
+  it to an internal path (`/…`, not `//…`).
+- **M2/M3** — corrected the search-schema comments to match reality: arrays are JSON-encoded by the
+  router (not repeated params), and an invalid enum member drops the whole filter (all-or-nothing), not
+  per-element. Added a mixed valid+invalid test.
+
+Accepted, not fixed:
+
+- **L1** — boot issues two concurrent permission fetches (getSession + INITIAL_SESSION). Minor; the H1
+  fix removes the harmful case (a failing second fetch no longer clobbers a good first result).
+- **L2** — `page` is not clamped to the last page; a huge value returns an empty page (the data layer
+  handles the out-of-range range gracefully — see Stage 4). Cosmetic.
+
 ## Risks
 
 - File-based route generation config with Vite — follow official plugin setup.
