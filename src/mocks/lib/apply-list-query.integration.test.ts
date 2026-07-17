@@ -1,11 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { Constants } from '~/lib/database.types';
 import { listParamsSchema, type ListParams } from '~/lib/list-query';
-import { applyListQuery, type ApplyListConfig } from '~/mocks/lib/apply-list-query';
+import { applyListQuery } from '~/mocks/lib/apply-list-query';
+import { ticketListConfig } from '~/mocks/config/ticket-list-config';
 import { ticketRows } from '~/mocks/fixtures';
-import type { TicketRow } from '~/mocks/fixtures/row-types';
 // Type-only: erased at runtime, so importing it does not load the module before the
 // beforeAll doMock repoints its supabase client.
 import type { ticketApi as ImportedTicketApi } from '~/features/tickets/api/ticket-api';
@@ -31,38 +30,6 @@ const URL = 'http://127.0.0.1:54321';
 // The fixed local-dev anon key — identical on every machine, not a secret.
 const ANON =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
-
-// Enum columns sort by their DEFINITION order in Postgres, not alphabetically — the
-// single most likely parity trap. The accessors map to the enum's ordinal so the
-// in-memory sort agrees with `order by status`.
-const STATUS_ORDER = Constants.public.Enums.ticket_status;
-const PRIORITY_ORDER = Constants.public.Enums.ticket_priority;
-
-const applyConfig: ApplyListConfig<TicketRow> = {
-  filterable: {
-    status: (r) => r.status,
-    priority: (r) => r.priority,
-    channel: (r) => r.channel,
-    assignee_id: (r) => r.assignee_id,
-    team_id: (r) => r.team_id,
-    category_id: (r) => r.category_id,
-  },
-  searchText: (r) => `${r.subject} ${r.description}`,
-  fallbackText: (r) => r.subject,
-  sortAccessors: {
-    created_at: (r) => r.created_at,
-    updated_at: (r) => r.updated_at,
-    due_at: (r) => r.due_at,
-    status: (r) => STATUS_ORDER.indexOf(r.status),
-    priority: (r) => PRIORITY_ORDER.indexOf(r.priority),
-    id: (r) => r.id,
-  },
-  defaultSort: { field: 'created_at', dir: 'desc' },
-  tiebreakers: [
-    { field: 'created_at', dir: 'desc' },
-    { field: 'id', dir: 'desc' },
-  ],
-};
 
 const CASES: Record<string, Partial<ListParams>> = {
   default: {},
@@ -121,7 +88,7 @@ describe.skipIf(!RUN)('list-query parity: MSW applier vs live Supabase', () => {
     const params = listParamsSchema.parse(partial);
 
     const supabaseResult = await ticketApi.list(params);
-    const mswResult = applyListQuery(ticketRows, params, applyConfig);
+    const mswResult = applyListQuery(ticketRows, params, ticketListConfig);
 
     expect(mswResult.totalCount).toBe(supabaseResult.totalCount);
     expect(mswResult.pageCount).toBe(supabaseResult.pageCount);

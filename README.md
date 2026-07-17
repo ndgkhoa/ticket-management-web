@@ -32,10 +32,37 @@ cp .env.example .env    # env is Zod-validated and fails fast at boot
 bun run dev             # http://localhost:5173
 ```
 
-The app has no backend yet. `VITE_API_MODE=msw` starts Mock Service Worker, which is
-what will let the app run with no backend at all — the handler registry is still empty,
-so today it registers the worker and passes requests through with a warning. Handlers
-land with the data layer.
+### Data source: `VITE_API_MODE`
+
+The build reads its data source from one env var, chosen at build/deploy time:
+
+- **`msw`** — Mock Service Worker answers every request from the seeded fixtures,
+  including a mocked auth (GoTrue) layer, so the app runs with **no backend at all**.
+  This is the mode for the always-on static demo and for the whole test suite. The same
+  fixtures seed the live database, so the demo and production agree by construction.
+- **`supabase`** — talks to a live Supabase project (`VITE_SUPABASE_*`). Realtime,
+  Storage and server-side RPCs need this mode.
+
+```bash
+VITE_API_MODE=msw bun run dev        # no backend needed
+VITE_API_MODE=supabase bun run dev   # requires supabase start + VITE_SUPABASE_*
+```
+
+### Demo accounts (msw mode)
+
+Sign in with any of the seeded accounts below — shared password **`password123`**. Each
+maps to a role, so you can see the app from every side (the admin surface appears only
+for owner/admin). The Google button, which can't run OAuth on a static build, signs in
+as the owner.
+
+| Email                 | Role     | Sees                                     |
+| --------------------- | -------- | ---------------------------------------- |
+| `owner@demo.local`    | Owner    | Everything, including the permission set |
+| `admin@demo.local`    | Admin    | Users, org data, every ticket            |
+| `agent@demo.local`    | Agent    | Their team's tickets + internal notes    |
+| `customer@demo.local` | Customer | Their own tickets                        |
+
+These are fabricated demo credentials against seeded data — there is nothing to protect.
 
 ## Scripts
 
@@ -55,12 +82,12 @@ land with the data layer.
 
 ## Testing
 
-| Layer            | Tool                                                                                                      | Runs on           |
-| ---------------- | --------------------------------------------------------------------------------------------------------- | ----------------- |
-| Unit + component | Vitest · Testing Library · jsdom                                                                          | every push and PR |
-| Mock API         | MSW — one handler registry shared by tests and the demo build (registry empty until the data layer lands) | every push and PR |
-| End-to-end       | Playwright, against the **production build**                                                              | PRs               |
-| Accessibility    | axe-core via Playwright, WCAG 2.1 AA                                                                      | PRs               |
+| Layer            | Tool                                                                                                             | Runs on           |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------- |
+| Unit + component | Vitest · Testing Library · jsdom                                                                                 | every push and PR |
+| Mock API         | MSW — one handler registry shared by tests and the demo build (PostgREST tables + mocked auth over the fixtures) | every push and PR |
+| End-to-end       | Playwright, against the **production build**                                                                     | PRs               |
+| Accessibility    | axe-core via Playwright, WCAG 2.1 AA                                                                             | PRs               |
 
 Two choices worth knowing about:
 

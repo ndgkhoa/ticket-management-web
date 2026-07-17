@@ -1,18 +1,33 @@
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from '@tanstack/react-router';
 
+import { env } from '~/config/env';
 import { Button } from '~/components/ui/button';
 import { authApi } from '~/features/auth/api/auth-api';
+import { DEMO_LOGIN } from '~/features/auth/constants/demo-login';
 
 /**
- * "Continue with Google" — shared by sign-in and sign-up. Kicks off the OAuth redirect;
- * on success the browser leaves this page, so there's nothing to handle but the error
- * (e.g. the provider isn't configured on the Supabase project yet).
+ * "Continue with Google" — shared by sign-in and sign-up. Against a live project it kicks
+ * off the OAuth redirect; on success the browser leaves this page, so there's nothing to
+ * handle but the error (e.g. the provider isn't configured yet).
+ *
+ * On mocks (the static demo) OAuth cannot run — it is a cross-origin full-page redirect a
+ * Service Worker cannot intercept — so the button short-circuits to a demo sign-in and
+ * navigates in, keeping the button functional without a real provider.
  */
 export function GoogleButton({ disabled, label }: { disabled?: boolean; label?: string }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const handleGoogle = async () => {
+    if (env.VITE_API_MODE === 'msw') {
+      const { error } = await authApi.signInWithPassword(DEMO_LOGIN.email, DEMO_LOGIN.password);
+      if (error) toast.error(error.message);
+      else await navigate({ to: '/' });
+      return;
+    }
+
     const { error } = await authApi.signInWithGoogle();
     if (error) toast.error(error.message);
   };
