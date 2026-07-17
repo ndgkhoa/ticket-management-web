@@ -63,7 +63,9 @@ describe('ticket detail over MSW', () => {
 
 describe('admin plain reads over MSW', () => {
   it('lists every profile', async () => {
-    await expect(userApi.list()).resolves.toHaveLength(userRows.length);
+    const { rows, totalCount } = await userApi.list({ page: 1, pageSize: 100, filters: {} });
+    expect(totalCount).toBe(userRows.length);
+    expect(rows).toHaveLength(userRows.length);
   });
 
   it('lists roles ordered by name', async () => {

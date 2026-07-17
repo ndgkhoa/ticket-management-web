@@ -1,23 +1,33 @@
 import { z } from 'zod';
 
 import { supabase } from '~/lib/supabase';
+import { runListQuery, type ListQueryConfig } from '~/lib/list-query-builder';
+import type { ListParams } from '~/lib/list-query';
 import { USER_COLUMNS, userSchema } from '~/features/admin/users/schemas/user-schema';
 
 /**
- * Data access for users (profiles). This stage lists the profiles a signed-in admin
- * may see — a plain ordered read, since the read-only view has no pagination yet.
- *
- * The server-side paginated list (the shared `list-query` contract: search, sort,
- * page params, `keepPreviousData`) lands with the admin UI rebuild that renders it;
- * the query key already carries params so that upgrade doesn't reshape the cache.
+ * List-query configuration for users — mirrors `ticket-api.ts`. `profiles` has no
+ * tsvector column, so there is no `searchColumn`; `q` always runs through the
+ * trigram `ilike` fallback on `email`.
  */
+const userListConfig: ListQueryConfig = {
+  fallbackColumn: 'email',
+  sortableFields: ['created_at', 'email', 'full_name'],
+  defaultSort: { field: 'created_at', dir: 'desc' },
+  tiebreakers: [
+    { field: 'created_at', dir: 'desc' },
+    { field: 'id', dir: 'desc' },
+  ],
+};
+
 export const userApi = {
-  list: async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select(USER_COLUMNS)
-      .order('created_at', { ascending: false })
-      .throwOnError();
-    return z.array(userSchema).parse(data);
+  list: async (params: ListParams) => {
+    const { rows, totalCount, pageCount } = await runListQuery(
+      () => supabase.from('profiles').select(USER_COLUMNS, { count: 'estimated' }),
+      params,
+      userListConfig
+    );
+
+    return { rows: z.array(userSchema).parse(rows), totalCount, pageCount };
   },
 };

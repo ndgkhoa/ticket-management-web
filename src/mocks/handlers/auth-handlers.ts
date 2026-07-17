@@ -1,21 +1,12 @@
 import { http, HttpResponse } from 'msw';
 
-import {
-  DEMO_PASSWORD,
-  permissionRows,
-  roleIdByName,
-  rolePermissionRows,
-  roleRows,
-  userRoleRows,
-  userRows,
-} from '~/mocks/fixtures';
+import { DEMO_PASSWORD, userRows } from '~/mocks/fixtures';
 import {
   buildSession,
   buildUser,
   decodeUserId,
   userIdFromRefreshToken,
 } from '~/mocks/lib/fake-session';
-import { parsePostgrestRequest } from '~/mocks/lib/postgrest-request';
 
 /**
  * The auth half of the mock backend: enough of GoTrue for the demo build to sign in with
@@ -25,9 +16,10 @@ import { parsePostgrestRequest } from '~/mocks/lib/postgrest-request';
  * OAuth is deliberately absent: `signInWithOAuth` is a full-page redirect across origins,
  * outside a Service Worker's reach, so it cannot be mocked. In msw mode the Google button
  * short-circuits to a demo sign-in instead of starting a flow that cannot complete.
+ *
+ * The `user_roles` permission query lives in its own handler (`user-roles-handlers`), so
+ * it shares the mutable junction store the admin role editor writes to.
  */
-
-const permissionCodeById = new Map(permissionRows.map((row) => [row.id, row.code]));
 
 type DemoAccount = {
   id: string;
@@ -104,40 +96,9 @@ function handleGetUser({ request }: { request: Request }) {
   return HttpResponse.json(buildUser(row));
 }
 
-/**
- * The one nested read the app makes: the permission set, flattened from
- * `user_roles → roles → role_permissions → permissions.code`. Answered directly in the
- * shape the auth store reads, since the generic table handler only does flat columns.
- *
- * A user id with no `user_roles` rows (a fresh sign-up) resolves to the customer role,
- * so a just-registered account still gets its baseline permissions.
- */
-function handlePermissionQuery({ request }: { request: Request }) {
-  const userId = parsePostgrestRequest(request).filters.user_id?.value;
-  const roleIds = userRoleRows
-    .filter((userRole) => userRole.user_id === userId)
-    .map((userRole) => userRole.role_id);
-  const effectiveRoleIds = roleIds.length > 0 ? roleIds : [roleIdByName.get('customer')!];
-
-  const data = effectiveRoleIds.map((roleId) => ({
-    roles: {
-      id: roleId,
-      name: roleRows.find((role) => role.id === roleId)?.name ?? '',
-      role_permissions: rolePermissionRows
-        .filter((rolePermission) => rolePermission.role_id === roleId)
-        .map((rolePermission) => ({
-          permissions: { code: permissionCodeById.get(rolePermission.permission_id) ?? '' },
-        })),
-    },
-  }));
-
-  return HttpResponse.json(data);
-}
-
 export const authHandlers = [
   http.post('*/auth/v1/token', handleToken),
   http.post('*/auth/v1/signup', handleSignUp),
   http.get('*/auth/v1/user', handleGetUser),
   http.post('*/auth/v1/logout', () => new HttpResponse(null, { status: 204 })),
-  http.get('*/rest/v1/user_roles', handlePermissionQuery),
 ];

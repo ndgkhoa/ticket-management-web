@@ -10,6 +10,7 @@ import {
   userRows,
 } from '~/mocks/fixtures';
 import { ticketListConfig } from '~/mocks/config/ticket-list-config';
+import { profileListConfig } from '~/mocks/config/profile-list-config';
 import { makeTableHandler } from '~/mocks/handlers/make-table-handler';
 import { makeJunctionHandler } from '~/mocks/handlers/make-junction-handler';
 
@@ -28,7 +29,7 @@ const profileRows = userRows.map(({ password: _password, ...profile }) => profil
 
 export const restHandlers = [
   makeTableHandler({ table: 'tickets', rows: ticketRows, applyConfig: ticketListConfig }),
-  makeTableHandler({ table: 'profiles', rows: profileRows }),
+  makeTableHandler({ table: 'profiles', rows: profileRows, applyConfig: profileListConfig }),
   makeTableHandler({ table: 'roles', rows: roleRows, writable: true }),
   makeTableHandler({ table: 'permissions', rows: permissionRows }),
   makeTableHandler({ table: 'teams', rows: teamRows, writable: true }),

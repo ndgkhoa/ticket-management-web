@@ -6,10 +6,10 @@ import type { Tables } from '~/lib/database.types';
  * User: the `profiles` row as a domain model.
  *
  * "User" in the admin sense is a profile plus the roles granted through
- * `user_roles`. This stage models the profile; role assignment (the `user_roles`
- * junction editor) lands with the admin UI rebuild. The legacy .NET user shape
- * (username, phone, audit columns) is gone — Supabase auth is email/OAuth, so a
- * profile is `id · email · full_name · avatar_url · created_at`.
+ * `user_roles`; this schema models the profile itself, and the role assignment editor
+ * reads/writes the junction separately. The legacy .NET user shape (username, phone,
+ * audit columns) is gone — Supabase auth is email/OAuth, so a profile is
+ * `id · email · full_name · avatar_url · created_at`.
  */
 const userRowSchema = z.object({
   id: z.uuid(),
