@@ -1,6 +1,6 @@
 # Phase 05 — Design System: shadcn/ui
 
-**Priority:** P1 · **Status:** ⬜ todo · **Depends:** Phase 01 (UI-independent of 03/04)
+**Priority:** P1 · **Status:** ✅ done · **Depends:** Phase 01 (UI-independent of 03/04)
 
 ## Overview
 
@@ -107,7 +107,7 @@ The one component every list depends on. Build it against the `code-standards.md
 5. Set up Storybook + Chromatic; author stories + visual regression baseline.
 6. Add Chromatic job to CI.
 
-## Progress (in flight — 5a/5b/5c done, 5d remaining)
+## Progress (5a–5d done)
 
 Staged 5a→5d, one commit per stage. **Decisions taken:** dark mode = **shadcn ThemeProvider**
 (Vite guide) not Zustand — user reversed the initial Zustand pick to follow the docs; theme lives
@@ -138,8 +138,24 @@ kept. Storybook only, **Chromatic deferred** (needs the user's token).
       except `sign-in.test.tsx` which legitimately asserts the `vi` translation output (`Đăng nhập`), a
       test of i18n, not a UI literal. not-found/error/loading pages now localised via new i18n keys
       (`Common.Back/BackToHome/Loading/NoResults/ClearFilters`, `Errors.*`).
-- [ ] **5d — Storybook + stories** (Chromatic deferred, document the wire-up). **Deferred by user** to a
-      follow-up session; 5c ships first because it unblocks Phase 06.
+- [x] **5d — Storybook + stories** — **Storybook 10** (not 9; latest at build time) with the
+      `@storybook/tanstack-react` framework (auto-detected — carries the app's Vite config, `~` alias
+      and Tailwind plugin). `.storybook/preview.tsx` loads the app's `styles/index.css` + i18next and adds
+      a light/dark theme toolbar (toggles `.dark` on `<html>`, mirroring ThemeProvider). Stories are
+      **colocated** next to components: Button, Badge, Input, **DataTable** (flagship — Default / Loading
+      skeleton / placeholder-dimming / Empty / NoResults, proving the list contract), Form `FieldText`
+      (real TanStack Form + Zod, valid + invalid), and the ticket status/priority badge colours (all enum
+      values, viewable in both themes). `bun run storybook` / `storybook:build`. Remaining shadcn primitives
+      (dialog, select, tabs, tooltip…) can get stories incrementally — the pattern is established. - **addon-vitest + addon-mcp removed** on purpose: addon-vitest rewrote `vitest.config.ts` into a
+      Playwright browser-test project (out of scope — visual regression is Chromatic's job, deferred) and
+      would make `bun run test` boot a browser; the hand-tuned jsdom config was restored. - **Chromatic deferred** (needs the user's token). Wire-up when ready: `bunx storybook add
+    @chromatic-com/storybook` is already done (addon present); add a `CHROMATIC_PROJECT_TOKEN` secret and
+      a CI step `bunx chromatic --project-token=$CHROMATIC_PROJECT_TOKEN --build-script-name=storybook:build`
+      (PR-only per phase-02 quota rule; the `--build-script-name` flag is needed because the script was
+      renamed from Storybook's default `build-storybook` to match this repo's `:`-namespaced scripts). - **Gotcha (environment, not code):** a stray orphaned `.pnp.cjs` in the parent `workspace/personal/`
+      (no `package.json`/`yarn.lock` beside it) made esbuild — Storybook's manager builder — switch to Yarn
+      PnP resolution and fail. Removed by the user. If Storybook's manager build ever fails to resolve its
+      own deps, look for a stray `.pnp.cjs` up the tree first.
 
 ### Post-5c polish & conventions (this session)
 
@@ -171,8 +187,8 @@ eslint (0 errors), 6 Playwright e2e all green — incl. WCAG 2.1 AA on sign-in +
 login form meets the contrast the deleted antd `theme.ts` existed to enforce) and boot-with-no-console-errors
 (proving the v5-patch removal didn't break runtime).
 
-**Next session starts at 5d.** Storybook 9 install + stories for primitives/DataTable/Form + a documented
-(deferred) Chromatic wire-up.
+**Phase 05 complete (5a–5d).** Next is **Phase 06 (help desk features)**, which 5c unblocked. Storybook is
+live for the design system; Chromatic is the one deferred piece (needs the user's token — see 5d note).
 
 ## Success criteria
 

@@ -44,7 +44,7 @@ See `code-standards.md`. Key rules:
 | 02  | [Testing & CI infrastructure](phase-02-testing-ci.md)              | ✅ done |
 | 03  | [Data layer — Supabase + MSW](phase-03-data-layer-supabase-msw.md) | ✅ done |
 | 04  | [Routing — TanStack Router](phase-04-routing-tanstack-router.md)   | ✅ done |
-| 05  | [Design system — shadcn/ui](phase-05-design-system-shadcn.md)      | ⬜ todo |
+| 05  | [Design system — shadcn/ui](phase-05-design-system-shadcn.md)      | ✅ done |
 | 06  | [Help desk core features](phase-06-helpdesk-features.md)           | ⬜ todo |
 | 07  | [AI features + semantic search](phase-07-ai-features.md)           | ⬜ todo |
 | 08  | [Dashboard analytics](phase-08-dashboard-analytics.md)             | ⬜ todo |
