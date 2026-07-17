@@ -107,7 +107,7 @@ The one component every list depends on. Build it against the `code-standards.md
 5. Set up Storybook + Chromatic; author stories + visual regression baseline.
 6. Add Chromatic job to CI.
 
-## Progress (in flight — 5a/5b done, 5c/5d remaining)
+## Progress (in flight — 5a/5b/5c done, 5d remaining)
 
 Staged 5a→5d, one commit per stage. **Decisions taken:** dark mode = **shadcn ThemeProvider**
 (Vite guide) not Zustand — user reversed the initial Zustand pick to follow the docs; theme lives
@@ -122,21 +122,57 @@ kept. Storybook only, **Chromatic deferred** (needs the user's token).
 - [x] Toolbar (debounced 300ms search + view options + faceted filter slot), faceted filter (URL-controlled).
 - [x] Pagination bar: page-size select (persisted preference), `x–y of N`, boundary-disabled controls.
 - [x] Empty / no-results / skeleton / placeholder-dimmed states — 5 DataTable tests prove them.
-- [x] Reusable Form (TanStack Form + Zod) — TextField + FieldError.
-- [ ] **5c — antd fully removed** — plus its orbit: `@ant-design/icons` (→ lucide-react),
-      `@ant-design/v5-patch-for-react-19`, `lodash` + `@types/lodash`. Migrate 26 antd sites screen by
-      screen onto the shadcn primitives + DataTable; provider drops antd `ConfigProvider`/`App` and the
-      test harness (`render.tsx`) drops them too; delete `styles/theme.ts`.
-- [ ] **5c — `forwardRef` gone** — `ref` passed as a normal prop (React 19). NOTE: the shadcn primitives
-      already avoid it; check remaining app code.
-- [ ] **5c — No Vietnamese string literals in `src/`** — done-check: grep `src/` for VN diacritics → 0
-      outside `i18n/`. Known spots survived into shadcn-era throwaway (not-found/error-fallback now use
-      plain English placeholders — localise properly when rebuilt).
-- [ ] **5d — Storybook + stories** (Chromatic deferred, document the wire-up).
+- [x] Reusable Form (TanStack Form + Zod) — `Field*` family (`FieldText` + `FieldError`).
+- [x] **5c — antd fully removed** — plus its orbit: `@ant-design/icons` (→ lucide-react),
+      `@ant-design/v5-patch-for-react-19`, `lodash` + `@types/lodash` all removed from `package.json`.
+      All antd sites migrated onto shadcn primitives + DataTable; provider dropped antd
+      `ConfigProvider`/`App`, `main.tsx` dropped the v5-patch, test harness (`render.tsx`) now wraps
+      `ThemeProvider` + QueryClient + Router; `styles/theme.ts` and dead `utils/notification.ts` deleted.
+      Tickets page is the flagship DataTable consumer (server-driven paging/sorting, faceted status/priority
+      filters, debounced search, distinct empty vs no-results); admin lists use the shadcn Table primitive
+      (still non-paginated read-only). Made `DataTableToolbar.table` optional so it works with `DataTable`
+      (which owns its table internally).
+- [x] **5c — `forwardRef` gone** — verified 0 usages in `src/` (shadcn primitives already avoid it; the
+      Phase-01 `forwardRef` sites were removed with the antd wrappers).
+- [x] **5c — No Vietnamese string literals in `src/`** — grep for VN diacritics → 0 outside `i18n/`,
+      except `sign-in.test.tsx` which legitimately asserts the `vi` translation output (`Đăng nhập`), a
+      test of i18n, not a UI literal. not-found/error/loading pages now localised via new i18n keys
+      (`Common.Back/BackToHome/Loading/NoResults/ClearFilters`, `Errors.*`).
+- [ ] **5d — Storybook + stories** (Chromatic deferred, document the wire-up). **Deferred by user** to a
+      follow-up session; 5c ships first because it unblocks Phase 06.
 
-**Next session starts at 5c.** Groundwork (primitives, DataTable, Form, theme) is committed and green;
-5c wires screens + removes antd. Verify a **production build** after `bun remove antd` (resolution differs
-from dev), and re-run e2e.
+### Post-5c polish & conventions (this session)
+
+UX/design polish on the migrated shell + a codebase-wide convention pass (all green: tsc, 43 tests,
+eslint 0 errors, 6 e2e, prettier):
+
+- **Shell/UX:** removed the nested double scrollbar (only `<main>` scrolls); separated the dev-only
+  Devtools buttons; language + theme controls are now icon toggles (click-to-flip EN⇄VI, light⇄dark),
+  same size; dropped the in-app footer (dashboards don't need one); sidebar `tickets` label capitalised
+  via a new `Fields.Tickets` key.
+- **Logo/branding:** wordmark is now an inline SVG (`components/ui/logo.tsx`) using `currentColor` so it
+  stays legible in dark mode; favicons added (`public/favicon-192.png`, `apple-touch-icon.png` + SVG),
+  Vite defaults removed; login uses an inline multicolour Google SVG (icons/ folder deleted).
+- **Tickets:** colour-coded `TicketStatusBadge`/`TicketPriorityBadge` (enum-typed, light+dark); all four
+  list tables gained a row-index (`Fields.Index`) column (page-offset aware on the paginated tickets).
+- **Structure:** deleted empty `hooks/` and unused `assets/react.svg`; merged the `app.tsx`/`provider.tsx`
+  indirection into a single `app/app.tsx` exporting `App` (rendered by `main.tsx`).
+- **Conventions (documented in `code-standards.md`):** components are **function declarations** (converted
+  ~24 arrow components; memo uses named function expressions); folders follow plural-collection /
+  singular-subsystem; component families unified (`Field*`, `DataTable*`, `*Fallback`, `*Layout`,
+  `Ticket*Badge`); `onX` props vs `handleX` local handlers audited clean.
+
+**Open decision for 5c (non-blocking):** re-sorting the tickets list does not reset to page 1 — `sort`/`dir`
+are deliberately excluded from `PAGE_RESETTING_KEYS` (Phase 03/04 schema). Server-side sort on the same page
+is valid; revisit if a page-1-on-sort UX is preferred.
+
+**Verification (5c):** typecheck, production build (Rolldown — resolution differs from dev), 43 unit tests,
+eslint (0 errors), 6 Playwright e2e all green — incl. WCAG 2.1 AA on sign-in + not-found (proving the shadcn
+login form meets the contrast the deleted antd `theme.ts` existed to enforce) and boot-with-no-console-errors
+(proving the v5-patch removal didn't break runtime).
+
+**Next session starts at 5d.** Storybook 9 install + stories for primitives/DataTable/Form + a documented
+(deferred) Chromatic wire-up.
 
 ## Success criteria
 
