@@ -8,6 +8,7 @@
 -- answer identically for identical params.
 
 truncate table
+  public.saved_views,
   public.ticket_events,
   public.attachments,
   public.ticket_messages,
@@ -3844,4 +3845,9 @@ insert into public.ticket_events (id, ticket_id, actor_id, event_type, meta, cre
   ('0000000b-0000-4000-8000-0000000004b8', '00000009-0000-4000-8000-0000000001f4', '00000001-0000-4000-8000-000000000016', 'created', '{"channel":"web"}'::jsonb, '2026-07-12T21:45:29.675Z'),
   ('0000000b-0000-4000-8000-0000000004b9', '00000009-0000-4000-8000-0000000001f4', '00000001-0000-4000-8000-000000000006', 'assigned', '{"assignee_id":"00000001-0000-4000-8000-000000000006","team_id":"00000004-0000-4000-8000-000000000002"}'::jsonb, '2026-07-12T21:50:29.675Z'),
   ('0000000b-0000-4000-8000-0000000004ba', '00000009-0000-4000-8000-0000000001f4', '00000001-0000-4000-8000-000000000006', 'status_changed', '{"from":"open","to":"solved"}'::jsonb, '2026-07-16T23:18:29.675Z');
+
+-- Saved views --------------------------------------------------------------
+insert into public.saved_views (id, user_id, name, search, is_shared, created_at) values
+  ('0000000c-0000-4000-8000-000000000001', '00000001-0000-4000-8000-000000000003', 'Open tickets', '{"page":1,"pageSize":20,"sort":"created_at","dir":"desc","status":["open"]}'::jsonb, true, '2025-11-05T09:00:00.000Z'),
+  ('0000000c-0000-4000-8000-000000000002', '00000001-0000-4000-8000-000000000002', 'Urgent & high priority', '{"page":1,"pageSize":20,"sort":"priority","dir":"desc","priority":["urgent","high"]}'::jsonb, true, '2025-11-05T09:00:00.000Z');
 

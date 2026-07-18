@@ -34,7 +34,12 @@ const en = {
     "Empty": "No saved views yet",
     "NameLabel": "View name",
     "NamePlaceholder": "e.g. My open tickets",
-    "Delete": "Delete view"
+    "Delete": "Delete view",
+    "MyViews": "My views",
+    "Shared": "Shared views",
+    "ShareLabel": "Share with everyone",
+    "Share": "Share",
+    "Unshare": "Make private"
   },
   "Bulk": {
     "Selected": "{{count}} selected",

@@ -27,6 +27,7 @@ export const FIXTURE_NAMESPACE = {
   ticket: 9,
   ticketMessage: 10,
   ticketEvent: 11,
+  savedView: 12,
 } as const;
 
 export type FixtureNamespace = keyof typeof FIXTURE_NAMESPACE;

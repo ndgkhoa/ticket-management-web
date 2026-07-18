@@ -226,6 +226,41 @@ export type Database = {
         };
         Relationships: [];
       };
+      saved_views: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_shared: boolean;
+          name: string;
+          search: Json;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_shared?: boolean;
+          name: string;
+          search: Json;
+          user_id?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_shared?: boolean;
+          name?: string;
+          search?: Json;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'saved_views_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       sla_policies: {
         Row: {
           first_response_mins: number;

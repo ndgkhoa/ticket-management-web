@@ -34,7 +34,12 @@ const vi = {
     "Empty": "Chưa có bộ lọc nào",
     "NameLabel": "Tên bộ lọc",
     "NamePlaceholder": "vd: Phiếu đang mở của tôi",
-    "Delete": "Xóa bộ lọc"
+    "Delete": "Xóa bộ lọc",
+    "MyViews": "Bộ lọc của tôi",
+    "Shared": "Bộ lọc chia sẻ",
+    "ShareLabel": "Chia sẻ với mọi người",
+    "Share": "Chia sẻ",
+    "Unshare": "Đặt riêng tư"
   },
   "Bulk": {
     "Selected": "Đã chọn {{count}}",

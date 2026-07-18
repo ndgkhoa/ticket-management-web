@@ -24,6 +24,7 @@ import {
   permissionRows,
   rolePermissionRows,
   roleRows,
+  savedViewRows,
   slaPolicyRows,
   tagRows,
   teamMemberRows,
@@ -104,6 +105,7 @@ const HEADER = `-- GENERATED FILE — DO NOT EDIT.
  * auth.users — which cascades to profiles — is the only order that works.
  */
 const TRUNCATE = `truncate table
+  public.saved_views,
   public.ticket_events,
   public.attachments,
   public.ticket_messages,
@@ -283,6 +285,12 @@ const sections = [
     'public.ticket_events',
     ['id', 'ticket_id', 'actor_id', 'event_type', 'meta', 'created_at'],
     ticketEventRows
+  ),
+  '-- Saved views --------------------------------------------------------------',
+  insertInto(
+    'public.saved_views',
+    ['id', 'user_id', 'name', 'search', 'is_shared', 'created_at'],
+    savedViewRows
   ),
 ];
 

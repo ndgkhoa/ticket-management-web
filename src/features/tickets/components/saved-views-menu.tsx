@@ -1,9 +1,11 @@
-import { Bookmark, Check, Plus, Trash2 } from 'lucide-react';
+import { Bookmark, Check, Globe, Lock, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
 import {
   Button,
+  Checkbox,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -18,7 +20,14 @@ import {
   Input,
   Label,
 } from '~/components/ui';
-import { useSavedViewsStore } from '~/stores/saved-views';
+import { useAuthStore } from '~/stores/auth';
+import {
+  useCreateSavedView,
+  useRemoveSavedView,
+  useSavedViews,
+  useSetSavedViewShared,
+} from '~/features/tickets/api/saved-view-queries';
+import type { SavedView } from '~/features/tickets/schemas/saved-view-schema';
 import type { TicketSearch } from '~/features/tickets/schemas/ticket-search-schema';
 
 type Props = {
@@ -29,26 +38,88 @@ type Props = {
 };
 
 /**
- * Saved-views control for the ticket list: a dropdown to apply or delete a stored view,
- * plus a small dialog to name and save the current filters. Views live in a persisted
- * Zustand store, so this component owns only the open/name UI state.
+ * Saved-views control: apply, save, share, and delete server-backed views. A view is the
+ * owner's own or shared with everyone; the menu groups the caller's own views (which they
+ * can share/delete) from others' shared views (apply only). State/UI lives here; the data
+ * and mutations come from the `saved_views` queries.
  */
 export function SavedViewsMenu({ search, onApply }: Props) {
   const { t } = useTranslation();
-  const views = useSavedViewsStore((state) => state.views);
-  const addView = useSavedViewsStore((state) => state.addView);
-  const removeView = useSavedViewsStore((state) => state.removeView);
+  const currentUserId = useAuthStore((state) => state.user?.id);
+  const { data: views = [] } = useSavedViews();
+  const createView = useCreateSavedView();
+  const setShared = useSetSavedViewShared();
+  const removeView = useRemoveSavedView();
 
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState('');
+  const [shareOnSave, setShareOnSave] = useState(false);
+
+  const myViews = views.filter((view) => view.userId === currentUserId);
+  const sharedViews = views.filter((view) => view.isShared && view.userId !== currentUserId);
 
   const handleSave = () => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    addView(trimmed, search);
-    setName('');
-    setSaveOpen(false);
+    createView.mutate(
+      { name: trimmed, search, isShared: shareOnSave },
+      {
+        onSuccess: () => {
+          toast.success(t('Common.Saved'));
+          setName('');
+          setShareOnSave(false);
+          setSaveOpen(false);
+        },
+        onError: (error) => toast.error(error.message),
+      }
+    );
   };
+
+  const renderView = (view: SavedView, owned: boolean) => (
+    <DropdownMenuItem
+      key={view.id}
+      // Apply from page 1 — the snapshot's page may be past the end if the data shrank.
+      onSelect={() => onApply({ ...view.search, page: 1 })}
+      className="justify-between gap-2"
+    >
+      <span className="flex items-center gap-2 truncate">
+        <Check className="text-muted-foreground size-4 shrink-0" />
+        <span className="truncate">{view.name}</span>
+      </span>
+      {owned && (
+        <span className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            aria-label={view.isShared ? t('SavedViews.Unshare') : t('SavedViews.Share')}
+            title={view.isShared ? t('SavedViews.Unshare') : t('SavedViews.Share')}
+            className={view.isShared ? 'text-primary' : 'text-muted-foreground hover:text-primary'}
+            onClick={(event) => {
+              event.stopPropagation();
+              event.preventDefault();
+              setShared.mutate(
+                { id: view.id, isShared: !view.isShared },
+                { onError: (error) => toast.error(error.message) }
+              );
+            }}
+          >
+            {view.isShared ? <Globe className="size-4" /> : <Lock className="size-4" />}
+          </button>
+          <button
+            type="button"
+            aria-label={t('SavedViews.Delete')}
+            className="text-muted-foreground hover:text-destructive"
+            onClick={(event) => {
+              event.stopPropagation();
+              event.preventDefault();
+              removeView.mutate(view.id, { onError: (error) => toast.error(error.message) });
+            }}
+          >
+            <Trash2 className="size-4" />
+          </button>
+        </span>
+      )}
+    </DropdownMenuItem>
+  );
 
   return (
     <>
@@ -59,40 +130,25 @@ export function SavedViewsMenu({ search, onApply }: Props) {
             {t('SavedViews.Title')}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64">
-          <DropdownMenuLabel>{t('SavedViews.Title')}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {views.length === 0 ? (
+        <DropdownMenuContent align="end" className="max-h-96 w-72 overflow-y-auto">
+          {myViews.length === 0 && sharedViews.length === 0 ? (
             <div className="text-muted-foreground px-2 py-1.5 text-sm">{t('SavedViews.Empty')}</div>
           ) : (
-            views.map((view) => (
-              <DropdownMenuItem
-                key={view.id}
-                // Keep focus/close behaviour to the apply action; the delete button
-                // stops propagation so removing a view doesn't also apply it. Apply from
-                // page 1 — the snapshot's page may be past the end if the data shrank since
-                // it was saved, which would land the user on an empty page.
-                onSelect={() => onApply({ ...view.search, page: 1 })}
-                className="justify-between gap-2"
-              >
-                <span className="flex items-center gap-2 truncate">
-                  <Check className="text-muted-foreground size-4 shrink-0" />
-                  <span className="truncate">{view.name}</span>
-                </span>
-                <button
-                  type="button"
-                  aria-label={t('SavedViews.Delete')}
-                  className="text-muted-foreground hover:text-destructive shrink-0"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    event.preventDefault();
-                    removeView(view.id);
-                  }}
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </DropdownMenuItem>
-            ))
+            <>
+              {myViews.length > 0 && (
+                <>
+                  <DropdownMenuLabel>{t('SavedViews.MyViews')}</DropdownMenuLabel>
+                  {myViews.map((view) => renderView(view, true))}
+                </>
+              )}
+              {sharedViews.length > 0 && (
+                <>
+                  {myViews.length > 0 && <DropdownMenuSeparator />}
+                  <DropdownMenuLabel>{t('SavedViews.Shared')}</DropdownMenuLabel>
+                  {sharedViews.map((view) => renderView(view, false))}
+                </>
+              )}
+            </>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => setSaveOpen(true)}>
@@ -108,21 +164,30 @@ export function SavedViewsMenu({ search, onApply }: Props) {
             <DialogHeader>
               <DialogTitle>{t('SavedViews.Save')}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-2">
-              <Label htmlFor="saved-view-name">{t('SavedViews.NameLabel')}</Label>
-              <Input
-                id="saved-view-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                onKeyDown={(event) => event.key === 'Enter' && handleSave()}
-                placeholder={t('SavedViews.NamePlaceholder')}
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="saved-view-name">{t('SavedViews.NameLabel')}</Label>
+                <Input
+                  id="saved-view-name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  onKeyDown={(event) => event.key === 'Enter' && handleSave()}
+                  placeholder={t('SavedViews.NamePlaceholder')}
+                />
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  checked={shareOnSave}
+                  onCheckedChange={(value) => setShareOnSave(value === true)}
+                />
+                {t('SavedViews.ShareLabel')}
+              </label>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setSaveOpen(false)}>
                 {t('Common.Cancel')}
               </Button>
-              <Button onClick={handleSave} disabled={!name.trim()}>
+              <Button onClick={handleSave} disabled={!name.trim() || createView.isPending}>
                 {t('Common.Save')}
               </Button>
             </DialogFooter>

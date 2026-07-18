@@ -26,6 +26,22 @@ test('narrows the list with the status facet and reflects it in the URL', async 
   await expect(page).toHaveURL(/status/);
 });
 
+test('saves the current view and lists it', async ({ page }) => {
+  await signInAsOwner(page);
+  await page.goto('/tickets');
+  await expect(page.getByRole('heading', { name: 'List of tickets' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Saved views' }).click();
+  await page.getByRole('menuitem', { name: 'Save current view' }).click();
+
+  await page.getByLabel('View name').fill('My e2e view');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+
+  // Reopen the menu — the new view is listed under "My views".
+  await page.getByRole('button', { name: 'Saved views' }).click();
+  await expect(page.getByRole('menuitem', { name: 'My e2e view' })).toBeVisible();
+});
+
 test('bulk-updates the selected page of tickets', async ({ page }) => {
   await signInAsOwner(page);
   await page.goto('/tickets');

@@ -107,3 +107,13 @@ export type TicketEventRow = {
   meta: Record<string, unknown>;
   created_at: string;
 };
+
+export type SavedViewRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  /** The TicketSearch object, stored as jsonb. */
+  search: Record<string, unknown>;
+  is_shared: boolean;
+  created_at: string;
+};

@@ -4,6 +4,7 @@ import {
   permissionRows,
   roleRows,
   rolePermissionRows,
+  savedViewRows,
   slaPolicyRows,
   tagRows,
   teamRows,
@@ -51,6 +52,10 @@ export const restHandlers = [
     applyConfig: cannedResponseListConfig,
     writable: true,
   }),
+  // Saved views — full CRUD over a per-user store. The demo has no RLS, so the read
+  // returns all rows; the menu shows only the caller's own plus shared ones by filtering
+  // on `user_id`/`is_shared`, so another user's private view is never surfaced.
+  makeTableHandler({ table: 'saved_views', rows: savedViewRows, writable: true }),
   // Role→permission membership for the matrix editor (composite key, no id).
   makeJunctionHandler({ table: 'role_permissions', rows: rolePermissionRows }),
   // Ticket↔tag membership — read feeds the list's tag filter (resolves tags → ticket ids);
