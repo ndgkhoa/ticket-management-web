@@ -3,14 +3,24 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '~/components/ui';
 import { cn } from '~/utils/cn';
 import { useSlaPolicyList } from '~/features/admin/sla-policies/api/sla-policy-queries';
+import { slaVariant, type SlaVariant } from '~/features/tickets/components/sla-state';
 import type { Ticket } from '~/features/tickets/schemas/ticket-schema';
 
 type Props = { ticket: Ticket };
 
-type SlaVariant = 'met' | 'met_late' | 'breached' | 'pending' | 'pending_soon';
 type SlaState = { label: string; variant: SlaVariant; due: number };
 
 const AMBER = 'border-amber-500/30 bg-amber-500/15 text-amber-600 dark:text-amber-400';
+
+// The done/breached states have a fixed i18n label; the two pending states instead show the
+// live countdown, so they're absent here and fall through to `formatDelta`.
+const SLA_LABEL_KEY: Partial<
+  Record<SlaVariant, 'Tickets.Met' | 'Tickets.MetLate' | 'Tickets.Breached'>
+> = {
+  met: 'Tickets.Met',
+  met_late: 'Tickets.MetLate',
+  breached: 'Tickets.Breached',
+};
 
 // Badge look per SLA state: green = met on time, amber = late or nearly-due, red = breached,
 // neutral = comfortably counting down.
@@ -50,24 +60,15 @@ export function TicketSlaCard({ ticket }: Props) {
   const now = Date.now();
 
   const stateFor = (dueMinutes: number, doneAt: string | null): SlaState => {
-    const due = created + dueMinutes * 60_000;
-    if (doneAt) {
-      const onTime = new Date(doneAt).getTime() <= due;
-      return {
-        label: onTime ? t('Tickets.Met') : t('Tickets.MetLate'),
-        variant: onTime ? 'met' : 'met_late',
-        due,
-      };
-    }
-    if (now > due) return { label: t('Tickets.Breached'), variant: 'breached', due };
-    // Within the last quarter of the window → amber "due soon"; otherwise a calm countdown.
-    const remaining = due - now;
-    const soon = remaining < dueMinutes * 60_000 * 0.25;
-    return {
-      label: formatDelta(Math.round(remaining / 60_000), t),
-      variant: soon ? 'pending_soon' : 'pending',
-      due,
-    };
+    const { variant, due } = slaVariant({
+      createdAt: created,
+      dueMinutes,
+      doneAt: doneAt ? new Date(doneAt).getTime() : null,
+      now,
+    });
+    const labelKey = SLA_LABEL_KEY[variant];
+    const label = labelKey ? t(labelKey) : formatDelta(Math.round((due - now) / 60_000), t);
+    return { label, variant, due };
   };
 
   const firstResponse = stateFor(policy.first_response_mins, ticket.firstResponseAt);

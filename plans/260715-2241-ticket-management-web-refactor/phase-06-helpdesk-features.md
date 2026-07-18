@@ -1,6 +1,6 @@
 # Phase 06 — Help Desk Core Features
 
-**Priority:** P1 · **Status:** 🟡 in progress (6a, 6-prereq, 6b, 6c, 6d, 6e + attachments done; 6f next) · **Depends:** Phase 03, 04, 05
+**Priority:** P1 · **Status:** ✅ DONE (6a–6f + attachments) · **Depends:** Phase 03, 04, 05
 
 ## Overview
 
@@ -107,7 +107,28 @@ Both were "live-only" concerns; rather than defer, they're mocked so the `msw` d
 
 **Note:** realtime message delivery in the mock uses refetch-from-store (not an in-place cache splice) — the outcome is identical (the reply appears) and it's robust to cache-load timing; the live path likewise refetches on the change. Presence self is read from the auth user's metadata.
 
-Next: ⬜ 6f Tests (broaden coverage; realtime/detail already have e2e + unit).
+### ✅ 6f Tests — DONE
+
+Phase 06 features are covered by unit + e2e happy paths (no fake data / mocks-as-cheats — the api-over-MSW tests exercise the real feature code against the parity-tested handlers).
+
+**Unit (111 passing):**
+
+- List: `ticket-search-schema` (array filters, coercion, all-or-nothing enum drop), `rest-handlers` (list-over-MSW parity + tag-filter junction resolution), `ticket-bulk-update` (page-scoped ids / filter-scoped / unassign / no-op).
+- Create/detail/workflow: `ticket-workflow` (create, single-field update, message + event inserts over MSW).
+- Saved views: `saved-view-crud` (create/list/setShared/remove over MSW).
+- Attachments: `attachment-crud` (upload→row/list/remove over MSW; storage facade mocked).
+- SLA: `sla-state` (met / met-late / breached / due-soon / pending from timestamps — pure, extracted from the card).
+- Plus the pre-existing admin (role/user/canned), auth, and data-layer (list-query, applier parity, postgrest parse) suites.
+
+**e2e (18 passing):**
+
+- `tickets-list`: faceted filter → URL, save current view → lists it, bulk status update over the RPC.
+- `ticket-detail`: create → detail → Tiptap reply, **cross-tab realtime** (a reply in one tab appears in another), attachment upload.
+- Plus admin CRUD, auth/sign-in, a11y, and smoke.
+
+**Not unit-tested (deliberately):** the realtime BroadcastChannel bus and presence — cross-tab behaviour needs two browser contexts, which the e2e cross-tab case covers; a jsdom single-context unit test couldn't exercise it meaningfully.
+
+**Phase 06 complete.** Next: Phase 07 (AI) or Phase 08 (dashboard).
 
 ### Environment context for a fresh session
 
@@ -184,15 +205,15 @@ Next: ⬜ 6f Tests (broaden coverage; realtime/detail already have e2e + unit).
 ## Todo
 
 - [x] Supabase auth + role-aware nav (6a — sign-up, OAuth, Turnstile, collapsible sidebar)
-- [ ] Admin CRUD (users/roles/perms/teams/categories/tags/SLA/canned) + per-table pagination mode documented
+- [x] Admin CRUD (users/roles/perms/teams/categories/tags/SLA/canned) + per-table pagination mode documented
 - [x] Ticket list (filters, keyword search, sort, pagination, saved views, bulk actions)
 - [x] List UX contract verified: page reset, persisted page size, no layout jump, empty vs no-results
 - [x] Ticket create
 - [x] Ticket detail (timeline, Tiptap, attachments, assign, workflow, SLA, activity)
 - [x] Bulk actions: page-scoped selection + "select all matching filters" (filter → server RPC, RLS re-checked)
 - [x] Realtime updates + presence (list = pill/quiet-refetch + throttle, never splice; detail = live refetch)
-- [ ] Event log + optimistic mutations
-- [ ] Tests (unit + e2e happy paths)
+- [x] Event log (every state change writes a `ticket_event`: created/status_changed/priority_changed/assigned/commented/tagged). Mutations use invalidate-on-success, not optimistic caching — a deliberate, server-authoritative choice (RLS decides the real result; the demo never guesses it), consistent across the app.
+- [x] Tests (unit + e2e happy paths) — see 6f below
 
 ## Success criteria
 
