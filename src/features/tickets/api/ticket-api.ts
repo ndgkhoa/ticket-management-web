@@ -1,10 +1,29 @@
 import { z } from 'zod';
 
 import { supabase } from '~/lib/supabase';
+import { useAuthStore } from '~/stores/auth';
 import { runListQuery, type ListQueryConfig } from '~/lib/list-query-builder';
 import type { ListParams } from '~/lib/list-query';
+import type { TablesUpdate } from '~/lib/database.types';
 import { TICKET_COLUMNS, ticketSchema } from '~/features/tickets/schemas/ticket-schema';
-import type { TicketStatus } from '~/features/tickets/schemas/ticket-enums';
+import type { TicketPriority, TicketStatus } from '~/features/tickets/schemas/ticket-enums';
+
+/** What the create form submits. Requester is the caller; status/channel are defaulted. */
+export type CreateTicketInput = {
+  subject: string;
+  description: string;
+  priority: TicketPriority;
+  categoryId: string | null;
+};
+
+/** A single-ticket field change from the detail workflow (each field independently). */
+export type UpdateTicketPatch = {
+  status?: TicketStatus;
+  priority?: TicketPriority;
+  assigneeId?: string | null;
+  teamId?: string | null;
+  categoryId?: string | null;
+};
 
 /**
  * A bulk status/assignee change. `status` and `assigneeId` are each independently
@@ -127,6 +146,58 @@ export const ticketApi = {
       .from('tickets')
       .select(TICKET_COLUMNS)
       .eq('id', id)
+      .single()
+      .throwOnError();
+    return ticketSchema.parse(data);
+  },
+
+  create: async (input: CreateTicketInput) => {
+    const requesterId = useAuthStore.getState().user?.id;
+    if (!requesterId) throw new Error('Not authenticated');
+    const now = new Date().toISOString();
+    // Every column the domain schema reads is sent explicitly: the mock insert fills only
+    // `id`, so the server-defaulted and nullable columns must be present for the returned
+    // row to round-trip against MSW as it does against the live defaults.
+    const { data } = await supabase
+      .from('tickets')
+      .insert({
+        subject: input.subject,
+        description: input.description,
+        status: 'open',
+        priority: input.priority,
+        channel: 'web',
+        requester_id: requesterId,
+        assignee_id: null,
+        team_id: null,
+        category_id: input.categoryId,
+        sla_policy_id: null,
+        first_response_at: null,
+        resolved_at: null,
+        due_at: null,
+        created_at: now,
+        updated_at: now,
+      })
+      .select(TICKET_COLUMNS)
+      .single()
+      .throwOnError();
+    return ticketSchema.parse(data);
+  },
+
+  update: async (id: string, patch: UpdateTicketPatch) => {
+    // Map the camelCase patch to columns; only provided fields are sent. `null` is a real
+    // value here (unassign / clear team or category), distinct from an absent field.
+    const columns: TablesUpdate<'tickets'> = { updated_at: new Date().toISOString() };
+    if (patch.status !== undefined) columns.status = patch.status;
+    if (patch.priority !== undefined) columns.priority = patch.priority;
+    if (patch.assigneeId !== undefined) columns.assignee_id = patch.assigneeId;
+    if (patch.teamId !== undefined) columns.team_id = patch.teamId;
+    if (patch.categoryId !== undefined) columns.category_id = patch.categoryId;
+
+    const { data } = await supabase
+      .from('tickets')
+      .update(columns)
+      .eq('id', id)
+      .select(TICKET_COLUMNS)
       .single()
       .throwOnError();
     return ticketSchema.parse(data);

@@ -54,6 +54,34 @@ const vi = {
     "Apply": "Áp dụng",
     "Updated": "Đã cập nhật {{count}} phiếu"
   },
+  "Tickets": {
+    "PublicReply": "Trả lời",
+    "InternalNote": "Ghi chú nội bộ",
+    "Send": "Gửi",
+    "NoMessages": "Chưa có tin nhắn",
+    "NoActivity": "Chưa có hoạt động",
+    "Unassigned": "Chưa giao",
+    "Sla": "SLA",
+    "Properties": "Thuộc tính",
+    "Activity": "Hoạt động",
+    "FirstResponse": "Phản hồi đầu",
+    "Resolution": "Xử lý xong",
+    "Met": "Đạt",
+    "MetLate": "Đạt (trễ)",
+    "Breached": "Quá hạn",
+    "DueIn": "còn {{value}}",
+    "Overdue": "trễ {{value}}",
+    "RequestedBy": "Người tạo: {{name}}",
+    "Event": {
+      "created": "đã tạo phiếu",
+      "assigned": "đã đổi người phụ trách",
+      "status_changed": "đặt trạng thái thành {{to}}",
+      "priority_changed": "đặt độ ưu tiên thành {{to}}",
+      "commented": "đã thêm trả lời",
+      "noted": "đã thêm ghi chú nội bộ",
+      "tagged": "đã cập nhật nhãn"
+    }
+  },
   "Errors": {
     "ServerErrorTitle": "Đã có lỗi xảy ra",
     "ServerErrorDescription": "Xin lỗi, đã xảy ra lỗi không mong muốn.",

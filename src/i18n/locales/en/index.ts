@@ -54,6 +54,34 @@ const en = {
     "Apply": "Apply",
     "Updated": "Updated {{count}} tickets"
   },
+  "Tickets": {
+    "PublicReply": "Reply",
+    "InternalNote": "Internal note",
+    "Send": "Send",
+    "NoMessages": "No messages yet",
+    "NoActivity": "No activity yet",
+    "Unassigned": "Unassigned",
+    "Sla": "SLA",
+    "Properties": "Properties",
+    "Activity": "Activity",
+    "FirstResponse": "First response",
+    "Resolution": "Resolution",
+    "Met": "Met",
+    "MetLate": "Met (late)",
+    "Breached": "Breached",
+    "DueIn": "in {{value}}",
+    "Overdue": "{{value}} overdue",
+    "RequestedBy": "Requested by {{name}}",
+    "Event": {
+      "created": "created the ticket",
+      "assigned": "changed the assignee",
+      "status_changed": "set status to {{to}}",
+      "priority_changed": "set priority to {{to}}",
+      "commented": "added a reply",
+      "noted": "added an internal note",
+      "tagged": "updated tags"
+    }
+  },
   "Errors": {
     "ServerErrorTitle": "Something went wrong",
     "ServerErrorDescription": "Sorry, an unexpected error occurred.",

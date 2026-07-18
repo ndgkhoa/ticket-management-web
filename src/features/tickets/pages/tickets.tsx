@@ -1,5 +1,6 @@
-import { Inbox, SearchX, User as UserIcon } from 'lucide-react';
+import { Inbox, Plus, SearchX, User as UserIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Link } from '@tanstack/react-router';
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
 
 import { Avatar, AvatarFallback, AvatarImage, Button, Container } from '~/components/ui';
@@ -65,6 +66,15 @@ function Tickets() {
       accessorKey: 'subject',
       header: t('Fields.Subject'),
       enableSorting: false,
+      cell: ({ row }) => (
+        <Link
+          to="/tickets/$ticketId"
+          params={{ ticketId: row.original.id }}
+          className="hover:text-primary font-medium hover:underline"
+        >
+          {row.original.subject}
+        </Link>
+      ),
     },
     {
       id: 'status',
@@ -161,7 +171,17 @@ function Tickets() {
   return (
     <Container
       title={t('Common.List', { name: t('Fields.Ticket_other') })}
-      extraRight={<SavedViewsMenu search={search} onApply={applySearch} />}
+      extraRight={
+        <div className="flex items-center gap-2">
+          <SavedViewsMenu search={search} onApply={applySearch} />
+          <Button size="sm" className="h-8" asChild>
+            <Link to="/tickets/new">
+              <Plus className="mr-1 size-4" />
+              {t('Common.Create', { name: t('Fields.Ticket_one') })}
+            </Link>
+          </Button>
+        </div>
+      }
     >
       <DataTable
         columns={columns}

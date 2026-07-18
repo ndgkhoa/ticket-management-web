@@ -8,6 +8,8 @@ import {
   slaPolicyRows,
   tagRows,
   teamRows,
+  ticketEventRows,
+  ticketMessageRows,
   ticketRows,
   ticketTagRows,
   userRows,
@@ -38,7 +40,13 @@ export const restHandlers = [
     rows: ticketRows,
     applyConfig: ticketListConfig,
     store: ticketStore,
+    // Writable so the detail page can patch a single ticket (status/priority/assignment)
+    // through the same shared store the list reads.
+    writable: true,
   }),
+  // The ticket conversation and its audit trail — read by ticket_id, append-only inserts.
+  makeTableHandler({ table: 'ticket_messages', rows: ticketMessageRows, writable: true }),
+  makeTableHandler({ table: 'ticket_events', rows: ticketEventRows, writable: true }),
   makeTableHandler({ table: 'profiles', rows: profileRows, applyConfig: profileListConfig }),
   makeTableHandler({ table: 'roles', rows: roleRows, writable: true }),
   makeTableHandler({ table: 'permissions', rows: permissionRows }),

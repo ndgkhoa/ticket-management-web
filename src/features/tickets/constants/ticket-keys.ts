@@ -16,4 +16,8 @@ export const ticketKeys = {
   detail: (id: string) => [...ticketKeys.details(), id] as const,
   /** The assignable-agents roster (the assignee filter's options). */
   assignees: () => [...ticketKeys.all, 'assignees'] as const,
+  /** A ticket's conversation and its audit trail, each keyed by ticket id. */
+  messages: (ticketId: string) => [...ticketKeys.detail(ticketId), 'messages'] as const,
+  events: (ticketId: string) => [...ticketKeys.detail(ticketId), 'events'] as const,
+  tags: (ticketId: string) => [...ticketKeys.detail(ticketId), 'tags'] as const,
 };

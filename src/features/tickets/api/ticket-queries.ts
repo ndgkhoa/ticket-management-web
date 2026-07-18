@@ -8,7 +8,13 @@ import {
 } from '@tanstack/react-query';
 
 import type { ListParams } from '~/lib/list-query';
-import { ticketApi, type BulkTicketPatch } from '~/features/tickets/api/ticket-api';
+import {
+  ticketApi,
+  type BulkTicketPatch,
+  type CreateTicketInput,
+  type UpdateTicketPatch,
+} from '~/features/tickets/api/ticket-api';
+import { ticketEventApi, type CreateEventInput } from '~/features/tickets/api/ticket-event-api';
 import { ticketKeys } from '~/features/tickets/constants/ticket-keys';
 
 /**
@@ -38,6 +44,46 @@ export const ticketQueries = {
 export const useTicketList = (params: ListParams) => useQuery(ticketQueries.list(params));
 
 export const useTicketDetail = (id: string) => useSuspenseQuery(ticketQueries.detail(id));
+
+/**
+ * Create a ticket, then record the `created` event so it appears in the activity timeline.
+ * Returns the new ticket so the caller can navigate to its detail page.
+ */
+export const useCreateTicket = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateTicketInput) => {
+      const ticket = await ticketApi.create(input);
+      await ticketEventApi.create({ ticketId: ticket.id, eventType: 'created' });
+      return ticket;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ticketKeys.lists() }),
+  });
+};
+
+/**
+ * A single-ticket field change from the detail workflow. Optionally records the matching
+ * event (status_changed, assigned, …) in the same mutation, then invalidates the ticket's
+ * detail (which cascades to its messages/events/tags) and every list.
+ */
+export const useUpdateTicket = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (args: {
+      id: string;
+      patch: UpdateTicketPatch;
+      event?: CreateEventInput;
+    }) => {
+      const ticket = await ticketApi.update(args.id, args.patch);
+      if (args.event) await ticketEventApi.create(args.event);
+      return ticket;
+    },
+    onSuccess: (ticket) => {
+      void queryClient.invalidateQueries({ queryKey: ticketKeys.detail(ticket.id) });
+      void queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
+    },
+  });
+};
 
 /**
  * Bulk status/assignee mutation. On success it invalidates every ticket list so the

@@ -17,6 +17,8 @@ import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as AppAdminRouteRouteImport } from './routes/_app/admin/route'
 import { Route as AppTicketsIndexRouteImport } from './routes/_app/tickets/index'
 import { Route as AppAdminIndexRouteImport } from './routes/_app/admin/index'
+import { Route as AppTicketsNewRouteImport } from './routes/_app/tickets/new'
+import { Route as AppTicketsTicketIdRouteImport } from './routes/_app/tickets/$ticketId'
 import { Route as AppAdminUsersRouteImport } from './routes/_app/admin/users'
 import { Route as AppAdminTeamsRouteImport } from './routes/_app/admin/teams'
 import { Route as AppAdminTagsRouteImport } from './routes/_app/admin/tags'
@@ -64,6 +66,16 @@ const AppAdminIndexRoute = AppAdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppAdminRouteRoute,
+} as any)
+const AppTicketsNewRoute = AppTicketsNewRouteImport.update({
+  id: '/tickets/new',
+  path: '/tickets/new',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppTicketsTicketIdRoute = AppTicketsTicketIdRouteImport.update({
+  id: '/tickets/$ticketId',
+  path: '/tickets/$ticketId',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppAdminUsersRoute = AppAdminUsersRouteImport.update({
   id: '/users',
@@ -120,6 +132,8 @@ export interface FileRoutesByFullPath {
   '/admin/tags': typeof AppAdminTagsRoute
   '/admin/teams': typeof AppAdminTeamsRoute
   '/admin/users': typeof AppAdminUsersRoute
+  '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
+  '/tickets/new': typeof AppTicketsNewRoute
   '/admin/': typeof AppAdminIndexRoute
   '/tickets/': typeof AppTicketsIndexRoute
 }
@@ -136,6 +150,8 @@ export interface FileRoutesByTo {
   '/admin/tags': typeof AppAdminTagsRoute
   '/admin/teams': typeof AppAdminTeamsRoute
   '/admin/users': typeof AppAdminUsersRoute
+  '/tickets/$ticketId': typeof AppTicketsTicketIdRoute
+  '/tickets/new': typeof AppTicketsNewRoute
   '/admin': typeof AppAdminIndexRoute
   '/tickets': typeof AppTicketsIndexRoute
 }
@@ -155,6 +171,8 @@ export interface FileRoutesById {
   '/_app/admin/tags': typeof AppAdminTagsRoute
   '/_app/admin/teams': typeof AppAdminTeamsRoute
   '/_app/admin/users': typeof AppAdminUsersRoute
+  '/_app/tickets/$ticketId': typeof AppTicketsTicketIdRoute
+  '/_app/tickets/new': typeof AppTicketsNewRoute
   '/_app/admin/': typeof AppAdminIndexRoute
   '/_app/tickets/': typeof AppTicketsIndexRoute
 }
@@ -174,6 +192,8 @@ export interface FileRouteTypes {
     | '/admin/tags'
     | '/admin/teams'
     | '/admin/users'
+    | '/tickets/$ticketId'
+    | '/tickets/new'
     | '/admin/'
     | '/tickets/'
   fileRoutesByTo: FileRoutesByTo
@@ -190,6 +210,8 @@ export interface FileRouteTypes {
     | '/admin/tags'
     | '/admin/teams'
     | '/admin/users'
+    | '/tickets/$ticketId'
+    | '/tickets/new'
     | '/admin'
     | '/tickets'
   id:
@@ -208,6 +230,8 @@ export interface FileRouteTypes {
     | '/_app/admin/tags'
     | '/_app/admin/teams'
     | '/_app/admin/users'
+    | '/_app/tickets/$ticketId'
+    | '/_app/tickets/new'
     | '/_app/admin/'
     | '/_app/tickets/'
   fileRoutesById: FileRoutesById
@@ -274,6 +298,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AppAdminIndexRouteImport
       parentRoute: typeof AppAdminRouteRoute
+    }
+    '/_app/tickets/new': {
+      id: '/_app/tickets/new'
+      path: '/tickets/new'
+      fullPath: '/tickets/new'
+      preLoaderRoute: typeof AppTicketsNewRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/tickets/$ticketId': {
+      id: '/_app/tickets/$ticketId'
+      path: '/tickets/$ticketId'
+      fullPath: '/tickets/$ticketId'
+      preLoaderRoute: typeof AppTicketsTicketIdRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/_app/admin/users': {
       id: '/_app/admin/users'
@@ -365,12 +403,16 @@ const AppAdminRouteRouteWithChildren = AppAdminRouteRoute._addFileChildren(
 interface AppRouteRouteChildren {
   AppAdminRouteRoute: typeof AppAdminRouteRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
+  AppTicketsTicketIdRoute: typeof AppTicketsTicketIdRoute
+  AppTicketsNewRoute: typeof AppTicketsNewRoute
   AppTicketsIndexRoute: typeof AppTicketsIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAdminRouteRoute: AppAdminRouteRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
+  AppTicketsTicketIdRoute: AppTicketsTicketIdRoute,
+  AppTicketsNewRoute: AppTicketsNewRoute,
   AppTicketsIndexRoute: AppTicketsIndexRoute,
 }
 

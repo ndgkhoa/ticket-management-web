@@ -145,3 +145,49 @@
     @apply bg-[#606060];
   }
 }
+
+/* Rich text — the Tiptap composer and rendered message bodies. The base reset zeroes all
+   margins, so block spacing and list markers are restored here rather than pulling in a
+   typography plugin for a handful of tags. */
+.rich-text {
+  @apply text-sm leading-relaxed break-words;
+}
+.rich-text:focus {
+  @apply outline-none;
+}
+.rich-text p {
+  @apply my-2;
+}
+.rich-text h1 {
+  @apply my-2 text-lg font-semibold;
+}
+.rich-text h2 {
+  @apply my-2 text-base font-semibold;
+}
+.rich-text h3 {
+  @apply my-2 text-sm font-semibold;
+}
+.rich-text ul {
+  @apply my-2 list-disc pl-5;
+}
+.rich-text ol {
+  @apply my-2 list-decimal pl-5;
+}
+.rich-text a {
+  @apply text-primary underline;
+}
+.rich-text blockquote {
+  @apply border-border my-2 border-l-2 pl-3 italic;
+}
+.rich-text code {
+  @apply bg-muted rounded px-1 py-0.5 text-xs;
+}
+.rich-text pre {
+  @apply bg-muted my-2 overflow-x-auto rounded p-2 text-xs;
+}
+.rich-text pre code {
+  @apply bg-transparent p-0;
+}
+.rich-text strong {
+  @apply font-semibold;
+}

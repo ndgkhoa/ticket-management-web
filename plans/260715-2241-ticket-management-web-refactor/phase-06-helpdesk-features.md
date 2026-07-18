@@ -1,6 +1,6 @@
 # Phase 06 — Help Desk Core Features
 
-**Priority:** P1 · **Status:** 🟡 in progress (6a, 6-prereq, 6b, 6c done; 6d–6f next) · **Depends:** Phase 03, 04, 05
+**Priority:** P1 · **Status:** 🟡 in progress (6a, 6-prereq, 6b, 6c, 6d done; 6e–6f next) · **Depends:** Phase 03, 04, 05
 
 ## Overview
 
@@ -78,7 +78,23 @@ The list foundation (server-side sort/filter/pagination, status/priority facets,
 
 **Deferred to later stages (unchanged):** realtime list pill / quiet-refetch (6e); the `ticket_events` write on each mutation lands with the event-log task (bulk RPC currently updates status/assignee + `updated_at` only). Bulk keyword-search + select-all is intentionally not offered — replicating the FTS/trigram fallback in SQL for an unforgiving mutation isn't worth it; the page-scoped selection still works with a search active.
 
-Next: ⬜ 6d Create/detail · 6e Realtime · 6f Tests.
+### ✅ 6d Create + detail — DONE (attachments deferred)
+
+- **Create** (`/tickets/new`): TanStack Form (subject/description/priority/category); requester = the caller. On success writes a `created` event and navigates to the new ticket. `ticketApi.create` sends every column the domain schema reads (the mock insert fills only `id`).
+- **Detail** (`/tickets/$ticketId`): loader-warmed ticket + a 2-column layout — conversation (message timeline + composer) and a sidebar (SLA · Properties · Activity).
+  - **Message timeline:** `public_reply` vs `internal_note` (RLS hides notes from customers; notes tinted + badged). Bodies rendered through `RichTextView` — **DOMPurify-sanitised** before `dangerouslySetInnerHTML`, since a client could POST raw HTML to `body`.
+  - **Composer:** **Tiptap** (StarterKit) rich text + a small toolbar; a public/internal toggle shown only to holders of `message.create.internal`. Posts the HTML body and records a `commented` event.
+  - **Workflow (Properties):** inline status/priority/assignee/team/category selects + a tag multi-select through the junction. Status/priority/assignment write the matching `ticket_event`; team/category have no event type so update silently; tags write `tagged`. Each single-ticket change goes through `ticketApi.update` (tickets now MSW-writable via the shared store, so detail edits show up in the list).
+  - **SLA countdown:** first-response / resolution due derived from `created_at` + the priority's policy — met / breached / live countdown, breach in destructive red.
+  - **Activity:** the `ticket_events` feed, newest-first, actor + action per type.
+  - **Profiles:** one `useProfileLookup` resolves requester/assignee/authors/actors by id (RLS decides visibility).
+- **List wiring:** subject cell links to the detail; a "Create ticket" button in the header.
+- **msw:** `tickets` made writable + `ticket_messages`/`ticket_events` handlers over the shared store; event/message/tag writes round-trip. New deps: `@tiptap/*`, `dompurify`.
+- Tests: `ticket-workflow.test.ts` (create/update/message/event over MSW) + `e2e/ticket-detail.spec.ts` (in-browser create → detail → Tiptap reply). Green: tsc, 104 unit, 0 lint errors, 16 e2e, lang:check.
+
+**Deferred:** attachments (Supabase Storage — live-only, doesn't mock; lands with the storage/realtime pass). The `ticket_events` write-on-mutation that the plan lists separately is effectively done here (status/priority/assign/comment/tag all emit events).
+
+Next: ⬜ 6e Realtime · 6f Tests.
 
 ### Environment context for a fresh session
 
@@ -158,8 +174,8 @@ Next: ⬜ 6d Create/detail · 6e Realtime · 6f Tests.
 - [ ] Admin CRUD (users/roles/perms/teams/categories/tags/SLA/canned) + per-table pagination mode documented
 - [x] Ticket list (filters, keyword search, sort, pagination, saved views, bulk actions)
 - [x] List UX contract verified: page reset, persisted page size, no layout jump, empty vs no-results
-- [ ] Ticket create
-- [ ] Ticket detail (timeline, Tiptap, attachments, assign, workflow, SLA, activity)
+- [x] Ticket create
+- [x] Ticket detail (timeline, Tiptap, assign, workflow, SLA, activity) — attachments deferred to the storage pass
 - [x] Bulk actions: page-scoped selection + "select all matching filters" (filter → server RPC, RLS re-checked)
 - [ ] Realtime updates + presence (list = pill/quiet-refetch + throttle, never splice; detail = splice)
 - [ ] Event log + optimistic mutations
