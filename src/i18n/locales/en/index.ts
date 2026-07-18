@@ -105,7 +105,12 @@ const en = {
     "Team_other": "teams",
     "SlaPolicies": "SLA policies",
     "SlaPolicy_one": "SLA policy",
-    "SlaPolicy_other": "SLA policies"
+    "SlaPolicy_other": "SLA policies",
+    "CannedResponses": "Canned responses",
+    "CannedResponse_one": "canned response",
+    "CannedResponse_other": "canned responses",
+    "Title": "Title",
+    "Body": "Body"
   },
   "Validation": {
     "Required": "This field is required",

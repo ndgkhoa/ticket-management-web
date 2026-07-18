@@ -5,6 +5,7 @@ import {
   Home,
   Inbox,
   KeyRound,
+  MessagesSquare,
   Tags,
   Timer,
   UserCog,
@@ -30,7 +31,8 @@ type NavPath =
   | '/admin/teams'
   | '/admin/categories'
   | '/admin/tags'
-  | '/admin/sla-policies';
+  | '/admin/sla-policies'
+  | '/admin/canned-responses';
 
 type NavItem = { to: NavPath; icon: LucideIcon; label: string };
 
@@ -91,6 +93,11 @@ export const Sidebar = memo(function Sidebar() {
     { to: '/admin/categories', icon: FolderTree, label: t('Fields.Categories') },
     { to: '/admin/tags', icon: Tags, label: t('Fields.Tags') },
     { to: '/admin/sla-policies', icon: Timer, label: t('Fields.SlaPolicies') },
+    {
+      to: '/admin/canned-responses',
+      icon: MessagesSquare,
+      label: t('Fields.CannedResponses'),
+    },
   ];
 
   return (

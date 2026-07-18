@@ -1,6 +1,6 @@
 # Phase 06 — Help Desk Core Features
 
-**Priority:** P1 · **Status:** 🟡 in progress (6a, 6-prereq, 6b lookup CRUD done) · **Depends:** Phase 03, 04, 05
+**Priority:** P1 · **Status:** 🟡 in progress (6a, 6-prereq, 6b done; 6c–6f next) · **Depends:** Phase 03, 04, 05
 
 ## Overview
 
@@ -45,7 +45,24 @@ Full create/edit/delete for the four bounded lookup tables on a client-side tabl
 
 **Users admin — DONE.** `features/admin/users/**`: server-side paginated list (mirrors the ticket list — URL params, keepPreviousData, email search, sort) + a **role-assignment** dialog (checkboxes over `user_roles`). Manage-only: no create/delete (auth-coupled). The `user_roles` MSW handler moved to `mocks/handlers/user-roles-handlers.ts` with a **shared mutable store** so a role assigned in the editor reflects in that user's permissions (same store the auth permission query reads); `mocks/config/profile-list-config.ts` gives profiles a list config. Tests: `user-list.test.ts` + `e2e/admin-users.spec.ts`.
 
-**Still TODO in 6b:** canned_responses (server-side CRUD). **permissions stays read-only** (catalogue mirrors the RLS policies; the editable thing is role→permission assignment, done). Then ⬜ 6c Ticket list · 6d Create/detail · 6e Realtime · 6f Tests.
+**Canned responses — DONE.** `features/admin/canned-responses/**`: server-side paginated list (title search, sort, keepPreviousData, loader) + full CRUD (create/edit/delete via form dialog + confirm). `create` sets `created_at`/`created_by` client-side (the MSW insert only fills `id`). MSW `canned_responses` registered writable with a list config. Tests: `canned-response-crud.test.ts` + `e2e/admin-canned-responses.spec.ts`.
+
+**Admin lists also gained:** a client-side search box on the lookup tables (name/description/code), route loaders that prewarm each list (no skeleton flash), and success toasts on create/edit/delete. Permissions moved onto the searchable client table.
+
+**Admin UX polish (shared across every table):**
+
+- **Actions column** unified via a shared right-aligned `ActionsHeader` (`components/data-table/data-table-actions-header.tsx`) so header + edit/delete icons line up flush-right on every screen.
+- **Pagination visibility rule** (both `DataTable` server + `ClientDataTable`): the pager + rows-per-page show only when the data spans **more than one page**; a single page shows no footer. Default page size unified to `DEFAULT_PAGE_SIZE` (20) on the client tables too (were 10).
+- **Wide tables scroll** — table wrapper is `overflow-x-auto` (not `overflow-hidden`), so many-column tables scroll horizontally instead of clipping their last column on a narrow viewport.
+- **Form modals reset** — mounted only while open (`{open && <Dialog/>}`), so they never retain the previous or just-submitted values on reopen.
+- **Breadcrumb** is i18n-mapped per segment (incl. `canned-responses`); `scrollbar-gutter: stable` on the scroll container to avoid horizontal shift when content height changes.
+- Note on **i18n text-length reflow** (EN↔VI width differences): mitigated structurally (fixed sidebar, `justify-between` headers, scrollable tables), not eliminated — inherent to i18n; revisit per-element with min-width/truncate only if a specific control jumps.
+
+### ✅ 6b Admin CRUD — DONE
+
+All admin screens shipped: users (+role assign), roles (+permission matrix), permissions (read-only searchable), teams, categories, tags, SLA policies, canned responses. **permissions stays read-only** by design (catalogue mirrors the RLS policies; the editable thing is role→permission assignment). Green across the board: tsc, 87 unit, lint, 12 e2e, lang:check.
+
+Next: ⬜ 6c Ticket list · 6d Create/detail · 6e Realtime · 6f Tests.
 
 Per-table pagination (user-confirmed): **users** = server-side (full list contract, like tickets); **roles/permissions/teams/categories/tags/sla_policies** = client-side (fetch-all, `manualPagination:false`, bounded). Realtime/Storage/bulk-RPC = live Supabase only.
 

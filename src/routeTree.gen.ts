@@ -24,6 +24,7 @@ import { Route as AppAdminSlaPoliciesRouteImport } from './routes/_app/admin/sla
 import { Route as AppAdminRolesRouteImport } from './routes/_app/admin/roles'
 import { Route as AppAdminPermissionsRouteImport } from './routes/_app/admin/permissions'
 import { Route as AppAdminCategoriesRouteImport } from './routes/_app/admin/categories'
+import { Route as AppAdminCannedResponsesRouteImport } from './routes/_app/admin/canned-responses'
 
 const AuthRouteRoute = AuthRouteRouteImport.update({
   id: '/auth',
@@ -99,6 +100,11 @@ const AppAdminCategoriesRoute = AppAdminCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => AppAdminRouteRoute,
 } as any)
+const AppAdminCannedResponsesRoute = AppAdminCannedResponsesRouteImport.update({
+  id: '/canned-responses',
+  path: '/canned-responses',
+  getParentRoute: () => AppAdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRouteRouteWithChildren
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
+  '/admin/canned-responses': typeof AppAdminCannedResponsesRoute
   '/admin/categories': typeof AppAdminCategoriesRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
   '/admin/roles': typeof AppAdminRolesRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/': typeof AppIndexRoute
+  '/admin/canned-responses': typeof AppAdminCannedResponsesRoute
   '/admin/categories': typeof AppAdminCategoriesRoute
   '/admin/permissions': typeof AppAdminPermissionsRoute
   '/admin/roles': typeof AppAdminRolesRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/auth/sign-in': typeof AuthSignInRoute
   '/auth/sign-up': typeof AuthSignUpRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/admin/canned-responses': typeof AppAdminCannedResponsesRoute
   '/_app/admin/categories': typeof AppAdminCategoriesRoute
   '/_app/admin/permissions': typeof AppAdminPermissionsRoute
   '/_app/admin/roles': typeof AppAdminRolesRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth/sign-in'
     | '/auth/sign-up'
+    | '/admin/canned-responses'
     | '/admin/categories'
     | '/admin/permissions'
     | '/admin/roles'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/'
+    | '/admin/canned-responses'
     | '/admin/categories'
     | '/admin/permissions'
     | '/admin/roles'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/_app/'
+    | '/_app/admin/canned-responses'
     | '/_app/admin/categories'
     | '/_app/admin/permissions'
     | '/_app/admin/roles'
@@ -312,10 +324,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminCategoriesRouteImport
       parentRoute: typeof AppAdminRouteRoute
     }
+    '/_app/admin/canned-responses': {
+      id: '/_app/admin/canned-responses'
+      path: '/canned-responses'
+      fullPath: '/admin/canned-responses'
+      preLoaderRoute: typeof AppAdminCannedResponsesRouteImport
+      parentRoute: typeof AppAdminRouteRoute
+    }
   }
 }
 
 interface AppAdminRouteRouteChildren {
+  AppAdminCannedResponsesRoute: typeof AppAdminCannedResponsesRoute
   AppAdminCategoriesRoute: typeof AppAdminCategoriesRoute
   AppAdminPermissionsRoute: typeof AppAdminPermissionsRoute
   AppAdminRolesRoute: typeof AppAdminRolesRoute
@@ -327,6 +347,7 @@ interface AppAdminRouteRouteChildren {
 }
 
 const AppAdminRouteRouteChildren: AppAdminRouteRouteChildren = {
+  AppAdminCannedResponsesRoute: AppAdminCannedResponsesRoute,
   AppAdminCategoriesRoute: AppAdminCategoriesRoute,
   AppAdminPermissionsRoute: AppAdminPermissionsRoute,
   AppAdminRolesRoute: AppAdminRolesRoute,

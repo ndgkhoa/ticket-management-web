@@ -97,7 +97,11 @@ const vi = {
     "Teams": "Nhóm",
     "Team_other": "nhóm",
     "SlaPolicies": "Chính sách SLA",
-    "SlaPolicy_other": "chính sách SLA"
+    "SlaPolicy_other": "chính sách SLA",
+    "CannedResponses": "Mẫu trả lời",
+    "CannedResponse_other": "mẫu trả lời",
+    "Title": "Tiêu đề",
+    "Body": "Nội dung"
   },
   "Validation": {
     "Required": "Trường này là bắt buộc",

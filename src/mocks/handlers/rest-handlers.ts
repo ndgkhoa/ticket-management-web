@@ -1,4 +1,5 @@
 import {
+  cannedResponseRows,
   categoryRows,
   permissionRows,
   roleRows,
@@ -11,6 +12,7 @@ import {
 } from '~/mocks/fixtures';
 import { ticketListConfig } from '~/mocks/config/ticket-list-config';
 import { profileListConfig } from '~/mocks/config/profile-list-config';
+import { cannedResponseListConfig } from '~/mocks/config/canned-response-list-config';
 import { makeTableHandler } from '~/mocks/handlers/make-table-handler';
 import { makeJunctionHandler } from '~/mocks/handlers/make-junction-handler';
 
@@ -36,6 +38,12 @@ export const restHandlers = [
   makeTableHandler({ table: 'categories', rows: categoryRows, writable: true }),
   makeTableHandler({ table: 'tags', rows: tagRows, writable: true }),
   makeTableHandler({ table: 'sla_policies', rows: slaPolicyRows, writable: true }),
+  makeTableHandler({
+    table: 'canned_responses',
+    rows: cannedResponseRows,
+    applyConfig: cannedResponseListConfig,
+    writable: true,
+  }),
   // Role→permission membership for the matrix editor (composite key, no id).
   makeJunctionHandler({ table: 'role_permissions', rows: rolePermissionRows }),
 ].flat();

@@ -22,7 +22,8 @@ type LabelKey =
   | 'Fields.Teams'
   | 'Fields.Categories'
   | 'Fields.Tags'
-  | 'Fields.SlaPolicies';
+  | 'Fields.SlaPolicies'
+  | 'Fields.CannedResponses';
 
 const SEGMENT_LABELS: Record<string, LabelKey> = {
   admin: 'Sidebar.Admin',
@@ -34,6 +35,7 @@ const SEGMENT_LABELS: Record<string, LabelKey> = {
   categories: 'Fields.Categories',
   tags: 'Fields.Tags',
   'sla-policies': 'Fields.SlaPolicies',
+  'canned-responses': 'Fields.CannedResponses',
 };
 
 export function Breadcrumb() {
