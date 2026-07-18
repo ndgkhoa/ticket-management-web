@@ -62,6 +62,11 @@ export function useTicketListRealtime({ canAutoRefresh, viewKey }: Args) {
         id: TOAST_ID,
         duration: 10_000,
         action: { label: translate.current('Common.Refresh'), onClick: refresh },
+        // Once it fades on its own, start the count fresh so the next one reads "1 new",
+        // not a total carried over from a notice the user already stopped seeing.
+        onAutoClose: () => {
+          count.current = 0;
+        },
       });
     });
     return () => {

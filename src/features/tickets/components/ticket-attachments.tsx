@@ -1,11 +1,12 @@
 import { Loader2, Paperclip, Trash2, UploadCloud } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '~/components/ui';
 import { cn } from '~/utils/cn';
 import { useAuthStore } from '~/stores/auth';
+import { revokeAttachmentUrl } from '~/lib/storage';
 import {
   useRemoveAttachment,
   useTicketAttachments,
@@ -117,6 +118,17 @@ export function TicketAttachments({ ticketId }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [uploads, setUploads] = useState<UploadProgress[]>([]);
+  // Pending interval/timeout ids, cleared on unmount so a navigation mid-upload leaves nothing
+  // running.
+  const timers = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    const pending = timers.current;
+    return () =>
+      pending.forEach((id) => {
+        window.clearTimeout(id);
+        window.clearInterval(id);
+      });
+  }, []);
 
   const startUpload = (file: File) => {
     const id = crypto.randomUUID();
@@ -131,23 +143,33 @@ export function TicketAttachments({ ticketId }: Props) {
         )
       );
     }, 100);
+    timers.current.add(timer);
 
     const finish = () => {
       window.clearInterval(timer);
+      timers.current.delete(timer);
       setUploads((current) =>
         current.map((item) => (item.id === id ? { ...item, percent: 100 } : item))
       );
-      window.setTimeout(() => {
+      const removal = window.setTimeout(() => {
         setUploads((current) => current.filter((item) => item.id !== id));
+        timers.current.delete(removal);
       }, 350);
+      timers.current.add(removal);
     };
 
     upload.mutate(file, {
       // Hold the bar for a minimum so a mock (instant) upload still animates.
-      onSuccess: () =>
-        window.setTimeout(finish, Math.max(0, MIN_UPLOAD_MS - (Date.now() - startedAt))),
+      onSuccess: () => {
+        const hold = window.setTimeout(
+          finish,
+          Math.max(0, MIN_UPLOAD_MS - (Date.now() - startedAt))
+        );
+        timers.current.add(hold);
+      },
       onError: (error) => {
         window.clearInterval(timer);
+        timers.current.delete(timer);
         setUploads((current) => current.filter((item) => item.id !== id));
         toast.error(error.message);
       },
@@ -223,7 +245,10 @@ export function TicketAttachments({ ticketId }: Props) {
               attachment={attachment}
               ownedByMe={attachment.uploadedBy === currentUserId}
               onRemove={() =>
-                remove.mutate(attachment.id, { onError: (error) => toast.error(error.message) })
+                remove.mutate(attachment.id, {
+                  onSuccess: () => revokeAttachmentUrl(attachment.fileUrl),
+                  onError: (error) => toast.error(error.message),
+                })
               }
             />
           ))}

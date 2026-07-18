@@ -53,7 +53,12 @@ function applyToStore(table: string, change: RealtimeChange): void {
   else if (change.eventType === 'DELETE' && change.old?.id) store.remove(String(change.old.id));
 }
 
-function createTransport(): RealtimeTransport {
+function createTransport(): {
+  transport: RealtimeTransport;
+  /** Notify this tab's subscribers directly — for the synthetic generator, whose broadcast the
+   *  sending tab (rightly) ignores. */
+  emitLocalChange: (table: string, change: RealtimeChange) => void;
+} {
   const tableSubs = new Map<string, Set<(change: RealtimeChange) => void>>();
   // Per topic: our own local viewers and the ones learned from other tabs.
   const presence = new Map<
@@ -102,7 +107,10 @@ function createTransport(): RealtimeTransport {
     notifyPresence(message.topic);
   });
 
-  return {
+  const emitLocalChange = (table: string, change: RealtimeChange) =>
+    tableSubs.get(table)?.forEach((cb) => cb(change));
+
+  const transport: RealtimeTransport = {
     subscribeTable(table, onChange) {
       const set = tableSubs.get(table) ?? new Set();
       set.add(onChange);
@@ -142,6 +150,8 @@ function createTransport(): RealtimeTransport {
       };
     },
   };
+
+  return { transport, emitLocalChange };
 }
 
 const SYNTHETIC_SUBJECTS = [
@@ -184,25 +194,7 @@ function startSyntheticActivity(
 
 /** Install the mock transport and start synthetic activity. Called from the msw bootstrap. */
 export function installMockRealtime(): void {
-  const tableSubs = new Map<string, Set<(change: RealtimeChange) => void>>();
-  const transport = createTransport();
-
-  // Wrap subscribeTable so the synthetic generator can notify this tab's subscribers directly
-  // (BroadcastChannel doesn't echo to the sender).
-  const wrapped: RealtimeTransport = {
-    ...transport,
-    subscribeTable(table, onChange) {
-      const set = tableSubs.get(table) ?? new Set();
-      set.add(onChange);
-      tableSubs.set(table, set);
-      const off = transport.subscribeTable(table, onChange);
-      return () => {
-        set.delete(onChange);
-        off();
-      };
-    },
-  };
-
-  registerRealtimeTransport(wrapped);
-  startSyntheticActivity((table, change) => tableSubs.get(table)?.forEach((cb) => cb(change)));
+  const { transport, emitLocalChange } = createTransport();
+  registerRealtimeTransport(transport);
+  startSyntheticActivity(emitLocalChange);
 }

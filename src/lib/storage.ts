@@ -15,22 +15,22 @@ import { supabase } from '~/lib/supabase';
 const BUCKET = 'attachments';
 const isMsw = env.VITE_API_MODE === 'msw';
 
-// msw only: object URLs by path, so a just-uploaded file is viewable within the session.
-const mockObjectUrls = new Map<string, string>();
-
 export type UploadedFile = { path: string; url: string };
 
 export async function uploadAttachment(ticketId: string, file: File): Promise<UploadedFile> {
   const path = `${ticketId}/${crypto.randomUUID()}-${file.name}`;
 
   if (isMsw) {
-    const url = URL.createObjectURL(file);
-    mockObjectUrls.set(path, url);
-    return { path, url };
+    return { path, url: URL.createObjectURL(file) };
   }
 
   const { error } = await supabase.storage.from(BUCKET).upload(path, file);
   if (error) throw new Error(error.message);
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
   return { path, url: data.publicUrl };
+}
+
+/** Free a mock object URL when its attachment is deleted; a no-op for live http(s) URLs. */
+export function revokeAttachmentUrl(url: string): void {
+  if (url.startsWith('blob:')) URL.revokeObjectURL(url);
 }

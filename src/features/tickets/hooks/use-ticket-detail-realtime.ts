@@ -40,5 +40,6 @@ export function useTicketDetailRealtime(ticketId: string): PresenceMember[] {
     return joinPresence(`ticket:${ticketId}`, self, setMembers);
   }, [ticketId, userId]);
 
-  return members;
+  // Presence shows who ELSE is here — drop yourself; you know you're viewing.
+  return members.filter((member) => member.id !== userId);
 }
