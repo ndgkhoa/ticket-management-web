@@ -40,5 +40,15 @@ export function useTicketSearchParams() {
     });
   };
 
-  return { search, setSearch };
+  /**
+   * Replace the whole search with an absolute object — used when applying a saved view,
+   * which must clear filters the view doesn't set rather than merge onto the current
+   * ones. This is the "a saved view is a shared link" path: it navigates to exactly the
+   * snapshot's params, so it restores identically to opening that link.
+   */
+  const applySearch = (next: TicketSearch) => {
+    void navigate({ search: () => next });
+  };
+
+  return { search, setSearch, applySearch };
 }

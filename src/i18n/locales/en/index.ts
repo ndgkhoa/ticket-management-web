@@ -28,6 +28,27 @@ const en = {
     "Saved": "Saved",
     "Deleted": "Deleted"
   },
+  "SavedViews": {
+    "Title": "Saved views",
+    "Save": "Save current view",
+    "Empty": "No saved views yet",
+    "NameLabel": "View name",
+    "NamePlaceholder": "e.g. My open tickets",
+    "Delete": "Delete view"
+  },
+  "Bulk": {
+    "Selected": "{{count}} selected",
+    "SetStatus": "Set status",
+    "Assign": "Assign to",
+    "Unassign": "Unassign",
+    "SelectAllMatching": "Select all {{count}} matching filters",
+    "AllMatchingSelected": "All {{count}} tickets matching these filters are selected",
+    "Clear": "Clear selection",
+    "ConfirmTitle": "Update {{count}} tickets?",
+    "ConfirmDescription": "This updates every ticket matching the current filters, including ones not shown on this page. Continue?",
+    "Apply": "Apply",
+    "Updated": "Updated {{count}} tickets"
+  },
   "Errors": {
     "ServerErrorTitle": "Something went wrong",
     "ServerErrorDescription": "Sorry, an unexpected error occurred.",
@@ -89,6 +110,9 @@ const en = {
     "Subject": "Subject",
     "Status": "Status",
     "Priority": "Priority",
+    "Assignee": "Assignee",
+    "Team": "Team",
+    "Category": "Category",
     "Name": "Name",
     "Color": "Color",
     "Actions": "Actions",

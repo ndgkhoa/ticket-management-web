@@ -1,6 +1,6 @@
 # Phase 06 — Help Desk Core Features
 
-**Priority:** P1 · **Status:** 🟡 in progress (6a, 6-prereq, 6b done; 6c–6f next) · **Depends:** Phase 03, 04, 05
+**Priority:** P1 · **Status:** 🟡 in progress (6a, 6-prereq, 6b, 6c done; 6d–6f next) · **Depends:** Phase 03, 04, 05
 
 ## Overview
 
@@ -64,7 +64,21 @@ All admin screens shipped: users (+role assign), roles (+permission matrix), per
 
 Next: ⬜ 6c Ticket list · 6d Create/detail · 6e Realtime · 6f Tests.
 
-Per-table pagination (user-confirmed): **users** = server-side (full list contract, like tickets); **roles/permissions/teams/categories/tags/sla_policies** = client-side (fetch-all, `manualPagination:false`, bounded). Realtime/Storage/bulk-RPC = live Supabase only.
+Per-table pagination (user-confirmed): **users** = server-side (full list contract, like tickets); **roles/permissions/teams/categories/tags/sla_policies** = client-side (fetch-all, `manualPagination:false`, bounded). Realtime/Storage = live Supabase only.
+
+### ✅ 6c Ticket list — DONE
+
+The list foundation (server-side sort/filter/pagination, status/priority facets, debounced keyword search, empty vs no-results, URL-as-truth) was already in place; 6c added the three remaining pieces from the requirements.
+
+- **Relationship filters:** assignee/team/category/tag faceted filters, all multi-select arrays for a uniform facet UX (refactored the old single `assigneeId` → `assigneeIds`). Team/category/tag options reuse the bounded admin lookup queries; **assignees** come from a new `assignable_agents()` RPC (profiles holding `ticket.update`, so a customer never appears as a target). The **tag filter** resolves through the `ticket_tags` junction in two steps (tags → ticket ids → `id in (…)`), keeping count/pagination exact where an inner-join would multiply rows; the MSW junction read was extended to honour `in` (a latent gap). Filter values validate against their enum/uuid at the URL boundary (all-or-nothing drop on a bad member).
+- **Saved views:** Zustand-persisted named snapshots of the whole search-param object; applying one navigates to the equivalent URL, so a saved view and a shared link are the same thing. `SavedViewsMenu` (dropdown to apply/delete + a name dialog) in the list header; `applySearch` on the search hook replaces the whole search (clears params the view omits).
+- **Bulk actions:** page-scoped row selection (checkbox column in the shared `DataTable`, keyed by ticket id, cleared on any list-view change) + the Gmail-style **"select all N matching filters"** escape hatch (offered only when a whole page is selected, there is more to select, and no free-text search is active). Both modes route through one `bulk_update_tickets(p_filters, p_patch)` RPC — page-scoped sends `{ id: [...] }`, select-all sends the active filters — so a large change is one small request, never an id payload. **SECURITY INVOKER** so RLS re-scopes every row; the returned count is what RLS actually let through. An escape-hatch apply (rows the user can't all see) is gated behind a confirm dialog stating the count. Works in `msw` mode via a shared ticket store + an RPC handler that reuses `applyListQuery` to compute the matched set.
+- **msw parity:** both RPCs mirror their SQL over the fixtures; a shared `ticketStore` lets a bulk change show up on the next list read (the ticket twin of `userRolesStore`). Migration `20260718120000_ticket_list_rpcs.sql` holds both functions (types hand-added to `database.types.ts`; regeneration reproduces them).
+- Tests: search-schema (array filters), tag-filter over MSW, bulk-update over MSW (ids/filter/unassign/no-op), saved-views store, `e2e/tickets-list.spec.ts` (facet→URL + in-browser bulk). Green: tsc, 98 unit, 0 lint errors, 14 e2e, lang:check (117 keys).
+
+**Deferred to later stages (unchanged):** realtime list pill / quiet-refetch (6e); the `ticket_events` write on each mutation lands with the event-log task (bulk RPC currently updates status/assignee + `updated_at` only). Bulk keyword-search + select-all is intentionally not offered — replicating the FTS/trigram fallback in SQL for an unforgiving mutation isn't worth it; the page-scoped selection still works with a search active.
+
+Next: ⬜ 6d Create/detail · 6e Realtime · 6f Tests.
 
 ### Environment context for a fresh session
 
@@ -142,11 +156,11 @@ Per-table pagination (user-confirmed): **users** = server-side (full list contra
 
 - [x] Supabase auth + role-aware nav (6a — sign-up, OAuth, Turnstile, collapsible sidebar)
 - [ ] Admin CRUD (users/roles/perms/teams/categories/tags/SLA/canned) + per-table pagination mode documented
-- [ ] Ticket list (filters, keyword search, sort, pagination, saved views, bulk actions)
-- [ ] List UX contract verified: page reset, persisted page size, no layout jump, empty vs no-results
+- [x] Ticket list (filters, keyword search, sort, pagination, saved views, bulk actions)
+- [x] List UX contract verified: page reset, persisted page size, no layout jump, empty vs no-results
 - [ ] Ticket create
 - [ ] Ticket detail (timeline, Tiptap, attachments, assign, workflow, SLA, activity)
-- [ ] Bulk actions: page-scoped selection + "select all matching filters" (filter → server RPC, RLS re-checked)
+- [x] Bulk actions: page-scoped selection + "select all matching filters" (filter → server RPC, RLS re-checked)
 - [ ] Realtime updates + presence (list = pill/quiet-refetch + throttle, never splice; detail = splice)
 - [ ] Event log + optimistic mutations
 - [ ] Tests (unit + e2e happy paths)

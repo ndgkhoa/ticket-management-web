@@ -8,6 +8,7 @@ import {
   tagRows,
   teamRows,
   ticketRows,
+  ticketTagRows,
   userRows,
 } from '~/mocks/fixtures';
 import { ticketListConfig } from '~/mocks/config/ticket-list-config';
@@ -15,6 +16,7 @@ import { profileListConfig } from '~/mocks/config/profile-list-config';
 import { cannedResponseListConfig } from '~/mocks/config/canned-response-list-config';
 import { makeTableHandler } from '~/mocks/handlers/make-table-handler';
 import { makeJunctionHandler } from '~/mocks/handlers/make-junction-handler';
+import { ticketStore } from '~/mocks/stores/ticket-store';
 
 /**
  * PostgREST table handlers for every `/rest/v1/*` read the app makes today, plus writes
@@ -30,7 +32,12 @@ import { makeJunctionHandler } from '~/mocks/handlers/make-junction-handler';
 const profileRows = userRows.map(({ password: _password, ...profile }) => profile);
 
 export const restHandlers = [
-  makeTableHandler({ table: 'tickets', rows: ticketRows, applyConfig: ticketListConfig }),
+  makeTableHandler({
+    table: 'tickets',
+    rows: ticketRows,
+    applyConfig: ticketListConfig,
+    store: ticketStore,
+  }),
   makeTableHandler({ table: 'profiles', rows: profileRows, applyConfig: profileListConfig }),
   makeTableHandler({ table: 'roles', rows: roleRows, writable: true }),
   makeTableHandler({ table: 'permissions', rows: permissionRows }),
@@ -46,4 +53,7 @@ export const restHandlers = [
   }),
   // Role→permission membership for the matrix editor (composite key, no id).
   makeJunctionHandler({ table: 'role_permissions', rows: rolePermissionRows }),
+  // Ticket↔tag membership — read feeds the list's tag filter (resolves tags → ticket ids);
+  // write surface is here for the detail tag editor.
+  makeJunctionHandler({ table: 'ticket_tags', rows: ticketTagRows }),
 ].flat();

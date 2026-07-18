@@ -1,0 +1,57 @@
+import { describe, expect, it } from 'vitest';
+
+import { agentUsers, ticketRows } from '~/mocks/fixtures';
+import { ticketApi } from '~/features/tickets/api/ticket-api';
+
+/**
+ * Bulk update over MSW — the feature api (supabase.rpc) hitting the mocked
+ * `bulk_update_tickets` handler, which mutates the shared ticket store the list reads.
+ * Asserts the two selection modes (page-scoped ids, filter-scoped) and the no-op guard.
+ */
+describe('ticketApi.bulkUpdate over MSW', () => {
+  const agentId = agentUsers[0].id;
+
+  it('updates exactly the ids passed (page-scoped selection)', async () => {
+    const ids = ticketRows.slice(0, 3).map((row) => row.id);
+
+    const count = await ticketApi.bulkUpdate({ id: ids }, { status: 'closed' });
+
+    expect(count).toBe(3);
+    for (const id of ids) {
+      const ticket = await ticketApi.detail(id);
+      expect(ticket.status).toBe('closed');
+    }
+  });
+
+  it('updates every ticket matching a filter (select-all-matching)', async () => {
+    const openCount = ticketRows.filter((row) => row.status === 'open').length;
+
+    const count = await ticketApi.bulkUpdate({ status: ['open'] }, { assigneeId: agentId });
+
+    expect(count).toBe(openCount);
+    // A ticket that was open is now assigned to the chosen agent.
+    const sample = ticketRows.find((row) => row.status === 'open')!;
+    const ticket = await ticketApi.detail(sample.id);
+    expect(ticket.assigneeId).toBe(agentId);
+  });
+
+  it('unassigns when the assignee sentinel is empty', async () => {
+    const assigned = ticketRows.find((row) => row.assignee_id !== null)!;
+
+    const count = await ticketApi.bulkUpdate({ id: [assigned.id] }, { assigneeId: null });
+
+    expect(count).toBe(1);
+    const ticket = await ticketApi.detail(assigned.id);
+    expect(ticket.assigneeId).toBeNull();
+  });
+
+  it('is a no-op when the patch changes nothing', async () => {
+    const target = ticketRows[0];
+
+    const count = await ticketApi.bulkUpdate({ id: [target.id] }, {});
+
+    expect(count).toBe(0);
+    const ticket = await ticketApi.detail(target.id);
+    expect(ticket.status).toBe(target.status);
+  });
+});

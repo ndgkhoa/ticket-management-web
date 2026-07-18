@@ -5,12 +5,21 @@ import {
   type ColumnDef,
   type OnChangeFn,
   type PaginationState,
+  type RowSelectionState,
   type SortingState,
 } from '@tanstack/react-table';
 import type { ReactNode } from 'react';
 
 import { cn } from '~/utils/cn';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui';
+import {
+  Checkbox,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '~/components/ui';
 import { DataTablePagination } from '~/components/data-table/data-table-pagination';
 import { DataTableSkeleton } from '~/components/data-table/data-table-skeleton';
 
@@ -34,7 +43,17 @@ type DataTableProps<TData, TValue> = {
   /** Whether any filter/search is active, to pick empty vs no-results messaging. */
   isFiltered?: boolean;
 
+  // Row selection — opt-in. When enabled, a checkbox column is prepended (header selects
+  // this page's rows only, matching the page-scoped selection contract). State is
+  // controlled by the caller, keyed by `getRowId` (stable ticket id), so a bulk action
+  // over the selection references real ids, never row indices.
+  enableRowSelection?: boolean;
+  rowSelection?: RowSelectionState;
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+
   toolbar?: ReactNode;
+  /** Shown above the table when a selection is active — the bulk action bar + banner. */
+  bulkBar?: ReactNode;
   /** No data at all — an onboarding CTA. */
   emptyState?: ReactNode;
   /** Filters/search matched nothing — echo the query + a clear action. */
@@ -53,13 +72,43 @@ export function DataTable<TData, TValue>({
   isLoading = false,
   isPlaceholderData = false,
   isFiltered = false,
+  enableRowSelection = false,
+  rowSelection,
+  onRowSelectionChange,
   toolbar,
+  bulkBar,
   emptyState,
   noResultsState,
 }: DataTableProps<TData, TValue>) {
+  // Prepend the checkbox column only when selection is on, so non-selectable tables are
+  // untouched. The header toggles just this page's rows (`toggleAllPageRowsSelected`).
+  const selectionColumn: ColumnDef<TData, TValue> = {
+    id: 'select',
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all rows on this page"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  };
+
+  const tableColumns = enableRowSelection ? [selectionColumn, ...columns] : columns;
+
   const table = useReactTable({
     data,
-    columns,
+    columns: tableColumns,
     getRowId,
     // Server-driven: the table renders what it is handed and reports intent through
     // the handlers. `rowCount` gives it the total so the pager knows the page count.
@@ -67,9 +116,11 @@ export function DataTable<TData, TValue>({
     manualPagination: true,
     manualSorting: true,
     manualFiltering: true,
-    state: { pagination, sorting },
+    enableRowSelection,
+    state: { pagination, sorting, ...(rowSelection ? { rowSelection } : {}) },
     onPaginationChange,
     onSortingChange,
+    onRowSelectionChange,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -79,6 +130,8 @@ export function DataTable<TData, TValue>({
   return (
     <div className="space-y-3">
       {toolbar}
+
+      {bulkBar}
 
       <div className="overflow-hidden rounded-md border">
         <div

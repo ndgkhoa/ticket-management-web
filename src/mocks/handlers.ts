@@ -2,6 +2,7 @@ import type { RequestHandler } from 'msw';
 
 import { authHandlers } from '~/mocks/handlers/auth-handlers';
 import { userRolesHandlers } from '~/mocks/handlers/user-roles-handlers';
+import { rpcHandlers } from '~/mocks/handlers/rpc-handlers';
 import { restHandlers } from '~/mocks/handlers/rest-handlers';
 
 /**
@@ -15,4 +16,9 @@ import { restHandlers } from '~/mocks/handlers/rest-handlers';
  * `VITE_API_MODE=msw` is what activates these — the same fixtures that seed the live
  * database also answer here, so the demo runs with no backend and no live Supabase.
  */
-export const handlers: RequestHandler[] = [...authHandlers, ...userRolesHandlers, ...restHandlers];
+export const handlers: RequestHandler[] = [
+  ...authHandlers,
+  ...userRolesHandlers,
+  ...rpcHandlers,
+  ...restHandlers,
+];

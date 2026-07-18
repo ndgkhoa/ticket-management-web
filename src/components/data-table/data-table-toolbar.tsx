@@ -66,7 +66,10 @@ export function DataTableToolbar<TData>({
   }, [search]);
 
   return (
-    <div className="flex items-center gap-2">
+    // `flex-wrap` so a toolbar with many active filters (each showing selected labels)
+    // flows onto a second line instead of overflowing the viewport and forcing the whole
+    // page to scroll horizontally.
+    <div className="flex flex-wrap items-center gap-2">
       <Input
         value={value}
         onChange={(event) => setValue(event.target.value)}

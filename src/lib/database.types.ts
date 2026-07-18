@@ -564,6 +564,26 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      assignable_agents: {
+        Args: never;
+        Returns: {
+          avatar_url: string | null;
+          created_at: string;
+          email: string;
+          full_name: string | null;
+          id: string;
+        }[];
+        SetofOptions: {
+          from: '*';
+          to: 'profiles';
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+      bulk_update_tickets: {
+        Args: { p_filters: Json; p_patch: Json };
+        Returns: number;
+      };
       can_access_ticket: {
         Args: {
           ticket_assignee_id: string;

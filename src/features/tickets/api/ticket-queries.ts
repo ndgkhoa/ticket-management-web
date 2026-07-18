@@ -1,7 +1,14 @@
-import { keepPreviousData, queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  queryOptions,
+  useMutation,
+  useQueryClient,
+  useQuery,
+  useSuspenseQuery,
+} from '@tanstack/react-query';
 
 import type { ListParams } from '~/lib/list-query';
-import { ticketApi } from '~/features/tickets/api/ticket-api';
+import { ticketApi, type BulkTicketPatch } from '~/features/tickets/api/ticket-api';
 import { ticketKeys } from '~/features/tickets/constants/ticket-keys';
 
 /**
@@ -31,3 +38,17 @@ export const ticketQueries = {
 export const useTicketList = (params: ListParams) => useQuery(ticketQueries.list(params));
 
 export const useTicketDetail = (id: string) => useSuspenseQuery(ticketQueries.detail(id));
+
+/**
+ * Bulk status/assignee mutation. On success it invalidates every ticket list so the
+ * affected rows re-read from the server — never splices, since a bulk change can move
+ * rows onto or off the current filtered page, which only a refetch resolves correctly.
+ */
+export const useBulkUpdateTickets = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ filters, patch }: { filters: ListParams['filters']; patch: BulkTicketPatch }) =>
+      ticketApi.bulkUpdate(filters, patch),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ticketKeys.lists() }),
+  });
+};

@@ -28,6 +28,27 @@ const vi = {
     "Saved": "Đã lưu",
     "Deleted": "Đã xóa"
   },
+  "SavedViews": {
+    "Title": "Bộ lọc đã lưu",
+    "Save": "Lưu bộ lọc hiện tại",
+    "Empty": "Chưa có bộ lọc nào",
+    "NameLabel": "Tên bộ lọc",
+    "NamePlaceholder": "vd: Phiếu đang mở của tôi",
+    "Delete": "Xóa bộ lọc"
+  },
+  "Bulk": {
+    "Selected": "Đã chọn {{count}}",
+    "SetStatus": "Đổi trạng thái",
+    "Assign": "Giao cho",
+    "Unassign": "Bỏ giao",
+    "SelectAllMatching": "Chọn tất cả {{count}} phiếu khớp bộ lọc",
+    "AllMatchingSelected": "Đã chọn tất cả {{count}} phiếu khớp bộ lọc",
+    "Clear": "Bỏ chọn",
+    "ConfirmTitle": "Cập nhật {{count}} phiếu?",
+    "ConfirmDescription": "Thao tác này cập nhật mọi phiếu khớp bộ lọc hiện tại, kể cả phiếu không hiển thị ở trang này. Tiếp tục?",
+    "Apply": "Áp dụng",
+    "Updated": "Đã cập nhật {{count}} phiếu"
+  },
   "Errors": {
     "ServerErrorTitle": "Đã có lỗi xảy ra",
     "ServerErrorDescription": "Xin lỗi, đã xảy ra lỗi không mong muốn.",
@@ -85,6 +106,9 @@ const vi = {
     "Subject": "Tiêu đề",
     "Status": "Trạng thái",
     "Priority": "Độ ưu tiên",
+    "Assignee": "Người phụ trách",
+    "Team": "Nhóm",
+    "Category": "Danh mục",
     "Name": "Tên",
     "Color": "Màu",
     "Actions": "Thao tác",

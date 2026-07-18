@@ -1,8 +1,8 @@
-import { Inbox, SearchX } from 'lucide-react';
+import { Inbox, SearchX, User as UserIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
 
-import { Button, Container } from '~/components/ui';
+import { Avatar, AvatarFallback, AvatarImage, Button, Container } from '~/components/ui';
 import { TicketStatusBadge } from '~/features/tickets/components/ticket-status-badge';
 import { TicketPriorityBadge } from '~/features/tickets/components/ticket-priority-badge';
 import { ErrorPage } from '~/components/errors';
@@ -15,7 +15,11 @@ import {
 } from '~/components/data-table';
 import type { PageSize } from '~/lib/list-query';
 import { useTicketList } from '~/features/tickets/api/ticket-queries';
+import { SavedViewsMenu } from '~/features/tickets/components/saved-views-menu';
+import { BulkActionsBar } from '~/features/tickets/components/bulk-actions-bar';
 import { useTicketSearchParams } from '~/features/tickets/hooks/use-ticket-search-params';
+import { useTicketFilterOptions } from '~/features/tickets/hooks/use-ticket-filter-options';
+import { useTicketBulkSelection } from '~/features/tickets/hooks/use-ticket-bulk-selection';
 import { toTicketListParams } from '~/features/tickets/schemas/ticket-search-schema';
 import {
   ticketPrioritySchema,
@@ -33,8 +37,14 @@ const priorityOptions = ticketPrioritySchema.options.map((value) => ({ label: va
 
 function Tickets() {
   const { t } = useTranslation();
-  const { search, setSearch } = useTicketSearchParams();
+  const { search, setSearch, applySearch } = useTicketSearchParams();
   const ticketQuery = useTicketList(toTicketListParams(search));
+
+  const rows = ticketQuery.data?.rows ?? [];
+  const totalCount = ticketQuery.data?.totalCount ?? 0;
+
+  const options = useTicketFilterOptions();
+  const bulk = useTicketBulkSelection({ search, rows, totalCount });
 
   // Continuous row number across pages: the server pages the data, so the display index
   // is the page offset plus the row's position on the current page.
@@ -70,6 +80,52 @@ function Tickets() {
       ),
       cell: ({ row }) => <TicketPriorityBadge priority={row.original.priority} />,
     },
+    {
+      id: 'assignee',
+      header: t('Fields.Assignee'),
+      // Relation columns aren't sortable — the sort allowlist is on the ticket's own
+      // columns, and ordering by a joined name isn't part of the list contract.
+      enableSorting: false,
+      cell: ({ row }) => {
+        const agent = row.original.assigneeId
+          ? options.assigneeById.get(row.original.assigneeId)
+          : undefined;
+        if (!agent) return <span className="text-muted-foreground">—</span>;
+        return (
+          <span className="inline-flex items-center gap-2">
+            <Avatar className="size-6">
+              <AvatarImage src={agent.avatarUrl ?? undefined} alt={agent.fullName ?? ''} />
+              <AvatarFallback>
+                <UserIcon className="size-3.5" />
+              </AvatarFallback>
+            </Avatar>
+            {agent.fullName ?? '—'}
+          </span>
+        );
+      },
+    },
+    {
+      id: 'team',
+      header: t('Fields.Team'),
+      enableSorting: false,
+      cell: ({ row }) => {
+        const name = row.original.teamId
+          ? options.teamNameById.get(row.original.teamId)
+          : undefined;
+        return <span className={name ? undefined : 'text-muted-foreground'}>{name ?? '—'}</span>;
+      },
+    },
+    {
+      id: 'category',
+      header: t('Fields.Category'),
+      enableSorting: false,
+      cell: ({ row }) => {
+        const name = row.original.categoryId
+          ? options.categoryNameById.get(row.original.categoryId)
+          : undefined;
+        return <span className={name ? undefined : 'text-muted-foreground'}>{name ?? '—'}</span>;
+      },
+    },
   ];
 
   // URL → table: pagination is 0-based here, 1-based in the URL. A page-size change
@@ -78,23 +134,60 @@ function Tickets() {
   const sorting: SortingState = [{ id: search.sort, desc: search.dir === 'desc' }];
 
   const isFiltered = Boolean(
-    search.q || search.status?.length || search.priority?.length || search.assigneeId
+    search.q ||
+    search.status?.length ||
+    search.priority?.length ||
+    search.assigneeIds?.length ||
+    search.teamIds?.length ||
+    search.categoryIds?.length ||
+    search.tagIds?.length
   );
 
   const handleReset = () =>
-    setSearch({ q: undefined, status: undefined, priority: undefined, assigneeId: undefined });
+    setSearch({
+      q: undefined,
+      status: undefined,
+      priority: undefined,
+      assigneeIds: undefined,
+      teamIds: undefined,
+      categoryIds: undefined,
+      tagIds: undefined,
+    });
 
   if (ticketQuery.isError) {
     return <ErrorPage subTitle={ticketQuery.error.message} />;
   }
 
   return (
-    <Container title={t('Common.List', { name: t('Fields.Ticket_other') })}>
+    <Container
+      title={t('Common.List', { name: t('Fields.Ticket_other') })}
+      extraRight={<SavedViewsMenu search={search} onApply={applySearch} />}
+    >
       <DataTable
         columns={columns}
-        data={ticketQuery.data?.rows ?? []}
-        totalCount={ticketQuery.data?.totalCount ?? 0}
+        data={rows}
+        totalCount={totalCount}
         getRowId={(row) => row.id}
+        enableRowSelection
+        rowSelection={bulk.rowSelection}
+        onRowSelectionChange={bulk.setRowSelection}
+        bulkBar={
+          bulk.selectedIds.length > 0 ? (
+            <BulkActionsBar
+              selectedCount={bulk.selectedIds.length}
+              totalCount={totalCount}
+              allPageSelected={bulk.allPageSelected}
+              selectAllMatching={bulk.selectAllMatching}
+              canSelectAllMatching={bulk.canSelectAllMatching}
+              onSelectAllMatching={bulk.enableSelectAllMatching}
+              onClear={bulk.clearSelection}
+              statusOptions={statusOptions}
+              assigneeOptions={options.assigneeOptions}
+              onApply={bulk.applyBulk}
+              pending={bulk.pending}
+            />
+          ) : null
+        }
         pagination={pagination}
         sorting={sorting}
         onPaginationChange={(updater) => {
@@ -144,6 +237,44 @@ function Tickets() {
                     })
                   }
                 />
+                {options.assigneeOptions.length > 0 && (
+                  <DataTableFacetedFilter
+                    title={t('Fields.Assignee')}
+                    options={options.assigneeOptions}
+                    selected={search.assigneeIds ?? []}
+                    onChange={(values) =>
+                      setSearch({ assigneeIds: values.length ? values : undefined })
+                    }
+                  />
+                )}
+                {options.teamOptions.length > 0 && (
+                  <DataTableFacetedFilter
+                    title={t('Fields.Team')}
+                    options={options.teamOptions}
+                    selected={search.teamIds ?? []}
+                    onChange={(values) =>
+                      setSearch({ teamIds: values.length ? values : undefined })
+                    }
+                  />
+                )}
+                {options.categoryOptions.length > 0 && (
+                  <DataTableFacetedFilter
+                    title={t('Fields.Category')}
+                    options={options.categoryOptions}
+                    selected={search.categoryIds ?? []}
+                    onChange={(values) =>
+                      setSearch({ categoryIds: values.length ? values : undefined })
+                    }
+                  />
+                )}
+                {options.tagOptions.length > 0 && (
+                  <DataTableFacetedFilter
+                    title={t('Fields.Tags')}
+                    options={options.tagOptions}
+                    selected={search.tagIds ?? []}
+                    onChange={(values) => setSearch({ tagIds: values.length ? values : undefined })}
+                  />
+                )}
               </>
             }
           />

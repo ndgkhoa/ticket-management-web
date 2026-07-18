@@ -14,4 +14,6 @@ export const ticketKeys = {
   list: (params: ListParams) => [...ticketKeys.lists(), params] as const,
   details: () => [...ticketKeys.all, 'detail'] as const,
   detail: (id: string) => [...ticketKeys.details(), id] as const,
+  /** The assignable-agents roster (the assignee filter's options). */
+  assignees: () => [...ticketKeys.all, 'assignees'] as const,
 };

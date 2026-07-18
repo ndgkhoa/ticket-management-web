@@ -14,13 +14,38 @@ import { collectionResponse, objectResponse } from '~/mocks/lib/postgrest-respon
  * delete addressed by the key columns.
  */
 
-/** The `col=eq.value` filters as a plain map — the only shape a junction query uses. */
+/** The `col=eq.value` filters as a plain map — what a delete is addressed by. */
 function eqFilters(query: PostgrestQuery): Record<string, string> {
   return Object.fromEntries(
     Object.entries(query.filters)
       .filter(([, filter]) => filter.op === 'eq')
       .map(([column, filter]) => [column, filter.value])
   );
+}
+
+/** Parse a PostgREST `in.(a,b,c)` list value into its members. */
+function parseInList(value: string): string[] {
+  return value
+    .replace(/^\(|\)$/g, '')
+    .split(',')
+    .map((entry) => entry.trim().replace(/^"|"$/g, ''));
+}
+
+/**
+ * Does a row satisfy every eq/in filter on the query? Reads honour `in` (a tag filter
+ * reads `ticket_tags?tag_id=in.(…)`) as well as `eq`; an `eq`-only read is the common
+ * membership lookup. Deletes stay eq-only (a junction row is addressed by its exact key).
+ */
+function matchesRead<Row extends Record<string, unknown>>(
+  row: Row,
+  query: PostgrestQuery
+): boolean {
+  return Object.entries(query.filters).every(([column, filter]) => {
+    const cell = String(row[column]);
+    if (filter.op === 'eq') return cell === filter.value;
+    if (filter.op === 'in') return parseInList(filter.value).includes(cell);
+    return true;
+  });
 }
 
 export function makeJunctionHandler<Row extends Record<string, unknown>>(config: {
@@ -37,7 +62,7 @@ export function makeJunctionHandler<Row extends Record<string, unknown>>(config:
 
   const read = http.get(path, ({ request }) => {
     const query = parsePostgrestRequest(request);
-    return collectionResponse(matching(eqFilters(query)));
+    return collectionResponse(store.all().filter((row) => matchesRead(row, query)));
   });
 
   const create = http.post(path, async ({ request }) => {

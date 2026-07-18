@@ -1,7 +1,7 @@
 import { http, type HttpHandler } from 'msw';
 
 import { applyListQuery, type ApplyListConfig } from '~/mocks/lib/apply-list-query';
-import { createTableStore } from '~/mocks/lib/table-store';
+import { createTableStore, type TableStore } from '~/mocks/lib/table-store';
 import {
   parsePostgrestRequest,
   toListParams,
@@ -28,7 +28,7 @@ import {
  * mutate the store and echo the affected row when `return=representation` is requested.
  */
 
-type TableConfig<Row extends Record<string, unknown>> = {
+type TableConfig<Row extends Record<string, unknown> & { id: string }> = {
   table: string;
   rows: readonly Row[];
   /** Present only for tables with a paginated + searchable list (tickets today). */
@@ -41,6 +41,12 @@ type TableConfig<Row extends Record<string, unknown>> = {
    * admin lookup tables opt in.
    */
   writable?: boolean;
+  /**
+   * An existing store to read from, instead of one seeded internally from `rows`. Supplied
+   * when another handler must mutate the same data — tickets share a store with the bulk
+   * RPC, so a bulk change shows up on the next list read.
+   */
+  store?: TableStore<Row>;
 };
 
 /** eq / in matching for the plain-read and detail paths — dynamic column access, since a
@@ -96,7 +102,7 @@ export function makeTableHandler<Row extends Record<string, unknown> & { id: str
 ): HttpHandler[] {
   const { table, applyConfig } = config;
   const getId = config.getId ?? ((row: Row) => String(row.id));
-  const store = createTableStore(config.rows);
+  const store = config.store ?? createTableStore(config.rows);
   const path = `*/rest/v1/${table}`;
 
   const read = http.get(path, ({ request }) => {

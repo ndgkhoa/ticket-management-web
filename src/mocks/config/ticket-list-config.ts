@@ -23,6 +23,8 @@ export const ticketListConfig: ApplyListConfig<TicketRow> = {
     assignee_id: (row) => row.assignee_id,
     team_id: (row) => row.team_id,
     category_id: (row) => row.category_id,
+    // The tag filter's resolved-id constraint (`.in('id', ticketIds)`); see ticket-api.
+    id: (row) => row.id,
   },
   // Subject + description feed the tsvector; subject alone feeds the trigram fallback.
   searchText: (row) => `${row.subject} ${row.description}`,

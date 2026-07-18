@@ -41,7 +41,16 @@ export const ticketSearchSchema = z.object({
   // arises from tampering, where dropping the filter is a safe response.
   status: z.array(ticketStatusSchema).optional().catch(undefined),
   priority: z.array(ticketPrioritySchema).optional().catch(undefined),
-  assigneeId: z.uuid().optional().catch(undefined),
+  // Relationship filters — all multi-select facets, so all arrays of ids (uniform with
+  // status/priority). A bad member drops the whole filter to undefined, same all-or-
+  // nothing rule as the enums: a mixed array only comes from tampering, and dropping it
+  // keeps an invalid uuid from reaching the data layer as a 22P02.
+  assigneeIds: z.array(z.uuid()).optional().catch(undefined),
+  teamIds: z.array(z.uuid()).optional().catch(undefined),
+  categoryIds: z.array(z.uuid()).optional().catch(undefined),
+  // Tags live on the `ticket_tags` junction, not a ticket column, so this resolves to a
+  // set of ticket ids in the api layer rather than mapping to a `.in` on a column.
+  tagIds: z.array(z.uuid()).optional().catch(undefined),
   sort: z.enum(SORTABLE_FIELDS).catch('created_at').default('created_at'),
   dir: z.enum(['asc', 'desc']).catch('desc').default('desc'),
 });
@@ -57,14 +66,28 @@ export const TICKET_SEARCH_DEFAULTS = {
 } as const;
 
 /** Which params, when changed, must send the user back to page 1. */
-export const PAGE_RESETTING_KEYS = ['q', 'pageSize', 'status', 'priority', 'assigneeId'] as const;
+export const PAGE_RESETTING_KEYS = [
+  'q',
+  'pageSize',
+  'status',
+  'priority',
+  'assigneeIds',
+  'teamIds',
+  'categoryIds',
+  'tagIds',
+] as const;
 
 /** Map the URL search into the nested params shape the shared list query expects. */
 export function toTicketListParams(search: TicketSearch): ListParams {
   const filters: ListParams['filters'] = {};
   if (search.status?.length) filters.status = search.status;
   if (search.priority?.length) filters.priority = search.priority;
-  if (search.assigneeId) filters.assignee_id = search.assigneeId;
+  if (search.assigneeIds?.length) filters.assignee_id = search.assigneeIds;
+  if (search.teamIds?.length) filters.team_id = search.teamIds;
+  if (search.categoryIds?.length) filters.category_id = search.categoryIds;
+  // Not a ticket column — the api resolves it through the junction. Carried on `filters`
+  // under a reserved key the column-filter allowlist deliberately omits.
+  if (search.tagIds?.length) filters.tag_id = search.tagIds;
 
   return {
     page: search.page,
