@@ -141,7 +141,9 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      <DataTablePagination table={table} totalCount={totalCount} />
+      {/* Only when the data spans more than one page — a single page needs no pager or
+          rows-per-page control. `getPageCount` reads the server total via `rowCount`. */}
+      {table.getPageCount() > 1 && <DataTablePagination table={table} totalCount={totalCount} />}
     </div>
   );
 }

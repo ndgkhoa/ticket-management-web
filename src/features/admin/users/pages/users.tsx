@@ -6,6 +6,7 @@ import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-t
 import { Avatar, AvatarFallback, AvatarImage, Button, Container } from '~/components/ui';
 import { ErrorPage } from '~/components/errors';
 import {
+  ActionsHeader,
   DataTable,
   DataTableColumnHeader,
   DataTableEmptyState,
@@ -82,16 +83,18 @@ function Users() {
     },
     {
       id: 'actions',
-      header: t('Fields.Actions'),
+      header: () => <ActionsHeader />,
       cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t('Fields.UserRoles')}
-          onClick={() => setRoleTarget(row.original)}
-        >
-          <Shield className="size-4" />
-        </Button>
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t('Fields.UserRoles')}
+            onClick={() => setRoleTarget(row.original)}
+          >
+            <Shield className="size-4" />
+          </Button>
+        </div>
       ),
       enableSorting: false,
       enableHiding: false,

@@ -30,13 +30,25 @@ function renderTable(overrides: Partial<Parameters<typeof DataTable<Row, unknown
 }
 
 describe('DataTable', () => {
-  it('renders the server-provided rows and the total count', async () => {
+  it('renders the server-provided rows', async () => {
     await renderTable();
 
     expect(screen.getByText('Alpha')).toBeInTheDocument();
     expect(screen.getByText('Bravo')).toBeInTheDocument();
-    // x–y of N from the server total, not a client-side count.
-    expect(screen.getByText('1–2 of 2')).toBeInTheDocument();
+  });
+
+  it('hides the pager for a single page', async () => {
+    // 2 rows at pageSize 20 → one page → no pager or rows-per-page control.
+    await renderTable();
+
+    expect(screen.queryByText('Rows per page')).not.toBeInTheDocument();
+  });
+
+  it('shows the pager with the server total across multiple pages', async () => {
+    // 50 rows / pageSize 20 → 3 pages → the pager reads x–y of N from the server total.
+    await renderTable({ totalCount: 50 });
+
+    expect(screen.getByText('1–20 of 50')).toBeInTheDocument();
   });
 
   it('shows the empty state when there is no data and no filter', async () => {

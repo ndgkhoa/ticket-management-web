@@ -12,6 +12,7 @@ import { Search } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { DEFAULT_PAGE_SIZE } from '~/lib/list-query';
 import {
   Input,
   Table,
@@ -68,7 +69,7 @@ export function ClientDataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 10 } },
+    initialState: { pagination: { pageSize: DEFAULT_PAGE_SIZE } },
   });
 
   const columnCount = table.getAllLeafColumns().length;
@@ -141,6 +142,8 @@ export function ClientDataTable<TData, TValue>({
         </Table>
       </div>
 
+      {/* Only when the data spans more than one page — a single page needs no pager or
+          rows-per-page control. */}
       {table.getPageCount() > 1 && <DataTablePagination table={table} totalCount={filteredCount} />}
     </div>
   );

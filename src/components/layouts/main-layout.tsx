@@ -6,7 +6,7 @@ import { Sidebar, Navbar, Breadcrumb } from '~/components/ui';
 
 const LayoutContent = memo(function LayoutContent() {
   return (
-    <main className="flex-1 overflow-auto px-4">
+    <main className="flex-1 [scrollbar-gutter:stable] overflow-auto px-4">
       <Breadcrumb />
       <Suspense fallback={<FullPageFallback />}>
         <Outlet />

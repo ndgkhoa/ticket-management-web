@@ -1,13 +1,13 @@
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Fragment, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 
 import { Button, ConfirmDialog, Container } from '~/components/ui';
 import { ErrorPage } from '~/components/errors';
-import { ClientDataTable } from '~/components/data-table';
+import { ActionsHeader, ClientDataTable } from '~/components/data-table';
 
 type Entity = { id: string };
 
@@ -73,7 +73,7 @@ export function AdminCrudPage<T extends Entity>({
 
   const actionsColumn: ColumnDef<T> = {
     id: 'actions',
-    header: () => <div className="text-right">{t('Fields.Actions')}</div>,
+    header: () => <ActionsHeader />,
     cell: ({ row }) => (
       <div className="flex justify-end gap-1">
         {rowActions?.(row.original)}
@@ -125,15 +125,15 @@ export function AdminCrudPage<T extends Entity>({
         emptyState={<span className="text-muted-foreground">{t('Common.NoData')}</span>}
       />
 
-      {/* Keyed remount per target resets the form defaults (create vs which row edited),
-          since TanStack Form reads its defaultValues only once on mount. */}
-      <Fragment key={form.entity?.id ?? 'new'}>
-        {renderForm({
-          open: form.open,
+      {/* Mount the form only while open, so it unmounts on close and remounts fresh on the
+          next open — TanStack Form reads its defaultValues once at mount, so a reused
+          instance would otherwise keep the previous (or just-submitted) values. */}
+      {form.open &&
+        renderForm({
+          open: true,
           onOpenChange: (open) => setForm((state) => ({ ...state, open })),
           entity: form.entity,
         })}
-      </Fragment>
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}

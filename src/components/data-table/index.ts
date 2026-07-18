@@ -3,6 +3,7 @@ export * from '~/components/data-table/client-data-table';
 export * from '~/components/data-table/data-table-toolbar';
 export * from '~/components/data-table/data-table-pagination';
 export * from '~/components/data-table/data-table-column-header';
+export * from '~/components/data-table/data-table-actions-header';
 export * from '~/components/data-table/data-table-faceted-filter';
 export * from '~/components/data-table/data-table-view-options';
 export * from '~/components/data-table/data-table-empty-state';
