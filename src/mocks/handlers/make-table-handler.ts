@@ -2,6 +2,7 @@ import { http, type HttpHandler } from 'msw';
 
 import { applyListQuery, type ApplyListConfig } from '~/mocks/lib/apply-list-query';
 import { createTableStore, type TableStore } from '~/mocks/lib/table-store';
+import { publishChange } from '~/mocks/lib/realtime-bus';
 import {
   parsePostgrestRequest,
   toListParams,
@@ -47,6 +48,11 @@ type TableConfig<Row extends Record<string, unknown> & { id: string }> = {
    * RPC, so a bulk change shows up on the next list read.
    */
   store?: TableStore<Row>;
+  /**
+   * Broadcast INSERT/UPDATE/DELETE on this table over the realtime bus, so other tabs of the
+   * demo react (the live twin is Supabase Realtime replicating the write). Off by default.
+   */
+  realtime?: boolean;
 };
 
 /** eq / in matching for the plain-read and detail paths — dynamic column access, since a
@@ -129,7 +135,9 @@ export function makeTableHandler<Row extends Record<string, unknown> & { id: str
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const rows = (Array.isArray(body) ? body : [body]).map((row) => {
       const withId = { ...row, id: row.id ?? crypto.randomUUID() } as Row;
-      return store.insert(withId);
+      const inserted = store.insert(withId);
+      if (config.realtime) publishChange(table, { eventType: 'INSERT', new: inserted, old: null });
+      return inserted;
     });
     return query.single ? objectResponse(rows[0]) : collectionResponse(rows);
   });
@@ -141,6 +149,7 @@ export function makeTableHandler<Row extends Record<string, unknown> & { id: str
     const id = query.filters.id?.value;
     const updated = id ? store.update(id, patch) : undefined;
     if (!updated) return notFoundResponse();
+    if (config.realtime) publishChange(table, { eventType: 'UPDATE', new: updated, old: null });
     return query.single ? objectResponse(updated) : collectionResponse([updated]);
   });
 
@@ -149,6 +158,8 @@ export function makeTableHandler<Row extends Record<string, unknown> & { id: str
     const query = parsePostgrestRequest(request);
     const id = query.filters.id?.value;
     const removed = id ? store.remove(id) : undefined;
+    if (config.realtime && removed)
+      publishChange(table, { eventType: 'DELETE', new: null, old: removed });
     return query.single && removed
       ? objectResponse(removed)
       : collectionResponse(removed ? [removed] : []);

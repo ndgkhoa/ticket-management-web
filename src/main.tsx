@@ -26,6 +26,11 @@ const enableMocking = async () => {
   // 'warn' rather than 'bypass': an unhandled request still reaches the network, but
   // it says so. Silence here means a missing handler looks like a backend problem.
   await worker.start({ onUnhandledRequest: 'warn' });
+
+  // Route realtime through the BroadcastChannel mock (dynamic import keeps it, and its
+  // fixtures, out of the live bundle) and start the synthetic "other users" activity.
+  const { installMockRealtime } = await import('~/mocks/lib/realtime-bus');
+  installMockRealtime();
 };
 
 /**

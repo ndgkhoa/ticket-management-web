@@ -1,12 +1,29 @@
 import { useTranslation } from 'react-i18next';
 
 import { Badge } from '~/components/ui';
+import { cn } from '~/utils/cn';
 import { useSlaPolicyList } from '~/features/admin/sla-policies/api/sla-policy-queries';
 import type { Ticket } from '~/features/tickets/schemas/ticket-schema';
 
 type Props = { ticket: Ticket };
 
-type SlaState = { label: string; variant: 'met' | 'breached' | 'pending'; due: number };
+type SlaVariant = 'met' | 'met_late' | 'breached' | 'pending' | 'pending_soon';
+type SlaState = { label: string; variant: SlaVariant; due: number };
+
+const AMBER = 'border-amber-500/30 bg-amber-500/15 text-amber-600 dark:text-amber-400';
+
+// Badge look per SLA state: green = met on time, amber = late or nearly-due, red = breached,
+// neutral = comfortably counting down.
+const SLA_BADGE: Record<SlaVariant, { variant: 'outline' | 'destructive'; className?: string }> = {
+  met: {
+    variant: 'outline',
+    className: 'border-emerald-500/30 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  },
+  met_late: { variant: 'outline', className: AMBER },
+  pending_soon: { variant: 'outline', className: AMBER },
+  breached: { variant: 'destructive' },
+  pending: { variant: 'outline' },
+};
 
 /** Format a signed minute delta as a coarse "in 2h" / "3h overdue" string. */
 function formatDelta(minutes: number, t: ReturnType<typeof useTranslation>['t']): string {
@@ -35,11 +52,22 @@ export function TicketSlaCard({ ticket }: Props) {
   const stateFor = (dueMinutes: number, doneAt: string | null): SlaState => {
     const due = created + dueMinutes * 60_000;
     if (doneAt) {
-      const met = new Date(doneAt).getTime() <= due;
-      return { label: met ? t('Tickets.Met') : t('Tickets.MetLate'), variant: 'met', due };
+      const onTime = new Date(doneAt).getTime() <= due;
+      return {
+        label: onTime ? t('Tickets.Met') : t('Tickets.MetLate'),
+        variant: onTime ? 'met' : 'met_late',
+        due,
+      };
     }
     if (now > due) return { label: t('Tickets.Breached'), variant: 'breached', due };
-    return { label: formatDelta(Math.round((due - now) / 60_000), t), variant: 'pending', due };
+    // Within the last quarter of the window → amber "due soon"; otherwise a calm countdown.
+    const remaining = due - now;
+    const soon = remaining < dueMinutes * 60_000 * 0.25;
+    return {
+      label: formatDelta(Math.round(remaining / 60_000), t),
+      variant: soon ? 'pending_soon' : 'pending',
+      due,
+    };
   };
 
   const firstResponse = stateFor(policy.first_response_mins, ticket.firstResponseAt);
@@ -54,16 +82,15 @@ export function TicketSlaCard({ ticket }: Props) {
 }
 
 function SlaRow({ label, state }: { label: string; state: SlaState }) {
-  const variant =
-    state.variant === 'breached'
-      ? 'destructive'
-      : state.variant === 'met'
-        ? 'secondary'
-        : 'outline';
+  const style = SLA_BADGE[state.variant];
   return (
     <div className="flex items-center justify-between gap-2 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <Badge variant={variant} title={new Date(state.due).toLocaleString()}>
+      <Badge
+        variant={style.variant}
+        className={cn(style.className)}
+        title={new Date(state.due).toLocaleString()}
+      >
         {state.label}
       </Badge>
     </div>

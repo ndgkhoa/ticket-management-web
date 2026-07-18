@@ -1,6 +1,6 @@
 # Phase 06 — Help Desk Core Features
 
-**Priority:** P1 · **Status:** 🟡 in progress (6a, 6-prereq, 6b, 6c, 6d done; 6e–6f next) · **Depends:** Phase 03, 04, 05
+**Priority:** P1 · **Status:** 🟡 in progress (6a, 6-prereq, 6b, 6c, 6d, 6e + attachments done; 6f next) · **Depends:** Phase 03, 04, 05
 
 ## Overview
 
@@ -94,7 +94,20 @@ The list foundation (server-side sort/filter/pagination, status/priority facets,
 
 **Deferred:** attachments (Supabase Storage — live-only, doesn't mock; lands with the storage/realtime pass). The `ticket_events` write-on-mutation that the plan lists separately is effectively done here (status/priority/assign/comment/tag all emit events).
 
-Next: ⬜ 6e Realtime · 6f Tests.
+### ✅ 6e Realtime + attachments — DONE (mocked for the demo, real on live)
+
+Both were "live-only" concerns; rather than defer, they're mocked so the `msw` demo showcases them, behind a facade that uses the real thing when connected to Supabase.
+
+- **Realtime facade** (`lib/realtime.ts`): live = Supabase Realtime (postgres changes + presence over a websocket); `msw` = a **BroadcastChannel transport** registered at bootstrap (dynamic-imported, so neither it nor its fixtures land in the live bundle). Feature code calls `subscribeTable` / `joinPresence` unaware of which is behind it.
+- **List** (`use-ticket-list-realtime`): a new/changed ticket triggers a **throttled quiet refetch** when safe (page 1, default sort, no filter/search/selection, settled), else a **"N new" pill** — never splices into the paged cache (the server owns page membership).
+- **Detail** (`use-ticket-detail-realtime`): another viewer's reply refetches the timeline + activity (append-only, so it just appears at the bottom); **presence** shows who else is viewing (avatar cluster in the header).
+- **msw transport mechanics:** write handlers broadcast INSERT/UPDATE/DELETE tagged with a per-tab sender id (a tab ignores its own echo); received changes apply to this tab's **shared ticket/message store** before notifying, so a refetch agrees with the notification. A **synthetic generator** files a ticket every ~25s (while visible) so a single tab still sees the pill move; a second tab makes it genuinely cross-session.
+- **Attachments** (`lib/storage.ts` + `attachment-*`): drag-drop upload → storage → an `attachments` row. Live = Supabase Storage bucket (public, migration `20260718120200`) + object RLS; `msw` = in-memory object URL. Ticket-level card on the detail with download links; uploader-only delete.
+- Tests: `e2e/ticket-detail.spec.ts` grew a **cross-tab realtime** case (a reply in one tab appears in another) + an **upload** case. Green: tsc, 104 unit, 0 lint errors, **18 e2e**, lang:check.
+
+**Note:** realtime message delivery in the mock uses refetch-from-store (not an in-place cache splice) — the outcome is identical (the reply appears) and it's robust to cache-load timing; the live path likewise refetches on the change. Presence self is read from the auth user's metadata.
+
+Next: ⬜ 6f Tests (broaden coverage; realtime/detail already have e2e + unit).
 
 ### Environment context for a fresh session
 
@@ -175,9 +188,9 @@ Next: ⬜ 6e Realtime · 6f Tests.
 - [x] Ticket list (filters, keyword search, sort, pagination, saved views, bulk actions)
 - [x] List UX contract verified: page reset, persisted page size, no layout jump, empty vs no-results
 - [x] Ticket create
-- [x] Ticket detail (timeline, Tiptap, assign, workflow, SLA, activity) — attachments deferred to the storage pass
+- [x] Ticket detail (timeline, Tiptap, attachments, assign, workflow, SLA, activity)
 - [x] Bulk actions: page-scoped selection + "select all matching filters" (filter → server RPC, RLS re-checked)
-- [ ] Realtime updates + presence (list = pill/quiet-refetch + throttle, never splice; detail = splice)
+- [x] Realtime updates + presence (list = pill/quiet-refetch + throttle, never splice; detail = live refetch)
 - [ ] Event log + optimistic mutations
 - [ ] Tests (unit + e2e happy paths)
 

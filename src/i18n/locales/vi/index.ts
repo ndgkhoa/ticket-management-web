@@ -26,7 +26,8 @@ const vi = {
     "Save": "Lưu",
     "Edit": "Sửa",
     "Saved": "Đã lưu",
-    "Deleted": "Đã xóa"
+    "Deleted": "Đã xóa",
+    "Refresh": "Làm mới"
   },
   "SavedViews": {
     "Title": "Bộ lọc đã lưu",
@@ -64,6 +65,9 @@ const vi = {
     "Sla": "SLA",
     "Properties": "Thuộc tính",
     "Activity": "Hoạt động",
+    "Attachments": "Tệp đính kèm",
+    "DropFiles": "Kéo thả tệp hoặc bấm để tải lên",
+    "NoAttachments": "Chưa có tệp",
     "FirstResponse": "Phản hồi đầu",
     "Resolution": "Xử lý xong",
     "Met": "Đạt",
@@ -72,6 +76,8 @@ const vi = {
     "DueIn": "còn {{value}}",
     "Overdue": "trễ {{value}}",
     "RequestedBy": "Người tạo: {{name}}",
+    "NewTickets_other": "{{count}} phiếu mới",
+    "Viewing": "đang xem",
     "Event": {
       "created": "đã tạo phiếu",
       "assigned": "đã đổi người phụ trách",

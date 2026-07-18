@@ -26,7 +26,8 @@ const en = {
     "Save": "Save",
     "Edit": "Edit",
     "Saved": "Saved",
-    "Deleted": "Deleted"
+    "Deleted": "Deleted",
+    "Refresh": "Refresh"
   },
   "SavedViews": {
     "Title": "Saved views",
@@ -64,6 +65,9 @@ const en = {
     "Sla": "SLA",
     "Properties": "Properties",
     "Activity": "Activity",
+    "Attachments": "Attachments",
+    "DropFiles": "Drop files or click to upload",
+    "NoAttachments": "No attachments",
     "FirstResponse": "First response",
     "Resolution": "Resolution",
     "Met": "Met",
@@ -72,6 +76,9 @@ const en = {
     "DueIn": "in {{value}}",
     "Overdue": "{{value}} overdue",
     "RequestedBy": "Requested by {{name}}",
+    "NewTickets_one": "{{count}} new ticket",
+    "NewTickets_other": "{{count}} new tickets",
+    "Viewing": "viewing",
     "Event": {
       "created": "created the ticket",
       "assigned": "changed the assignee",

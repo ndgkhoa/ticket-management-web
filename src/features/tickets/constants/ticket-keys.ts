@@ -20,4 +20,5 @@ export const ticketKeys = {
   messages: (ticketId: string) => [...ticketKeys.detail(ticketId), 'messages'] as const,
   events: (ticketId: string) => [...ticketKeys.detail(ticketId), 'events'] as const,
   tags: (ticketId: string) => [...ticketKeys.detail(ticketId), 'tags'] as const,
+  attachments: (ticketId: string) => [...ticketKeys.detail(ticketId), 'attachments'] as const,
 };

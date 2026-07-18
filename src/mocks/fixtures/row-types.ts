@@ -117,3 +117,14 @@ export type SavedViewRow = {
   is_shared: boolean;
   created_at: string;
 };
+
+export type AttachmentRow = {
+  id: string;
+  ticket_id: string;
+  message_id: string | null;
+  file_url: string;
+  file_name: string;
+  size_bytes: number;
+  uploaded_by: string | null;
+  created_at: string;
+};

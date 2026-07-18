@@ -21,6 +21,7 @@ import { BulkActionsBar } from '~/features/tickets/components/bulk-actions-bar';
 import { useTicketSearchParams } from '~/features/tickets/hooks/use-ticket-search-params';
 import { useTicketFilterOptions } from '~/features/tickets/hooks/use-ticket-filter-options';
 import { useTicketBulkSelection } from '~/features/tickets/hooks/use-ticket-bulk-selection';
+import { useTicketListRealtime } from '~/features/tickets/hooks/use-ticket-list-realtime';
 import { toTicketListParams } from '~/features/tickets/schemas/ticket-search-schema';
 import {
   ticketPrioritySchema,
@@ -163,6 +164,30 @@ function Tickets() {
       categoryIds: undefined,
       tagIds: undefined,
     });
+
+  // A realtime change refetches quietly only when nothing would shift under the user: page 1,
+  // default sort, no filter/search/selection, current data settled. Otherwise it raises a toast.
+  const canAutoRefresh =
+    search.page === 1 &&
+    search.sort === 'created_at' &&
+    search.dir === 'desc' &&
+    !isFiltered &&
+    bulk.selectedIds.length === 0 &&
+    !ticketQuery.isPlaceholderData;
+  const viewKey = JSON.stringify([
+    search.page,
+    search.pageSize,
+    search.sort,
+    search.dir,
+    search.q,
+    search.status,
+    search.priority,
+    search.assigneeIds,
+    search.teamIds,
+    search.categoryIds,
+    search.tagIds,
+  ]);
+  useTicketListRealtime({ canAutoRefresh, viewKey });
 
   if (ticketQuery.isError) {
     return <ErrorPage subTitle={ticketQuery.error.message} />;

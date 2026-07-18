@@ -1,3 +1,4 @@
+import type { AttachmentRow } from '~/mocks/fixtures/row-types';
 import {
   cannedResponseRows,
   categoryRows,
@@ -20,6 +21,7 @@ import { cannedResponseListConfig } from '~/mocks/config/canned-response-list-co
 import { makeTableHandler } from '~/mocks/handlers/make-table-handler';
 import { makeJunctionHandler } from '~/mocks/handlers/make-junction-handler';
 import { ticketStore } from '~/mocks/stores/ticket-store';
+import { ticketMessageStore } from '~/mocks/stores/ticket-message-store';
 
 /**
  * PostgREST table handlers for every `/rest/v1/*` read the app makes today, plus writes
@@ -41,12 +43,22 @@ export const restHandlers = [
     applyConfig: ticketListConfig,
     store: ticketStore,
     // Writable so the detail page can patch a single ticket (status/priority/assignment)
-    // through the same shared store the list reads.
+    // through the same shared store the list reads; realtime so other tabs see the change.
     writable: true,
+    realtime: true,
   }),
-  // The ticket conversation and its audit trail — read by ticket_id, append-only inserts.
-  makeTableHandler({ table: 'ticket_messages', rows: ticketMessageRows, writable: true }),
+  // The ticket conversation and its audit trail — read by ticket_id, append-only inserts. The
+  // conversation uses the shared store + realtime so a reply appears in another tab's timeline.
+  makeTableHandler({
+    table: 'ticket_messages',
+    rows: ticketMessageRows,
+    store: ticketMessageStore,
+    writable: true,
+    realtime: true,
+  }),
   makeTableHandler({ table: 'ticket_events', rows: ticketEventRows, writable: true }),
+  // Attachments start empty — files are uploaded in-session (blob URLs in msw). Read by ticket.
+  makeTableHandler<AttachmentRow>({ table: 'attachments', rows: [], writable: true }),
   makeTableHandler({ table: 'profiles', rows: profileRows, applyConfig: profileListConfig }),
   makeTableHandler({ table: 'roles', rows: roleRows, writable: true }),
   makeTableHandler({ table: 'permissions', rows: permissionRows }),

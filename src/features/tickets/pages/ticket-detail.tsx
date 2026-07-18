@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getRouteApi } from '@tanstack/react-router';
 
-import { Container } from '~/components/ui';
+import { Avatar, AvatarFallback, AvatarImage, Container } from '~/components/ui';
 import { ErrorPage } from '~/components/errors';
 import { TicketStatusBadge } from '~/features/tickets/components/ticket-status-badge';
 import { TicketPriorityBadge } from '~/features/tickets/components/ticket-priority-badge';
@@ -10,6 +10,7 @@ import { TicketComposer } from '~/features/tickets/components/ticket-composer';
 import { TicketMessageList } from '~/features/tickets/components/ticket-message-list';
 import { TicketProperties } from '~/features/tickets/components/ticket-properties';
 import { TicketSlaCard } from '~/features/tickets/components/ticket-sla-card';
+import { TicketAttachments } from '~/features/tickets/components/ticket-attachments';
 import { TicketActivity } from '~/features/tickets/components/ticket-activity';
 import { useTicketDetail } from '~/features/tickets/api/ticket-queries';
 import { useTicketMessages } from '~/features/tickets/api/ticket-message-queries';
@@ -17,6 +18,7 @@ import { useTicketEvents } from '~/features/tickets/api/ticket-event-queries';
 import { useTicketTags } from '~/features/tickets/api/ticket-tag-queries';
 import { useProfileLookup } from '~/features/tickets/api/profile-lookup-queries';
 import { useTicketFilterOptions } from '~/features/tickets/hooks/use-ticket-filter-options';
+import { useTicketDetailRealtime } from '~/features/tickets/hooks/use-ticket-detail-realtime';
 
 const route = getRouteApi('/_app/tickets/$ticketId');
 
@@ -53,6 +55,7 @@ function TicketDetail() {
     return [...ids];
   }, [ticket.requesterId, ticket.assigneeId, messages, events]);
   const profiles = useProfileLookup(profileIds);
+  const viewers = useTicketDetailRealtime(ticketId);
 
   if (ticketQuery.isError) {
     return <ErrorPage subTitle={ticketQuery.error.message} />;
@@ -68,6 +71,21 @@ function TicketDetail() {
         <span className="text-muted-foreground text-sm">
           {t('Tickets.RequestedBy', { name: requester?.fullName ?? '—' })}
         </span>
+        {viewers.length > 0 && (
+          <span className="ml-auto flex items-center gap-1" title={t('Tickets.Viewing')}>
+            <span className="flex -space-x-2">
+              {viewers.slice(0, 5).map((viewer) => (
+                <Avatar key={viewer.id} className="border-background size-6 border-2">
+                  <AvatarImage src={viewer.avatarUrl ?? undefined} alt={viewer.name} />
+                  <AvatarFallback className="text-[10px]">
+                    {viewer.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              ))}
+            </span>
+            <span className="text-muted-foreground text-xs">{t('Tickets.Viewing')}</span>
+          </span>
+        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -89,6 +107,9 @@ function TicketDetail() {
               tagOptions={options.tagOptions}
               ticketTagIds={tagsQuery.data ?? []}
             />
+          </Card>
+          <Card title={t('Tickets.Attachments')}>
+            <TicketAttachments ticketId={ticketId} />
           </Card>
           <Card title={t('Tickets.Activity')}>
             <TicketActivity events={events} actors={profiles} />
