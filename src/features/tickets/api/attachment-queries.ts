@@ -14,13 +14,11 @@ export const attachmentQueries = {
 export const useTicketAttachments = (ticketId: string) =>
   useQuery(attachmentQueries.list(ticketId));
 
-export const useUploadAttachment = (ticketId: string) => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (file: File) => attachmentApi.create(ticketId, file),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ticketKeys.attachments(ticketId) }),
-  });
-};
+// No onSuccess invalidation here on purpose: the component holds a progress bar for a moment
+// after the upload resolves, and refreshes the list itself when the bar clears, so the new row
+// appears as the bar leaves rather than on top of it.
+export const useUploadAttachment = (ticketId: string) =>
+  useMutation({ mutationFn: (file: File) => attachmentApi.create(ticketId, file) });
 
 export const useRemoveAttachment = (ticketId: string) => {
   const queryClient = useQueryClient();

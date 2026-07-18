@@ -2,11 +2,13 @@ import { Loader2, Paperclip, Trash2, UploadCloud } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Button } from '~/components/ui';
 import { cn } from '~/utils/cn';
 import { useAuthStore } from '~/stores/auth';
 import { revokeAttachmentUrl } from '~/lib/storage';
+import { ticketKeys } from '~/features/tickets/constants/ticket-keys';
 import {
   useRemoveAttachment,
   useTicketAttachments,
@@ -111,6 +113,7 @@ type UploadProgress = { id: string; name: string; percent: number };
 
 export function TicketAttachments({ ticketId }: Props) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const currentUserId = useAuthStore((state) => state.user?.id);
   const { data: attachments = [] } = useTicketAttachments(ticketId);
   const upload = useUploadAttachment(ticketId);
@@ -154,6 +157,9 @@ export function TicketAttachments({ ticketId }: Props) {
       const removal = window.setTimeout(() => {
         setUploads((current) => current.filter((item) => item.id !== id));
         timers.current.delete(removal);
+        // Refresh the list now, as the bar leaves — so the new row appears in its place rather
+        // than on top of a still-running progress bar.
+        void queryClient.invalidateQueries({ queryKey: ticketKeys.attachments(ticketId) });
       }, 350);
       timers.current.add(removal);
     };
