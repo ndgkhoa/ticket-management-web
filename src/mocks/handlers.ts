@@ -3,6 +3,7 @@ import type { RequestHandler } from 'msw';
 import { authHandlers } from '~/mocks/handlers/auth-handlers';
 import { userRolesHandlers } from '~/mocks/handlers/user-roles-handlers';
 import { rpcHandlers } from '~/mocks/handlers/rpc-handlers';
+import { aiHandlers } from '~/mocks/handlers/ai-handlers';
 import { restHandlers } from '~/mocks/handlers/rest-handlers';
 
 /**
@@ -20,5 +21,6 @@ export const handlers: RequestHandler[] = [
   ...authHandlers,
   ...userRolesHandlers,
   ...rpcHandlers,
+  ...aiHandlers,
   ...restHandlers,
 ];

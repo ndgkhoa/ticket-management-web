@@ -1,5 +1,5 @@
 import { Bold, Italic, List, ListOrdered, Send } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { EditorContent, useEditor } from '@tiptap/react';
@@ -11,7 +11,22 @@ import { useAuthStore } from '~/stores/auth';
 import { useCreateMessage } from '~/features/tickets/api/ticket-message-queries';
 import type { MessageType } from '~/features/tickets/schemas/ticket-enums';
 
-type Props = { ticketId: string };
+type Props = {
+  ticketId: string;
+  /** Plain-text draft to load into the editor (e.g. an accepted AI reply). */
+  insertDraft?: string | null;
+  /** Called once a pending draft has been loaded, so the parent can clear it. */
+  onDraftConsumed?: () => void;
+};
+
+/** Escape HTML, then turn blank-line-separated text into paragraphs for the editor. */
+function draftToHtml(draft: string): string {
+  const escaped = draft.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return escaped
+    .split(/\n{2,}/)
+    .map((paragraph) => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
+    .join('');
+}
 
 /**
  * The reply / internal-note composer: a Tiptap rich-text editor with a small formatting
@@ -19,7 +34,7 @@ type Props = { ticketId: string };
  * `message.create.internal` (RLS rejects it otherwise). On send it posts the HTML body and
  * clears the editor.
  */
-export function TicketComposer({ ticketId }: Props) {
+export function TicketComposer({ ticketId, insertDraft, onDraftConsumed }: Props) {
   const { t } = useTranslation();
   const canInternal = useAuthStore((state) => state.hasPermission('message.create.internal'));
   const createMessage = useCreateMessage(ticketId);
@@ -30,6 +45,15 @@ export function TicketComposer({ ticketId }: Props) {
     content: '',
     editorProps: { attributes: { class: 'rich-text min-h-24 px-3 py-2' } },
   });
+
+  // Load an accepted AI draft into the editor, then tell the parent to clear it so the
+  // same draft isn't re-inserted on every render.
+  useEffect(() => {
+    if (!editor || !insertDraft) return;
+    editor.commands.setContent(draftToHtml(insertDraft));
+    editor.commands.focus('end');
+    onDraftConsumed?.();
+  }, [editor, insertDraft, onDraftConsumed]);
 
   const submit = () => {
     if (!editor || editor.isEmpty) return;

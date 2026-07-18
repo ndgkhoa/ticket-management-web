@@ -619,6 +619,54 @@ export type Database = {
         Args: { p_filters: Json; p_patch: Json };
         Returns: number;
       };
+      match_tickets: {
+        Args: {
+          query_embedding: string;
+          match_count?: number;
+          similarity_threshold?: number;
+        };
+        Returns: {
+          id: string;
+          subject: string;
+          description: string;
+          status: Database['public']['Enums']['ticket_status'];
+          priority: Database['public']['Enums']['ticket_priority'];
+          channel: Database['public']['Enums']['ticket_channel'];
+          requester_id: string;
+          assignee_id: string | null;
+          team_id: string | null;
+          category_id: string | null;
+          sla_policy_id: string | null;
+          first_response_at: string | null;
+          resolved_at: string | null;
+          due_at: string | null;
+          created_at: string;
+          updated_at: string;
+          similarity: number;
+        }[];
+      };
+      similar_tickets: {
+        Args: { p_ticket_id: string; match_count?: number };
+        Returns: {
+          id: string;
+          subject: string;
+          description: string;
+          status: Database['public']['Enums']['ticket_status'];
+          priority: Database['public']['Enums']['ticket_priority'];
+          channel: Database['public']['Enums']['ticket_channel'];
+          requester_id: string;
+          assignee_id: string | null;
+          team_id: string | null;
+          category_id: string | null;
+          sla_policy_id: string | null;
+          first_response_at: string | null;
+          resolved_at: string | null;
+          due_at: string | null;
+          created_at: string;
+          updated_at: string;
+          similarity: number;
+        }[];
+      };
       can_access_ticket: {
         Args: {
           ticket_assignee_id: string;

@@ -53,6 +53,17 @@ export const ticketSearchSchema = z.object({
   tagIds: z.array(z.uuid()).optional().catch(undefined),
   sort: z.enum(SORTABLE_FIELDS).catch('created_at').default('created_at'),
   dir: z.enum(['asc', 'desc']).catch('desc').default('desc'),
+  // "Smart search" toggle: when on (and there's a `q`), the list ranks by semantic
+  // similarity instead of keyword match. Same URL, same `q` — only the backend path
+  // differs, so a shared/bookmarked link restores the mode too.
+  //
+  // Accepts both the boolean the router serializes and its string form; a plain
+  // `z.coerce.boolean()` would wrongly read the string `'false'` as `true`.
+  smart: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .transform((value) => value === true || value === 'true')
+    .catch(false)
+    .default(false),
 });
 
 export type TicketSearch = z.infer<typeof ticketSearchSchema>;
@@ -75,6 +86,9 @@ export const PAGE_RESETTING_KEYS = [
   'teamIds',
   'categoryIds',
   'tagIds',
+  // Switching keyword ↔ semantic changes the whole result set, so the old page offset is
+  // meaningless (and would mislabel the row-index column).
+  'smart',
 ] as const;
 
 /** Map the URL search into the nested params shape the shared list query expects. */

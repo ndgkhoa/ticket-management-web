@@ -12,6 +12,7 @@ const search: TicketSearch = {
   pageSize: 20,
   sort: 'created_at',
   dir: 'desc',
+  smart: false,
   status: ['open'],
 };
 

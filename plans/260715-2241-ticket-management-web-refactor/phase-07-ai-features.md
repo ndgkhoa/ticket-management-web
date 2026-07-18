@@ -1,6 +1,6 @@
 # Phase 07 — AI Features + Semantic Search
 
-**Priority:** P2 (differentiator) · **Status:** ⬜ todo · **Depends:** Phase 06
+**Priority:** P2 (differentiator) · **Status:** ✅ done · **Depends:** Phase 06
 
 ## Overview
 
@@ -83,15 +83,21 @@ AI is **not** a new bucket inside `features/tickets/` — it obeys the closed fe
 
 ## Todo
 
-- [ ] Dedicated Google Cloud project + key; confirm real quotas + stable model IDs in AI Studio before coding
-- [ ] pgvector `vector(1536)` + hnsw index + similarity RPC (verify the index actually builds)
-- [ ] embed-ticket edge function (gemini-embedding-001 @ 1536) + wired on write
-- [ ] Seed-embedding script: resumable, token-throttled, vectors committed to seed.sql
-- [ ] triage / suggest-reply / summarize edge functions
-- [ ] AI panels (triage hint, reply draft, summary)
-- [ ] Semantic search + similar tickets
-- [ ] MSW AI mocks + fallback handling
-- [ ] Docs (AI architecture, cost)
+- [x] Dedicated Google Cloud project + key; confirm real quotas + stable model IDs in AI Studio before coding
+- [x] pgvector `vector(1536)` + hnsw index (already in ticket-core) + similarity RPCs (`match_tickets`, `similar_tickets`)
+- [x] embed-ticket edge function (gemini-embedding-001 @ 1536) + wired on create
+- [x] Seed-embedding script: resumable, token-throttled, 500 vectors committed to `seed-embeddings.sql` (kept separate from generated `seed.sql`)
+- [x] triage / suggest-reply / summarize edge functions (+ `embed-query` for the search side)
+- [x] AI panels (triage hint, reply draft, summary)
+- [x] Semantic search ("Smart search" toggle) + similar tickets sidebar
+- [x] MSW AI mocks + graceful fallback handling
+- [x] Docs (`docs/ai-features.md` — architecture, cost, limitations)
+
+**Deviations from plan (with rationale):**
+
+- Embeddings committed to a **separate** `supabase/seed-embeddings.sql` (not into `seed.sql`) because `seed.sql` is generated from fixtures and CI-checked (`seed:check`); live-model vectors there would break the check.
+- Added an `embed-query` edge function for the query side (plan listed 4 functions; the query embedding also needs the server-side key). Similar-tickets uses the stored embedding via RPC — zero API cost.
+- Deferred (documented in `docs/ai-features.md`): server-side rate limiting / agent-role gating on the AI functions — acceptable for single-tenant demo; needed before real multi-tenant use.
 
 ## Success criteria
 

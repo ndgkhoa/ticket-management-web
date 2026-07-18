@@ -15,6 +15,7 @@ import {
   type UpdateTicketPatch,
 } from '~/features/tickets/api/ticket-api';
 import { ticketEventApi, type CreateEventInput } from '~/features/tickets/api/ticket-event-api';
+import { embedTicketInBackground } from '~/features/tickets/api/embed-ticket';
 import { ticketKeys } from '~/features/tickets/constants/ticket-keys';
 
 /**
@@ -55,6 +56,9 @@ export const useCreateTicket = () => {
     mutationFn: async (input: CreateTicketInput) => {
       const ticket = await ticketApi.create(input);
       await ticketEventApi.create({ ticketId: ticket.id, eventType: 'created' });
+      // Best-effort semantic embedding so the new ticket is searchable and can surface as
+      // a "similar ticket". Not awaited — it must never delay or fail the create itself.
+      embedTicketInBackground(ticket.id);
       return ticket;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ticketKeys.lists() }),

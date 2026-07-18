@@ -13,7 +13,16 @@ describe('ticketSearchSchema', () => {
       pageSize: 20,
       sort: 'created_at',
       dir: 'desc',
+      smart: false,
     });
+  });
+
+  it('reads the smart toggle from both boolean and string forms', () => {
+    expect(ticketSearchSchema.parse({}).smart).toBe(false);
+    expect(ticketSearchSchema.parse({ smart: true }).smart).toBe(true);
+    expect(ticketSearchSchema.parse({ smart: 'true' }).smart).toBe(true);
+    // The bug a plain `z.coerce.boolean()` would introduce: the string 'false' → true.
+    expect(ticketSearchSchema.parse({ smart: 'false' }).smart).toBe(false);
   });
 
   it('coerces string page/pageSize from the URL', () => {
@@ -60,6 +69,7 @@ describe('toTicketListParams', () => {
     pageSize: 50,
     sort: 'priority',
     dir: 'asc',
+    smart: false,
   };
 
   it('maps flat URL params to the nested list-query shape', () => {

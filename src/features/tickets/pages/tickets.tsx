@@ -1,9 +1,10 @@
-import { Inbox, Plus, SearchX, User as UserIcon } from 'lucide-react';
+import { Inbox, Plus, SearchX, Sparkles, User as UserIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link } from '@tanstack/react-router';
 import type { ColumnDef, PaginationState, SortingState } from '@tanstack/react-table';
 
 import { Avatar, AvatarFallback, AvatarImage, Button, Container } from '~/components/ui';
+import { cn } from '~/utils/cn';
 import { TicketStatusBadge } from '~/features/tickets/components/ticket-status-badge';
 import { TicketPriorityBadge } from '~/features/tickets/components/ticket-priority-badge';
 import { ErrorPage } from '~/components/errors';
@@ -16,6 +17,8 @@ import {
 } from '~/components/data-table';
 import type { PageSize } from '~/lib/list-query';
 import { useTicketList } from '~/features/tickets/api/ticket-queries';
+import { useSemanticSearch } from '~/features/tickets/api/semantic-search';
+import { isAiEnabled } from '~/features/tickets/api/ai-client';
 import { SavedViewsMenu } from '~/features/tickets/components/saved-views-menu';
 import { BulkActionsBar } from '~/features/tickets/components/bulk-actions-bar';
 import { useTicketSearchParams } from '~/features/tickets/hooks/use-ticket-search-params';
@@ -42,8 +45,18 @@ function Tickets() {
   const { search, setSearch, applySearch } = useTicketSearchParams();
   const ticketQuery = useTicketList(toTicketListParams(search));
 
-  const rows = ticketQuery.data?.rows ?? [];
-  const totalCount = ticketQuery.data?.totalCount ?? 0;
+  // Smart search: rank by semantic similarity instead of keyword match. Active only with
+  // AI on, the toggle set, and a query present. On any semantic error it falls back to the
+  // keyword results, so search is never unavailable (Phase 06 guarantees keyword works).
+  const smartActive = search.smart && isAiEnabled && Boolean(search.q);
+  const semanticQuery = useSemanticSearch(search.q, smartActive);
+  const usingSemantic = smartActive && !semanticQuery.isError;
+
+  // Semantic search is a single ranked top-N list, not a server-paged set — clamp it to
+  // one page so the DataTable never renders a pager that would just re-show the same rows.
+  const semanticRows = (semanticQuery.data ?? []).slice(0, search.pageSize);
+  const rows = usingSemantic ? semanticRows : (ticketQuery.data?.rows ?? []);
+  const totalCount = usingSemantic ? semanticRows.length : (ticketQuery.data?.totalCount ?? 0);
 
   const options = useTicketFilterOptions();
   const bulk = useTicketBulkSelection({ search, rows, totalCount });
@@ -154,6 +167,17 @@ function Tickets() {
     search.tagIds?.length
   );
 
+  // How many faceted filters are active (excludes the free-text query and Smart toggle) —
+  // shown as a badge on the collapsed "Filters" button.
+  const activeFilterCount = [
+    search.status,
+    search.priority,
+    search.assigneeIds,
+    search.teamIds,
+    search.categoryIds,
+    search.tagIds,
+  ].filter((values) => values?.length).length;
+
   const handleReset = () =>
     setSearch({
       q: undefined,
@@ -189,7 +213,9 @@ function Tickets() {
   ]);
   useTicketListRealtime({ canAutoRefresh, viewKey });
 
-  if (ticketQuery.isError) {
+  // Only fail the page on a keyword error when we're actually showing keyword results —
+  // in semantic mode the keyword query is irrelevant, and search must stay available.
+  if (ticketQuery.isError && !usingSemantic) {
     return <ErrorPage subTitle={ticketQuery.error.message} />;
   }
 
@@ -252,8 +278,8 @@ function Tickets() {
             });
           }
         }}
-        isLoading={ticketQuery.isPending}
-        isPlaceholderData={ticketQuery.isPlaceholderData}
+        isLoading={usingSemantic ? semanticQuery.isPending : ticketQuery.isPending}
+        isPlaceholderData={!usingSemantic && ticketQuery.isPlaceholderData}
         isFiltered={isFiltered}
         toolbar={
           <DataTableToolbar
@@ -262,6 +288,22 @@ function Tickets() {
             searchPlaceholder={t('Common.Search')}
             isFiltered={isFiltered}
             onReset={handleReset}
+            filterCount={activeFilterCount}
+            actions={
+              isAiEnabled && (
+                <Button
+                  type="button"
+                  variant={search.smart ? 'secondary' : 'outline'}
+                  size="sm"
+                  className={cn('h-8', search.smart && 'border-primary')}
+                  aria-pressed={search.smart}
+                  onClick={() => setSearch({ smart: !search.smart })}
+                >
+                  <Sparkles className="mr-1 size-4" />
+                  {t('Ai.SmartSearch')}
+                </Button>
+              )
+            }
             filters={
               <>
                 <DataTableFacetedFilter

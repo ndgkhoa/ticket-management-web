@@ -186,6 +186,33 @@ const en = {
     "PasswordMin": "Password must be at least 8 characters",
     "PasswordMismatch": "Passwords do not match",
     "PositiveInteger": "Must be a positive whole number"
+  },
+  "Permissions": {
+    "Resources": {
+      "ticket": "Tickets",
+      "message": "Messages",
+      "user": "Users",
+      "canned": "Canned responses",
+      "category": "Categories",
+      "tag": "Tags",
+      "team": "Teams",
+      "sla": "SLA",
+      "role": "Roles",
+      "permission": "Permissions",
+      "other": "Other"
+    }
+  },
+  "Ai": {
+    "TriageTitle": "AI triage",
+    "Suggest": "Suggest",
+    "Thinking": "Thinking…",
+    "Apply": "Apply",
+    "DraftReply": "Draft reply",
+    "Summarize": "Summarize",
+    "InsertDraft": "Insert into reply",
+    "SimilarTickets": "Similar tickets",
+    "NoSimilar": "No similar tickets found",
+    "SmartSearch": "Smart search"
   }
 } as const;
 export default en;

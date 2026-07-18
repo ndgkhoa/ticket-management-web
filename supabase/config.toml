@@ -68,7 +68,11 @@ schema_paths = []
 enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+# `seed-embeddings.sql` (loaded after `seed.sql`) carries the one-time, committed ticket
+# embeddings produced by `bun run seed:embed`. Kept separate because `seed.sql` is
+# generated from fixtures and CI-checked, while embeddings come from a live model — they
+# cannot live in the generated file without breaking `seed:check`.
+sql_paths = ["./seed.sql", "./seed-embeddings.sql"]
 
 [db.network_restrictions]
 # Enable management of network restrictions.

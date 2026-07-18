@@ -45,6 +45,21 @@ const envSchema = z
      * configured to match, or sign-in rejects the (absent) token.
      */
     VITE_TURNSTILE_SITE_KEY: z.string().min(1).optional(),
+
+    /**
+     * Whether the AI features (triage hint, reply/summary drafts, semantic search) are
+     * offered in the UI. The API key itself is server-side only (a Supabase secret on the
+     * edge functions), so the client cannot detect it — this flag is how a deploy without
+     * a key hides the AI affordances up front. Independent of that, every AI call still
+     * falls back gracefully on error, so a stale `true` degrades rather than breaks.
+     *
+     * `'true'`/`'false'` string because Vite env values are always strings. Defaults on:
+     * the MSW demo and tests mock AI, so it should be visible there.
+     */
+    VITE_AI_ENABLED: z
+      .enum(['true', 'false'])
+      .default('true')
+      .transform((value) => value === 'true'),
   })
   .refine(
     (env) =>

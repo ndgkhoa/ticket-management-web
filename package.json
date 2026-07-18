@@ -26,6 +26,7 @@
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts",
     "seed:gen": "bun scripts/generate-seed-sql.ts",
     "seed:check": "bun scripts/check-seed-sync.ts",
+    "seed:embed": "bun scripts/generate-seed-embeddings.ts",
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build"

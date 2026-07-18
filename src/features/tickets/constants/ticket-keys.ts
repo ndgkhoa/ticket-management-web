@@ -21,4 +21,8 @@ export const ticketKeys = {
   events: (ticketId: string) => [...ticketKeys.detail(ticketId), 'events'] as const,
   tags: (ticketId: string) => [...ticketKeys.detail(ticketId), 'tags'] as const,
   attachments: (ticketId: string) => [...ticketKeys.detail(ticketId), 'attachments'] as const,
+  /** Tickets semantically similar to a given one (detail sidebar). */
+  similar: (ticketId: string) => [...ticketKeys.detail(ticketId), 'similar'] as const,
+  /** Semantic ("smart") search results, keyed by the query text. */
+  semantic: (query: string) => [...ticketKeys.all, 'semantic', query] as const,
 };

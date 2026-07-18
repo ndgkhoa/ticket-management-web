@@ -9,6 +9,7 @@ import { Button, Container } from '~/components/ui';
 import { FieldSelect, FieldText, FieldTextarea } from '~/components/form';
 import { useCreateTicket } from '~/features/tickets/api/ticket-queries';
 import { useCategoryList } from '~/features/admin/categories/api/category-queries';
+import { AiTriageHint } from '~/features/tickets/components/ai-triage-hint';
 import { ticketPrioritySchema, type TicketPriority } from '~/features/tickets/schemas/ticket-enums';
 
 const NO_CATEGORY = '';
@@ -92,6 +93,28 @@ function TicketCreate() {
             <FieldSelect field={field} label={t('Fields.Category')} options={categoryOptions} />
           )}
         </form.Field>
+
+        <form.Subscribe
+          selector={(state) => ({
+            subject: state.values.subject,
+            description: state.values.description,
+          })}
+        >
+          {({ subject, description }) => (
+            <AiTriageHint
+              subject={subject}
+              description={description}
+              categories={categories.map((category) => ({
+                id: category.id,
+                name: category.name,
+              }))}
+              onApply={({ priority, categoryId }) => {
+                form.setFieldValue('priority', priority);
+                form.setFieldValue('categoryId', categoryId ?? NO_CATEGORY);
+              }}
+            />
+          )}
+        </form.Subscribe>
 
         <div className="flex justify-end gap-2">
           <Button type="submit" disabled={createTicket.isPending}>
