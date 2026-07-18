@@ -25,8 +25,10 @@ function Roles() {
         <DataTableColumnHeader column={column} title={t('Fields.RoleName')} />
       ),
       cell: ({ row }) => (
-        <span className="inline-flex items-center gap-2">
-          {row.original.name}
+        <span className="flex items-center gap-2">
+          {/* min-width so the badge starts at the same x on every row instead of trailing
+              each name's own width — otherwise the badges look ragged. */}
+          <span className="min-w-24">{row.original.name}</span>
           {row.original.isSystem && <Badge variant="secondary">{t('Common.System')}</Badge>}
         </span>
       ),

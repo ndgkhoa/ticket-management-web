@@ -78,13 +78,14 @@ export function ClientDataTable<TData, TValue>({
 
   return (
     <div className="space-y-3">
-      <div className="relative max-w-sm">
+      {/* Same search sizing as DataTableToolbar so every list's search box matches. */}
+      <div className="relative w-full md:max-w-[360px]">
         <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
         <Input
           value={globalFilter}
           onChange={(event) => table.setGlobalFilter(event.target.value)}
           placeholder={t('Common.Search')}
-          className="pl-8"
+          className="h-8 pl-8"
           aria-label={t('Common.Search')}
         />
       </div>

@@ -46,7 +46,10 @@ export function Container(props: Props) {
             'bg-background sticky top-0 z-10': stickyHeader,
           })}
         >
-          <div className="flex items-center gap-2">
+          {/* min-h matches the default button height so the header is the same height
+              whether or not `extraRight` holds a button — otherwise switching between a
+              page with a Create button and one without shifts the content down/up. */}
+          <div className="flex min-h-9 items-center gap-2">
             {showBackButton && (
               <TooltipProvider>
                 <Tooltip>

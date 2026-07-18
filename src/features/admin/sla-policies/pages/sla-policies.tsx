@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from '@tanstack/react-table';
 
 import { DataTableColumnHeader } from '~/components/data-table';
+import { TicketPriorityBadge } from '~/features/tickets/components/ticket-priority-badge';
 import { AdminCrudPage } from '~/features/admin/shared/admin-crud-page';
 import {
   useSlaPolicyList,
@@ -23,7 +24,7 @@ function SlaPolicies() {
     {
       accessorKey: 'priority',
       header: t('Fields.Priority'),
-      cell: ({ row }) => row.original.priority,
+      cell: ({ row }) => <TicketPriorityBadge priority={row.original.priority} />,
     },
     {
       accessorKey: 'first_response_mins',
