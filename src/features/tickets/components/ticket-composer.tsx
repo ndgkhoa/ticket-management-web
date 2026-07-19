@@ -9,6 +9,7 @@ import { Button } from '~/components/ui';
 import { cn } from '~/utils/cn';
 import { useAuthStore } from '~/stores/auth';
 import { useCreateMessage } from '~/features/tickets/api/ticket-message-queries';
+import { CannedResponsePicker } from '~/features/tickets/components/canned-response-picker';
 import type { MessageType } from '~/features/tickets/schemas/ticket-enums';
 
 type Props = {
@@ -37,6 +38,7 @@ function draftToHtml(draft: string): string {
 export function TicketComposer({ ticketId, insertDraft, onDraftConsumed }: Props) {
   const { t } = useTranslation();
   const canInternal = useAuthStore((state) => state.hasPermission('message.create.internal'));
+  const canUseCanned = useAuthStore((state) => state.hasPermission('canned.read'));
   const createMessage = useCreateMessage(ticketId);
   const [type, setType] = useState<MessageType>('public_reply');
 
@@ -45,6 +47,13 @@ export function TicketComposer({ ticketId, insertDraft, onDraftConsumed }: Props
     content: '',
     editorProps: { attributes: { class: 'rich-text min-h-24 px-3 py-2' } },
   });
+
+  // Insert a canned body at the cursor (not setContent) so it augments the current draft
+  // instead of replacing it. Plain-text bodies go through the same paragraph conversion as an
+  // accepted AI draft.
+  const insertCanned = (body: string) => {
+    editor?.chain().focus().insertContent(draftToHtml(body)).run();
+  };
 
   // Load an accepted AI draft into the editor, then tell the parent to clear it so the
   // same draft isn't re-inserted on every render.
@@ -139,6 +148,11 @@ export function TicketComposer({ ticketId, insertDraft, onDraftConsumed }: Props
           () => editor?.chain().focus().toggleOrderedList().run(),
           <ListOrdered className="size-4" />,
           'Ordered list'
+        )}
+        {canUseCanned && (
+          <div className="ml-auto">
+            <CannedResponsePicker onInsert={insertCanned} />
+          </div>
         )}
       </div>
 

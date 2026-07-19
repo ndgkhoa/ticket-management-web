@@ -7,6 +7,7 @@ import { Button, Separator, Textarea } from '~/components/ui';
 import { isAiEnabled } from '~/features/tickets/api/ai-client';
 import { useSuggestReply, type ThreadMessageInput } from '~/features/tickets/api/suggest-reply';
 import { useSummarizeTicket } from '~/features/tickets/api/summarize-ticket';
+import { useCannedResponses } from '~/features/tickets/api/canned-response-queries';
 import type { TicketMessage } from '~/features/tickets/schemas/ticket-message-schema';
 
 type Props = {
@@ -26,6 +27,7 @@ export function AiSuggestionPanel({ subject, messages, authorNameById, onUseDraf
   const { t } = useTranslation();
   const suggestReply = useSuggestReply();
   const summarize = useSummarizeTicket();
+  const { data: cannedResponses = [] } = useCannedResponses();
   const [draft, setDraft] = useState('');
 
   if (!isAiEnabled || messages.length === 0) return null;
@@ -38,7 +40,12 @@ export function AiSuggestionPanel({ subject, messages, authorNameById, onUseDraf
 
   const draftReply = () => {
     suggestReply.mutate(
-      { subject, messages: thread },
+      // Feed the approved canned-response library as context so the draft can lean on it.
+      {
+        subject,
+        messages: thread,
+        cannedResponses: cannedResponses.map((response) => response.body),
+      },
       {
         onSuccess: (result) => setDraft(result.draft),
         onError: (error) => toast.error(error.message),

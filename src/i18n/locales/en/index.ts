@@ -59,6 +59,7 @@ const en = {
     "Triage": "Unassigned",
     "PublicReply": "Reply",
     "InternalNote": "Internal note",
+    "CannedResponses": "Canned responses",
     "Send": "Send",
     "NoMessages": "No messages yet",
     "NoActivity": "No activity yet",

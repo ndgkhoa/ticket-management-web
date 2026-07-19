@@ -59,6 +59,7 @@ const vi = {
     "Triage": "Chưa gán",
     "PublicReply": "Trả lời",
     "InternalNote": "Ghi chú nội bộ",
+    "CannedResponses": "Mẫu trả lời",
     "Send": "Gửi",
     "NoMessages": "Chưa có tin nhắn",
     "NoActivity": "Chưa có hoạt động",

@@ -1,6 +1,6 @@
 # Phase 07 — Consume Canned Responses (Composer Picker + AI)
 
-**Priority:** P3 · **Status:** ⬜ todo · **Depends:** none
+**Priority:** P3 · **Status:** ✅ done · **Depends:** none
 
 ## Context
 
@@ -94,13 +94,15 @@ ai panel ──► useCannedResponseList() ──► cannedResponses: bodies →
 
 ## Todo
 
-- [ ] `canned-response-queries.ts` read hook (`canned.read`-scoped)
-- [ ] `canned-response-picker.tsx` composer picker (gated on `canned.read`)
-- [ ] Composer mounts picker + inserts body into Tiptap
-- [ ] AI panel passes `cannedResponses` to `useSuggestReply`
-- [ ] MSW canned-responses read handler + fixtures
-- [ ] i18n `en` + `vi` + `lang:check`
-- [ ] Tests: picker insert + AI payload includes canned bodies
+- [x] `canned-response-queries.ts` — `useCannedResponses()` reads the whole library title-ordered, gated on `canned.read` (query key nested under the shared `canned_responses` root so admin edits invalidate it). Reuses the admin schema (tickets→admin imports already established: sla-card, filter-options).
+- [x] `canned-response-picker.tsx` — DropdownMenu over titles; renders nothing until the library loads (so no dead control)
+- [x] Composer mounts the picker (gated on `canned.read`) and inserts the body at the cursor via `insertContent` (not `setContent`), reusing `draftToHtml` for the plain-text bodies
+- [x] AI panel passes `cannedResponses` (all bodies) to `useSuggestReply`
+- [x] MSW: existing `canned_responses` read handler + `cannedResponseRows` fixtures already serve the unpaginated read — no change needed
+- [x] i18n: `Tickets.CannedResponses` in `en` + `vi`; `lang:check` in sync (183 keys)
+- [x] Tests: picker lists titles + inserts the chosen body + hides without `canned.read` (2); AI panel forwards the canned bodies to `ai-suggest-reply` (1). 148 total pass.
+
+**Post-review (DONE, no blocking findings):** one Low test-flake fixed — the AI-panel test now awaits the canned-library load (via the query cache) before clicking "Draft reply", so the click can't beat the async fetch and send an empty context under CI load. Verified stable across repeated runs. Reviewer confirmed clean: XSS escape runs on the insert path, hook order safe, gating triple-consistent (`canned.read` on picker mount + query `enabled` + render-null-while-empty), query-key prefix invalidation from admin edits works, import boundary matches the existing tickets→admin pattern.
 
 ## Success criteria
 

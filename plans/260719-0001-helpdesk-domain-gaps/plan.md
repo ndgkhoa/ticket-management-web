@@ -1,7 +1,7 @@
 ---
 title: 'Help-desk domain-logic gaps'
 description: 'Close the business-logic gaps that make the demo help desk behave like a real one — SLA, triage, lifecycle, audit trail.'
-status: pending
+status: complete
 priority: P1
 effort: ~30h
 branch: develop
@@ -44,9 +44,14 @@ parity is a first-class deliverable in each phase, not an afterthought.
 | 02  | [Triage queue + auto-route + team UI](phase-02-triage-and-routing.md)    | ✅ done |
 | 03  | [Status lifecycle: reopen + auto-close](phase-03-status-lifecycle.md)    | ✅ done |
 | 04  | [Pause SLA clock (pending/on_hold)](phase-04-sla-clock-pause.md)         | ✅ done |
-| 05  | [Audit trail via DB triggers](phase-05-audit-trail-triggers.md)          | ⬜ todo |
-| 06  | [Gate agent UI / read-only for customers](phase-06-customer-readonly.md) | ⬜ todo |
-| 07  | [Consume canned responses (composer + AI)](phase-07-canned-responses.md) | ⬜ todo |
+| 05  | [Audit trail via DB triggers](phase-05-audit-trail-triggers.md)          | ✅ done |
+| 06  | [Gate agent UI / read-only for customers](phase-06-customer-readonly.md) | ✅ done |
+| 07  | [Consume canned responses (composer + AI)](phase-07-canned-responses.md) | ✅ done |
+
+All seven phases complete — the audit's help-desk gaps are closed. Domain invariants
+(SLA stamping/pause, triage visibility + auto-route, reopen/auto-close, audit trail) are
+DB-trigger-enforced with mirrored MSW mocks; the customer detail is read-only; canned
+responses feed the composer + AI.
 
 ## Key dependencies
 
