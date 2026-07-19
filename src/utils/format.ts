@@ -24,3 +24,15 @@ export const formatDate = (value?: string | number | Date | null): string => {
 
   return dayMonthYearFormatter.format(date);
 };
+
+/**
+ * Coarse human duration from a minute count: minutes under an hour, hours under a day, else
+ * days — one significant decimal. Null (no data) renders as "—". Used by the dashboard's KPI
+ * and agent metrics.
+ */
+export const formatMinutes = (mins: number | null): string => {
+  if (mins === null) return '—';
+  if (mins < 60) return `${Math.round(mins)}m`;
+  if (mins < 60 * 24) return `${(mins / 60).toFixed(1)}h`;
+  return `${(mins / (60 * 24)).toFixed(1)}d`;
+};

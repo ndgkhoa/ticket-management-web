@@ -646,6 +646,53 @@ export type Database = {
         Returns: boolean;
       };
       close_stale_solved_tickets: { Args: { p_days?: number }; Returns: number };
+      dashboard_agent_performance: {
+        Args: { p_from: string };
+        Returns: {
+          agent: string;
+          assigned_count: number;
+          avg_resolution_mins: number;
+          resolved_count: number;
+        }[];
+      };
+      dashboard_category_distribution: {
+        Args: { p_from: string };
+        Returns: {
+          category: string;
+          count: number;
+        }[];
+      };
+      dashboard_kpis: {
+        Args: { p_from: string };
+        Returns: {
+          avg_first_response_mins: number;
+          avg_resolution_mins: number;
+          open_count: number;
+          sla_compliance_pct: number;
+        }[];
+      };
+      dashboard_priority_distribution: {
+        Args: { p_from: string };
+        Returns: {
+          count: number;
+          priority: string;
+        }[];
+      };
+      dashboard_status_distribution: {
+        Args: { p_from: string };
+        Returns: {
+          count: number;
+          status: string;
+        }[];
+      };
+      dashboard_volume: {
+        Args: { p_from: string };
+        Returns: {
+          created_count: number;
+          day: string;
+          resolved_count: number;
+        }[];
+      };
       has_permission: {
         Args: { permission_code: string; uid: string };
         Returns: boolean;

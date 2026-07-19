@@ -1,6 +1,6 @@
 # Phase 08 — Dashboard Analytics
 
-**Priority:** P2 · **Status:** ⬜ todo · **Depends:** Phase 06
+**Priority:** P2 · **Status:** ✅ done · **Depends:** Phase 06
 
 ## Overview
 
@@ -30,12 +30,21 @@ A metrics dashboard that makes the demo look like a real operational tool: ticke
 
 ## Todo
 
-- [ ] Aggregation SQL views/RPCs (role-scoped)
-- [ ] Metric query hooks
-- [ ] KPI cards + chart components (themed, dark-mode)
-- [ ] Date-range filter (typed search params)
-- [ ] MSW fixtures + tests
-- [ ] a11y fallbacks for charts
+- [x] Aggregation SQL RPCs, role-scoped (`20260719090000_analytics_views.sql`): `dashboard_kpis`, `dashboard_volume`, `dashboard_{status,priority,category}_distribution`, `dashboard_agent_performance`. All `security invoker` + read `public.tickets` → the `tickets_select` RLS policy scopes each to the caller (verified live: admin 500 vs agent 313). Range-windowed by `p_from`; granted to `authenticated` only.
+- [x] Metric query hooks — `dashboard-api` + `dashboard-queries` (X-api + X-queries convention), keyed by range, `p_from` derived at fetch.
+- [x] KPI cards + chart components (Recharts + a shadcn-style `ui/chart` wrapper using the `--chart-1..5` tokens → themed + dark-mode). Charts: volume area, status donut, priority bar, category horizontal bar; agent performance as an accessible table.
+- [x] Date-range filter — typed `?range=` search param (7/30/90), `.default()` so bare links need no search.
+- [x] MSW `dashboard-handlers` mirror all 6 aggregations over the ticket store; tests: metrics parity (5), page render over MSW (1), `formatMinutes` (4) — 150 total pass.
+- [x] a11y: chart cards are `role="img"` with a title label (Recharts SVG has none); agent performance is a real `<table>` (kept out of `role="img"`); charts use Recharts `accessibilityLayer`.
+
+**Verified:** tsc clean · lint 0 err · live RPCs return sane numbers · RLS scoping (admin vs agent) · `db:reset` runs the full chain + seed cleanly. Note: the seed corpus is anchored near 2026-07-16, so the live 7/30/90-day windows only show data while "now" is close to that — inherent to fixed demo data.
+
+**Post-review fixes:**
+
+1. (Med) Distinct **error state** — a failed metric RPC used to render as "No data"/"—", hiding an outage. `KpiCard`/`ChartCard` now take `isError` and show `Dashboard.LoadError` separate from empty.
+2. (Med) **SLA compliance denominator** excludes resolved tickets with no `due_at` (a priority without a resolution SLA), so they aren't counted as automatic breaches — SQL + MSW.
+3. (Med, **design decision**) **`open_count` is the current open backlog, NOT window-scoped** — "Open tickets" is a right-now number. Verified live: 308 regardless of the range. Other three KPIs stay window-scoped.
+4. (Low) Category ordering gets a name tiebreak (deterministic); volume day-bucketing documented as UTC-session-dependent (Supabase default).
 
 ## Success criteria
 

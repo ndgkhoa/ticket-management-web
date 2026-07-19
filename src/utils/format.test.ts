@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatDate } from '~/utils/format';
+import { formatDate, formatMinutes } from '~/utils/format';
 
 describe('formatDate', () => {
   it('renders a date as DD/MM/YYYY with zero padding', () => {
@@ -26,5 +26,23 @@ describe('formatDate', () => {
   it('treats the epoch as a real date rather than a missing one', () => {
     // 0 is falsy, so a naive `if (!value)` guard would blank it out.
     expect(formatDate(0)).toBe('01/01/1970');
+  });
+});
+
+describe('formatMinutes', () => {
+  it('shows minutes under an hour', () => {
+    expect(formatMinutes(42)).toBe('42m');
+  });
+
+  it('shows hours under a day', () => {
+    expect(formatMinutes(150)).toBe('2.5h');
+  });
+
+  it('shows days beyond 24h', () => {
+    expect(formatMinutes(60 * 24 * 3)).toBe('3.0d');
+  });
+
+  it('renders a dash for no data', () => {
+    expect(formatMinutes(null)).toBe('—');
   });
 });
