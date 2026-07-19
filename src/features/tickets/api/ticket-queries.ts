@@ -14,7 +14,7 @@ import {
   type CreateTicketInput,
   type UpdateTicketPatch,
 } from '~/features/tickets/api/ticket-api';
-import { embedTicketInBackground } from '~/features/tickets/api/embed-ticket';
+import { embedTicketInBackground } from '~/features/tickets/api/embed-ticket-api';
 import { ticketKeys } from '~/features/tickets/constants/ticket-keys';
 
 /**

@@ -3,13 +3,48 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '~/components/ui';
 import { cn } from '~/utils/cn';
 import { useSlaPolicyList } from '~/features/admin/sla-policies/api/sla-policy-queries';
-import { slaVariant, type SlaVariant } from '~/features/tickets/components/sla-state';
-import { effectiveNow } from '~/features/tickets/components/sla-pause';
 import type { Ticket } from '~/features/tickets/schemas/ticket-schema';
 
 type Props = { ticket: Ticket };
 
+type SlaVariant = 'met' | 'met_late' | 'breached' | 'pending' | 'pending_soon';
+
 type SlaState = { label: string; variant: SlaVariant; due: number };
+
+/**
+ * Effective SLA "now": wall time minus the time the ticket's SLA clock has been paused (while
+ * pending/on_hold). Subtracting paused time from `now` (rather than pushing the deadline out)
+ * freezes the countdown while paused and resumes it on return to an active status. `pausedMs` is
+ * the banked total across finished pauses; `pausedAt` is the current pause's start (null when
+ * running), whose elapsed time is added live.
+ */
+function effectiveNow(args: { now: number; pausedMs: number; pausedAt: number | null }): number {
+  const { now, pausedMs, pausedAt } = args;
+  const currentPause = pausedAt !== null ? Math.max(0, now - pausedAt) : 0;
+  return now - pausedMs - currentPause;
+}
+
+/**
+ * Classify one SLA target from timestamps (all epoch ms). `doneAt` set → the target was hit: on
+ * time (`met`) or after the deadline (`met_late`). Otherwise `breached` once overdue,
+ * `pending_soon` in the final quarter of the window, else `pending`. `due` is supplied by the
+ * caller (DB-maintained resolution due, or created + window for first response) so a reopened
+ * ticket's restarted deadline is honoured.
+ */
+function slaVariant(args: { due: number; windowMs: number; doneAt: number | null; now: number }): {
+  variant: SlaVariant;
+  due: number;
+} {
+  const { due, windowMs, doneAt, now } = args;
+
+  if (doneAt !== null) {
+    return { variant: doneAt <= due ? 'met' : 'met_late', due };
+  }
+  if (now > due) return { variant: 'breached', due };
+
+  const soon = due - now < windowMs * 0.25;
+  return { variant: soon ? 'pending_soon' : 'pending', due };
+}
 
 const AMBER = 'border-amber-500/30 bg-amber-500/15 text-amber-600 dark:text-amber-400';
 

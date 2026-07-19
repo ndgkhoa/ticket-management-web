@@ -5,8 +5,9 @@ import { useTranslation } from 'react-i18next';
 
 import { Button, Separator, Textarea } from '~/components/ui';
 import { isAiEnabled } from '~/features/tickets/api/ai-client';
-import { useSuggestReply, type ThreadMessageInput } from '~/features/tickets/api/suggest-reply';
-import { useSummarizeTicket } from '~/features/tickets/api/summarize-ticket';
+import { useSuggestReply } from '~/features/tickets/api/suggest-reply-queries';
+import type { ThreadMessageInput } from '~/features/tickets/api/suggest-reply-api';
+import { useSummarizeTicket } from '~/features/tickets/api/summarize-ticket-queries';
 import { useCannedResponses } from '~/features/tickets/api/canned-response-queries';
 import type { TicketMessage } from '~/features/tickets/schemas/ticket-message-schema';
 

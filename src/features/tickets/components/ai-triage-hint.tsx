@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Badge, Button } from '~/components/ui';
 import { isAiEnabled } from '~/features/tickets/api/ai-client';
-import { useTriageTicket } from '~/features/tickets/api/triage-ticket';
+import { useTriageTicket } from '~/features/tickets/api/triage-ticket-queries';
 import type { TicketPriority } from '~/features/tickets/schemas/ticket-enums';
 
 type Category = { id: string; name: string };

@@ -17,7 +17,7 @@ import {
 } from '~/components/data-table';
 import type { PageSize } from '~/lib/list-query';
 import { useTicketList } from '~/features/tickets/api/ticket-queries';
-import { useSemanticSearch } from '~/features/tickets/api/semantic-search';
+import { useSemanticSearch } from '~/features/tickets/api/semantic-search-queries';
 import { isAiEnabled } from '~/features/tickets/api/ai-client';
 import { SavedViewsMenu } from '~/features/tickets/components/saved-views-menu';
 import { BulkActionsBar } from '~/features/tickets/components/bulk-actions-bar';

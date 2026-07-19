@@ -12,8 +12,8 @@ const create = () =>
 
 /**
  * SLA pause accumulator (Phase 04), mirrored in MSW. Entering pending/on_hold starts the pause;
- * leaving banks the elapsed time and clears the marker. The freeze-while-paused maths is unit-
- * tested in sla-pause.test.ts; here we assert the accumulator's state transitions.
+ * leaving banks the elapsed time and clears the marker. The freeze-while-paused maths is covered
+ * by the SLA card's render tests; here we assert the accumulator's state transitions.
  */
 describe('SLA pause accumulator over MSW', () => {
   beforeEach(() => useAuthStore.setState({ user: { id: CUSTOMER } as User }));

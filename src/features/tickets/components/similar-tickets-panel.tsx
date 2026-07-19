@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Badge, Skeleton } from '~/components/ui';
 import { isAiEnabled } from '~/features/tickets/api/ai-client';
-import { useSimilarTickets } from '~/features/tickets/api/semantic-search';
+import { useSimilarTickets } from '~/features/tickets/api/semantic-search-queries';
 import { TicketPriorityBadge } from '~/features/tickets/components/ticket-priority-badge';
 
 type Props = { ticketId: string };

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { triageTicketApi } from '~/features/tickets/api/triage-ticket';
-import { suggestReplyApi } from '~/features/tickets/api/suggest-reply';
-import { summarizeTicketApi } from '~/features/tickets/api/summarize-ticket';
-import { semanticSearchApi } from '~/features/tickets/api/semantic-search';
+import { triageTicketApi } from '~/features/tickets/api/triage-ticket-api';
+import { suggestReplyApi } from '~/features/tickets/api/suggest-reply-api';
+import { summarizeTicketApi } from '~/features/tickets/api/summarize-ticket-api';
+import { semanticSearchApi } from '~/features/tickets/api/semantic-search-api';
 import { ticketRows } from '~/mocks/fixtures';
 
 /**

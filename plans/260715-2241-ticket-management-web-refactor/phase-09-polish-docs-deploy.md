@@ -84,3 +84,12 @@ Public live demo with working demo logins; Lighthouse/a11y budgets pass in CI; R
 - Secrets in deploy — verify only public keys client-side. The Supabase anon key is public **by design** and safe to ship; RLS is what protects the data, which is why Phase 03's policy tests are load-bearing, not box-ticking. The service-role key must never reach the client bundle.
 - **Missing `_redirects` fails only on refresh/deep-link** — never in dev, never on first load from the homepage. Test the failure mode explicitly.
 - A CV demo on a paused/expired backend is a silent failure with no alert. MSW-first removes the failure mode rather than monitoring it.
+
+## Audit notes (2026-07-19) — coverage gaps found
+
+Existing e2e (9 specs) + unit/integration (140 pass) are solid. Gaps to fold into this phase:
+
+- **E2E doesn't cover the domain-gaps features** (plan `260719-0001`): triage-queue visibility, SLA pause/badge, audit trail (team/category events), read-only customer detail, canned-response picker. Unit + MSW cover them; add browser-level e2e here.
+- **Storybook is thin** — only 6 primitive stories (button, input, badge, field-text, data-table, ticket-badges). Feature components (composer, sla-card, properties, activity, ai-suggestion-panel, canned-response-picker, bulk-actions-bar, saved-views-menu) have none. Add **selectively** — Chromatic's 5k-snapshot/mo budget means don't blanket every component.
+- Seed `attachments` is intentionally empty (in-session blob uploads). Optionally seed 1-2 sample attachments for a richer first-load demo.
+- Confirmed still absent (already in Todo, re-flagged): `public/_redirects` (deep-link-refresh 404 is the classic silent SPA-on-Pages failure), `.github/workflows/lighthouse.yml`, and `docs/{system-architecture,deployment-guide,project-overview-pdr}.md` + ADRs (`docs/` currently holds only `ai-features.md` + `code-standards.md`).

@@ -6,7 +6,7 @@ const embedResultSchema = z.object({ ok: z.boolean() });
 
 /**
  * Fire-and-forget request to (re)compute a ticket's semantic embedding after it is
- * created or its subject/description changes.
+ * created or its subject/description changes. No query hook — it's imperative and not awaited.
  *
  * Best-effort by design: a missing embedding only means the ticket won't surface in
  * semantic results until it's next embedded — it must never fail the create/update the

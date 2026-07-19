@@ -45,3 +45,11 @@ Dashboard renders accurate role-scoped metrics; charts responsive + themed; work
 
 - Aggregation performance — index supporting columns; precompute where needed.
 - Chart a11y — provide non-visual equivalents.
+
+## Audit notes (2026-07-19)
+
+Dashboard is greenfield — only a stub `features/dashboard/pages` + route `_app/index.tsx`. Concrete gaps to cover when cooking:
+
+- **No chart library installed** — add Recharts or Tremor (neither is in `package.json`).
+- **No analytics RPC or MSW handlers yet** — the aggregation RPCs need new MSW handlers (current mocks only cover `assignable_agents`, `bulk_update_tickets`, `match_tickets`, `similar_tickets`) plus aggregated fixtures.
+- Seed already has a rich 500-ticket corpus with SLA stamps, `resolved_at`/`first_response_at`, priorities, teams, categories — the views can compute real metrics off it; **no new seed data needed**.
