@@ -209,7 +209,9 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
       ticket_id: id,
       author_id: assigneeId,
       type: 'public_reply',
-      body: faker.helpers.arrayElement(AGENT_REPLIES),
+      // Wrapped in <p> to match the Tiptap composer's HTML output — the body column holds
+      // rich text, so seed and live-authored messages render identically through RichTextView.
+      body: `<p>${faker.helpers.arrayElement(AGENT_REPLIES)}</p>`,
       created_at: firstResponseAt.toISOString(),
     });
 
@@ -222,7 +224,7 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
         ticket_id: id,
         author_id: assigneeId,
         type: 'internal_note',
-        body: faker.helpers.arrayElement(INTERNAL_NOTES),
+        body: `<p>${faker.helpers.arrayElement(INTERNAL_NOTES)}</p>`,
         created_at: new Date(firstResponseAt.getTime() + 2 * MINUTE_MS).toISOString(),
       });
     }
@@ -234,7 +236,7 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
         ticket_id: id,
         author_id: isCustomerTurn ? requesterId : assigneeId,
         type: 'public_reply',
-        body: faker.helpers.arrayElement(isCustomerTurn ? CUSTOMER_REPLIES : AGENT_REPLIES),
+        body: `<p>${faker.helpers.arrayElement(isCustomerTurn ? CUSTOMER_REPLIES : AGENT_REPLIES)}</p>`,
         created_at: new Date(
           firstResponseAt.getTime() +
             (reply + 1) * faker.number.int({ min: 20, max: 720 }) * MINUTE_MS
