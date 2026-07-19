@@ -1,9 +1,10 @@
+import { useMemo } from 'react';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useForm } from '@tanstack/react-form';
 import { useTranslation } from 'react-i18next';
 
-import { FieldText, FieldTextarea } from '~/components/form';
+import { FieldSelect, FieldText, FieldTextarea } from '~/components/form';
 import {
   Button,
   Dialog,
@@ -16,7 +17,10 @@ import {
   useCategoryCreate,
   useCategoryUpdate,
 } from '~/features/admin/categories/api/category-queries';
+import { useTeamList } from '~/features/admin/teams/api/team-queries';
 import type { Category } from '~/features/admin/categories/schemas/category-schema';
+
+const NO_TEAM = '';
 
 type Props = {
   open: boolean;
@@ -34,20 +38,38 @@ export function CategoryFormDialog({ open, onOpenChange, category }: Props) {
   const { t } = useTranslation();
   const create = useCategoryCreate();
   const update = useCategoryUpdate();
+  const { data: teams = [] } = useTeamList();
   const pending = create.isPending || update.isPending;
+
+  const teamOptions = useMemo(
+    () => [
+      { label: '—', value: NO_TEAM },
+      ...teams.map((team) => ({ label: team.name, value: team.id })),
+    ],
+    [teams]
+  );
 
   const schema = z.object({
     name: z.string().min(1, t('Validation.Required')),
     description: z.string(),
+    defaultTeamId: z.string(),
   });
 
   const form = useForm({
-    defaultValues: { name: category?.name ?? '', description: category?.description ?? '' },
+    defaultValues: {
+      name: category?.name ?? '',
+      description: category?.description ?? '',
+      defaultTeamId: category?.defaultTeamId ?? NO_TEAM,
+    },
     validators: { onSubmit: schema },
     onSubmit: ({ value }) => {
       // Empty description collapses to null — the column is nullable, and '' vs null
       // should not be two distinct "no description" states.
-      const input = { name: value.name.trim(), description: value.description.trim() || null };
+      const input = {
+        name: value.name.trim(),
+        description: value.description.trim() || null,
+        default_team_id: value.defaultTeamId || null,
+      };
       const handlers = {
         onSuccess: () => onOpenChange(false),
         onError: (error: Error) => toast.error(error.message),
@@ -81,6 +103,16 @@ export function CategoryFormDialog({ open, onOpenChange, category }: Props) {
           <form.Field name="description">
             {(field) => (
               <FieldTextarea field={field} label={t('Fields.Description')} disabled={pending} />
+            )}
+          </form.Field>
+          <form.Field name="defaultTeamId">
+            {(field) => (
+              <FieldSelect
+                field={field}
+                label={t('Fields.DefaultTeam')}
+                options={teamOptions}
+                disabled={pending}
+              />
             )}
           </form.Field>
           <DialogFooter>

@@ -159,6 +159,7 @@ function Tickets() {
 
   const isFiltered = Boolean(
     search.q ||
+    search.triage ||
     search.status?.length ||
     search.priority?.length ||
     search.assigneeIds?.length ||
@@ -210,6 +211,7 @@ function Tickets() {
     search.teamIds,
     search.categoryIds,
     search.tagIds,
+    search.triage,
   ]);
   useTicketListRealtime({ canAutoRefresh, viewKey });
 
@@ -290,19 +292,32 @@ function Tickets() {
             onReset={handleReset}
             filterCount={activeFilterCount}
             actions={
-              isAiEnabled && (
+              <>
                 <Button
                   type="button"
-                  variant={search.smart ? 'secondary' : 'outline'}
+                  variant={search.triage ? 'secondary' : 'outline'}
                   size="sm"
-                  className={cn('h-8', search.smart && 'border-primary')}
-                  aria-pressed={search.smart}
-                  onClick={() => setSearch({ smart: !search.smart })}
+                  className={cn('h-8', search.triage && 'border-primary')}
+                  aria-pressed={search.triage}
+                  onClick={() => setSearch({ triage: !search.triage })}
                 >
-                  <Sparkles className="mr-1 size-4" />
-                  {t('Ai.SmartSearch')}
+                  <Inbox className="mr-1 size-4" />
+                  {t('Tickets.Triage')}
                 </Button>
-              )
+                {isAiEnabled && (
+                  <Button
+                    type="button"
+                    variant={search.smart ? 'secondary' : 'outline'}
+                    size="sm"
+                    className={cn('h-8', search.smart && 'border-primary')}
+                    aria-pressed={search.smart}
+                    onClick={() => setSearch({ smart: !search.smart })}
+                  >
+                    <Sparkles className="mr-1 size-4" />
+                    {t('Ai.SmartSearch')}
+                  </Button>
+                )}
+              </>
             }
             filters={
               <>

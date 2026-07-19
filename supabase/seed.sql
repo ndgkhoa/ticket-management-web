@@ -340,12 +340,12 @@ insert into public.team_members (team_id, user_id) values
   ('00000004-0000-4000-8000-000000000001', '00000001-0000-4000-8000-00000000000c'),
   ('00000004-0000-4000-8000-000000000002', '00000001-0000-4000-8000-00000000000c');
 
-insert into public.categories (id, name, description) values
-  ('00000005-0000-4000-8000-000000000001', 'Billing question', 'Anything about an invoice, charge or refund'),
-  ('00000005-0000-4000-8000-000000000002', 'Bug report', 'Something is broken or behaving incorrectly'),
-  ('00000005-0000-4000-8000-000000000003', 'Feature request', 'A capability the product does not have yet'),
-  ('00000005-0000-4000-8000-000000000004', 'Account access', 'Sign-in, passwords, SSO and permissions'),
-  ('00000005-0000-4000-8000-000000000005', 'How-to', 'The product does this, the customer needs to know how');
+insert into public.categories (id, name, description, default_team_id) values
+  ('00000005-0000-4000-8000-000000000001', 'Billing question', 'Anything about an invoice, charge or refund', '00000004-0000-4000-8000-000000000001'),
+  ('00000005-0000-4000-8000-000000000002', 'Bug report', 'Something is broken or behaving incorrectly', '00000004-0000-4000-8000-000000000002'),
+  ('00000005-0000-4000-8000-000000000003', 'Feature request', 'A capability the product does not have yet', '00000004-0000-4000-8000-000000000002'),
+  ('00000005-0000-4000-8000-000000000004', 'Account access', 'Sign-in, passwords, SSO and permissions', '00000004-0000-4000-8000-000000000003'),
+  ('00000005-0000-4000-8000-000000000005', 'How-to', 'The product does this, the customer needs to know how', '00000004-0000-4000-8000-000000000003');
 
 insert into public.tags (id, name, color) values
   ('00000006-0000-4000-8000-000000000001', 'vip', '#b91c1c'),

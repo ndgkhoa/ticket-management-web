@@ -117,21 +117,32 @@ export type Database = {
       };
       categories: {
         Row: {
+          default_team_id: string | null;
           description: string | null;
           id: string;
           name: string;
         };
         Insert: {
+          default_team_id?: string | null;
           description?: string | null;
           id?: string;
           name: string;
         };
         Update: {
+          default_team_id?: string | null;
           description?: string | null;
           id?: string;
           name?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: 'categories_default_team_id_fkey';
+            columns: ['default_team_id'];
+            isOneToOne: false;
+            referencedRelation: 'teams';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       permissions: {
         Row: {
@@ -619,54 +630,6 @@ export type Database = {
         Args: { p_filters: Json; p_patch: Json };
         Returns: number;
       };
-      match_tickets: {
-        Args: {
-          query_embedding: string;
-          match_count?: number;
-          similarity_threshold?: number;
-        };
-        Returns: {
-          id: string;
-          subject: string;
-          description: string;
-          status: Database['public']['Enums']['ticket_status'];
-          priority: Database['public']['Enums']['ticket_priority'];
-          channel: Database['public']['Enums']['ticket_channel'];
-          requester_id: string;
-          assignee_id: string | null;
-          team_id: string | null;
-          category_id: string | null;
-          sla_policy_id: string | null;
-          first_response_at: string | null;
-          resolved_at: string | null;
-          due_at: string | null;
-          created_at: string;
-          updated_at: string;
-          similarity: number;
-        }[];
-      };
-      similar_tickets: {
-        Args: { p_ticket_id: string; match_count?: number };
-        Returns: {
-          id: string;
-          subject: string;
-          description: string;
-          status: Database['public']['Enums']['ticket_status'];
-          priority: Database['public']['Enums']['ticket_priority'];
-          channel: Database['public']['Enums']['ticket_channel'];
-          requester_id: string;
-          assignee_id: string | null;
-          team_id: string | null;
-          category_id: string | null;
-          sla_policy_id: string | null;
-          first_response_at: string | null;
-          resolved_at: string | null;
-          due_at: string | null;
-          created_at: string;
-          updated_at: string;
-          similarity: number;
-        }[];
-      };
       can_access_ticket: {
         Args: {
           ticket_assignee_id: string;
@@ -683,6 +646,70 @@ export type Database = {
       is_team_member: {
         Args: { target_team_id: string; uid: string };
         Returns: boolean;
+      };
+      match_tickets: {
+        Args: {
+          match_count?: number;
+          query_embedding: string;
+          similarity_threshold?: number;
+        };
+        Returns: {
+          assignee_id: string;
+          category_id: string;
+          channel: Database['public']['Enums']['ticket_channel'];
+          created_at: string;
+          description: string;
+          due_at: string;
+          first_response_at: string;
+          id: string;
+          priority: Database['public']['Enums']['ticket_priority'];
+          requester_id: string;
+          resolved_at: string;
+          similarity: number;
+          sla_policy_id: string;
+          status: Database['public']['Enums']['ticket_status'];
+          subject: string;
+          team_id: string;
+          updated_at: string;
+        }[];
+      };
+      similar_tickets: {
+        Args: { match_count?: number; p_ticket_id: string };
+        Returns: {
+          assignee_id: string;
+          category_id: string;
+          channel: Database['public']['Enums']['ticket_channel'];
+          created_at: string;
+          description: string;
+          due_at: string;
+          first_response_at: string;
+          id: string;
+          priority: Database['public']['Enums']['ticket_priority'];
+          requester_id: string;
+          resolved_at: string;
+          similarity: number;
+          sla_policy_id: string;
+          status: Database['public']['Enums']['ticket_status'];
+          subject: string;
+          team_id: string;
+          updated_at: string;
+        }[];
+      };
+      sla_policy_for_priority: {
+        Args: { p: Database['public']['Enums']['ticket_priority'] };
+        Returns: {
+          first_response_mins: number;
+          id: string;
+          name: string;
+          priority: Database['public']['Enums']['ticket_priority'];
+          resolution_mins: number;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'sla_policies';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
     };
     Enums: {

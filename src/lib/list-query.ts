@@ -116,3 +116,11 @@ export const MIN_FTS_LENGTH = 3;
 export function shouldUseFullTextSearch(q: string): boolean {
   return q.length >= MIN_FTS_LENGTH;
 }
+
+/**
+ * Sentinel for an "is null" column filter — the MSW twin of a Supabase `.is(col, null)`.
+ * Distinct from any real filter value (columns filter on UUIDs and enums, never this token).
+ * The MSW request parser maps `col=is.null` onto it, and the applier matches rows whose
+ * column is null. (Live PostgREST handles `is.null` natively; this only keeps the mock in step.)
+ */
+export const FILTER_IS_NULL = '__is_null__';

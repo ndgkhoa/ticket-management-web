@@ -56,6 +56,7 @@ const en = {
     "Updated": "Updated {{count}} tickets"
   },
   "Tickets": {
+    "Triage": "Unassigned",
     "PublicReply": "Reply",
     "InternalNote": "Internal note",
     "Send": "Send",
@@ -152,6 +153,7 @@ const en = {
     "Priority": "Priority",
     "Assignee": "Assignee",
     "Team": "Team",
+    "DefaultTeam": "Default team",
     "Category": "Category",
     "Name": "Name",
     "Color": "Color",
@@ -213,6 +215,13 @@ const en = {
     "SimilarTickets": "Similar tickets",
     "NoSimilar": "No similar tickets found",
     "SmartSearch": "Smart search"
+  },
+  "Teams": {
+    "ManageMembers": "Manage members",
+    "Members": "Members",
+    "AddMember": "Add member",
+    "NoMembers": "No members yet",
+    "SelectAgent": "Select an agent"
   }
 } as const;
 export default en;

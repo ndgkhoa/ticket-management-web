@@ -1,4 +1,4 @@
-import { DEFAULT_PAGE_SIZE, type ListParams } from '~/lib/list-query';
+import { DEFAULT_PAGE_SIZE, FILTER_IS_NULL, type ListParams } from '~/lib/list-query';
 
 /**
  * Parse the PostgREST request supabase-js emits back into the shared list contract.
@@ -127,6 +127,7 @@ export function toListParams(query: PostgrestQuery): ListParams {
   for (const [column, filter] of Object.entries(query.filters)) {
     if (filter.op === 'eq') filters[column] = filter.value;
     else if (filter.op === 'in') filters[column] = parseInList(filter.value);
+    else if (filter.op === 'is' && filter.value === 'null') filters[column] = FILTER_IS_NULL;
     else if (FTS_OPERATORS.has(filter.op)) ftsQuery = filter.value;
     else if (filter.op === 'ilike' || filter.op === 'like')
       trigramQuery = unescapeLikePattern(filter.value);

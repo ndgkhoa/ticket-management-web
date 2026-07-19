@@ -14,6 +14,7 @@ describe('ticketSearchSchema', () => {
       sort: 'created_at',
       dir: 'desc',
       smart: false,
+      triage: false,
     });
   });
 
@@ -70,6 +71,7 @@ describe('toTicketListParams', () => {
     sort: 'priority',
     dir: 'asc',
     smart: false,
+    triage: false,
   };
 
   it('maps flat URL params to the nested list-query shape', () => {

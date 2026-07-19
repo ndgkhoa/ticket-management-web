@@ -1,5 +1,6 @@
 import {
   computePageCount,
+  FILTER_IS_NULL,
   pageToRange,
   shouldUseFullTextSearch,
   type ListParams,
@@ -134,7 +135,9 @@ export function applyListQuery<Row>(
       const get = config.filterable[column];
       if (!get) return true;
       const cell = get(row);
-      return Array.isArray(value) ? value.includes(cell ?? '') : cell === value;
+      if (Array.isArray(value)) return value.includes(cell ?? '');
+      if (value === FILTER_IS_NULL) return cell === null;
+      return cell === value;
     })
   );
 

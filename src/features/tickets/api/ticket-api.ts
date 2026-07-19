@@ -116,6 +116,12 @@ export const ticketApi = {
   list: async (params: ListParams) => {
     const filters = { ...params.filters };
 
+    // The triage queue: unassigned AND unteamed. A reserved key, not a column — translated
+    // to `is null` constraints below (the MSW applier mirrors `is.null`). Dropped from the
+    // column filters so `applyFilters` never sees it.
+    const triageOnly = filters.triage !== undefined;
+    delete filters.triage;
+
     // Resolve the tag filter (junction → ticket ids) before building the base query.
     // `tag_id` is dropped from the column filters either way — it is not a ticket column.
     if ('tag_id' in filters) {
@@ -129,11 +135,13 @@ export const ticketApi = {
     }
 
     const { rows, totalCount, pageCount } = await runListQuery(
-      () =>
-        applyFilters(
+      () => {
+        const filtered = applyFilters(
           supabase.from('tickets').select(TICKET_COLUMNS, { count: 'estimated' }),
           filters
-        ),
+        );
+        return triageOnly ? filtered.is('assignee_id', null).is('team_id', null) : filtered;
+      },
       params,
       ticketListConfig
     );

@@ -240,7 +240,7 @@ const sections = [
   '-- Organization -------------------------------------------------------------',
   insertInto('public.teams', ['id', 'name', 'description'], teamRows),
   insertInto('public.team_members', ['team_id', 'user_id'], teamMemberRows),
-  insertInto('public.categories', ['id', 'name', 'description'], categoryRows),
+  insertInto('public.categories', ['id', 'name', 'description', 'default_team_id'], categoryRows),
   insertInto('public.tags', ['id', 'name', 'color'], tagRows),
   insertInto(
     'public.sla_policies',

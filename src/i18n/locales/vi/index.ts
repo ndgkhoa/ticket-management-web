@@ -56,6 +56,7 @@ const vi = {
     "Updated": "Đã cập nhật {{count}} phiếu"
   },
   "Tickets": {
+    "Triage": "Chưa gán",
     "PublicReply": "Trả lời",
     "InternalNote": "Ghi chú nội bộ",
     "Send": "Gửi",
@@ -147,6 +148,7 @@ const vi = {
     "Priority": "Độ ưu tiên",
     "Assignee": "Người phụ trách",
     "Team": "Nhóm",
+    "DefaultTeam": "Nhóm mặc định",
     "Category": "Danh mục",
     "Name": "Tên",
     "Color": "Màu",
@@ -203,6 +205,13 @@ const vi = {
     "SimilarTickets": "Ticket tương tự",
     "NoSimilar": "Không tìm thấy ticket tương tự",
     "SmartSearch": "Tìm kiếm thông minh"
+  },
+  "Teams": {
+    "ManageMembers": "Quản lý thành viên",
+    "Members": "Thành viên",
+    "AddMember": "Thêm thành viên",
+    "NoMembers": "Chưa có thành viên",
+    "SelectAgent": "Chọn nhân viên"
   }
 } as const;
 export default vi;

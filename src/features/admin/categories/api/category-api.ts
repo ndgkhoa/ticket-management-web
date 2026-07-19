@@ -8,7 +8,12 @@ import {
 } from '~/features/admin/categories/schemas/category-schema';
 
 /** What the create/edit form submits — the writable columns, nothing generated. */
-export type CategoryInput = { name: string; description: string | null };
+export type CategoryInput = {
+  name: string;
+  description: string | null;
+  /** Team a ticket in this category is auto-routed to on create (null = no routing). */
+  default_team_id: string | null;
+};
 
 /**
  * Data access for categories: a bounded lookup table, so the list is a plain

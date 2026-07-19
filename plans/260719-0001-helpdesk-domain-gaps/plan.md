@@ -41,7 +41,7 @@ parity is a first-class deliverable in each phase, not an afterthought.
 | #   | Phase                                                                    | Status  |
 | --- | ------------------------------------------------------------------------ | ------- |
 | 01  | [SLA correctness via DB triggers](phase-01-sla-timestamp-triggers.md)    | ✅ done |
-| 02  | [Triage queue + auto-route + team UI](phase-02-triage-and-routing.md)    | ⬜ todo |
+| 02  | [Triage queue + auto-route + team UI](phase-02-triage-and-routing.md)    | ✅ done |
 | 03  | [Status lifecycle: reopen + auto-close](phase-03-status-lifecycle.md)    | ⬜ todo |
 | 04  | [Pause SLA clock (pending/on_hold)](phase-04-sla-clock-pause.md)         | ⬜ todo |
 | 05  | [Audit trail via DB triggers](phase-05-audit-trail-triggers.md)          | ⬜ todo |

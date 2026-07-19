@@ -17,7 +17,11 @@ describe('category CRUD over MSW', () => {
   });
 
   it('creates a row and returns it, then the list includes it', async () => {
-    const created = await categoryApi.create({ name: 'Escalations', description: 'Hot ones' });
+    const created = await categoryApi.create({
+      name: 'Escalations',
+      description: 'Hot ones',
+      default_team_id: null,
+    });
 
     expect(created.id).toBeTruthy();
     expect(created.name).toBe('Escalations');
@@ -33,6 +37,7 @@ describe('category CRUD over MSW', () => {
     const updated = await categoryApi.update(target.id, {
       name: 'Renamed',
       description: null,
+      default_team_id: null,
     });
 
     expect(updated.id).toBe(target.id);

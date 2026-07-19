@@ -64,6 +64,13 @@ export const ticketSearchSchema = z.object({
     .transform((value) => value === true || value === 'true')
     .catch(false)
     .default(false),
+  // Triage queue: show only unassigned AND unteamed tickets (the new-ticket queue an agent
+  // works from). Same boolean/string handling as `smart`.
+  triage: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .transform((value) => value === true || value === 'true')
+    .catch(false)
+    .default(false),
 });
 
 export type TicketSearch = z.infer<typeof ticketSearchSchema>;
@@ -74,6 +81,10 @@ export const TICKET_SEARCH_DEFAULTS = {
   pageSize: DEFAULT_PAGE_SIZE,
   sort: 'created_at',
   dir: 'desc',
+  // Boolean toggles default off — kept out of the URL so `/tickets` stays clean until a
+  // toggle is actually on (`?smart=true` / `?triage=true`).
+  smart: false,
+  triage: false,
 } as const;
 
 /** Which params, when changed, must send the user back to page 1. */
@@ -89,6 +100,8 @@ export const PAGE_RESETTING_KEYS = [
   // Switching keyword ↔ semantic changes the whole result set, so the old page offset is
   // meaningless (and would mislabel the row-index column).
   'smart',
+  // Toggling the triage queue changes the whole result set too.
+  'triage',
 ] as const;
 
 /** Map the URL search into the nested params shape the shared list query expects. */
@@ -102,6 +115,8 @@ export function toTicketListParams(search: TicketSearch): ListParams {
   // Not a ticket column — the api resolves it through the junction. Carried on `filters`
   // under a reserved key the column-filter allowlist deliberately omits.
   if (search.tagIds?.length) filters.tag_id = search.tagIds;
+  // Reserved key: the api translates it to `assignee_id is null AND team_id is null`.
+  if (search.triage) filters.triage = 'true';
 
   return {
     page: search.page,

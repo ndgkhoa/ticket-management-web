@@ -50,7 +50,12 @@ export type UserRoleRow = { user_id: string; role_id: string };
 
 export type TeamRow = { id: string; name: string; description: string };
 export type TeamMemberRow = { team_id: string; user_id: string };
-export type CategoryRow = { id: string; name: string; description: string };
+export type CategoryRow = {
+  id: string;
+  name: string;
+  description: string;
+  default_team_id: string | null;
+};
 export type TagRow = { id: string; name: string; color: string };
 
 export type SlaPolicyRow = {

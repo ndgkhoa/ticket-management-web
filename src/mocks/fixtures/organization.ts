@@ -57,19 +57,25 @@ if (!teamMemberRows.some((row) => row.user_id === demoAgentId && row.team_id ===
   teamMemberRows.push({ team_id: billingTeamId, user_id: demoAgentId });
 }
 
+// [name, description, default team name] — the default team is what a ticket in this
+// category auto-routes to on create (Phase 02 routing), mirrored from the topic→team map
+// the ticket corpus already uses.
 const CATEGORY_DEFINITIONS = [
-  ['Billing question', 'Anything about an invoice, charge or refund'],
-  ['Bug report', 'Something is broken or behaving incorrectly'],
-  ['Feature request', 'A capability the product does not have yet'],
-  ['Account access', 'Sign-in, passwords, SSO and permissions'],
-  ['How-to', 'The product does this, the customer needs to know how'],
+  ['Billing question', 'Anything about an invoice, charge or refund', 'Billing'],
+  ['Bug report', 'Something is broken or behaving incorrectly', 'Technical'],
+  ['Feature request', 'A capability the product does not have yet', 'Technical'],
+  ['Account access', 'Sign-in, passwords, SSO and permissions', 'Onboarding'],
+  ['How-to', 'The product does this, the customer needs to know how', 'Onboarding'],
 ] as const;
 
+const teamIdByName = new Map(teamRows.map((team) => [team.name, team.id]));
+
 export const categoryRows: CategoryRow[] = CATEGORY_DEFINITIONS.map(
-  ([name, description], index) => ({
+  ([name, description, defaultTeamName], index) => ({
     id: fixtureUuid('category', index + 1),
     name,
     description,
+    default_team_id: teamIdByName.get(defaultTeamName) ?? null,
   })
 );
 

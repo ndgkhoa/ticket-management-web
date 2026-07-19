@@ -27,6 +27,7 @@ import {
   stampTicketSlaOnInsert,
   stampTicketSlaOnUpdate,
 } from '~/mocks/lib/sla-stamp';
+import { routeTicketOnInsert } from '~/mocks/lib/ticket-routing';
 
 /**
  * PostgREST table handlers for every `/rest/v1/*` read the app makes today, plus writes
@@ -51,8 +52,9 @@ export const restHandlers = [
     // through the same shared store the list reads; realtime so other tabs see the change.
     writable: true,
     realtime: true,
-    // Mirror the SLA-stamping triggers: due_at/sla_policy_id on create, resolved_at on solve.
-    stampInsert: stampTicketSlaOnInsert,
+    // Mirror the create triggers: auto-route team_id from the category, then stamp SLA
+    // (due_at/sla_policy_id); resolved_at on solve.
+    stampInsert: (row) => stampTicketSlaOnInsert(routeTicketOnInsert(row)),
     stampUpdate: stampTicketSlaOnUpdate,
   }),
   // The ticket conversation and its audit trail — read by ticket_id, append-only inserts. The

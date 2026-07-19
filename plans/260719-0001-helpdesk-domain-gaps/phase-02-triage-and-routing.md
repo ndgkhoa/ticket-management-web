@@ -1,6 +1,6 @@
 # Phase 02 — Triage Queue + Auto-Route + Team-Membership UI
 
-**Priority:** P1 · **Status:** ⬜ todo · **Depends:** none (team UI unblocks routing value)
+**Priority:** P1 · **Status:** ✅ done · **Depends:** none (team UI unblocks routing value)
 
 ## Context
 
@@ -112,14 +112,23 @@ references teams(id) on delete set null`; trigger `route_ticket_on_create()` (`B
 
 ## Todo
 
-- [ ] `can_access_ticket()` triage branch (unassigned + unteamed visible to `ticket.read.team`)
-- [ ] `categories.default_team_id` + `route_ticket_on_create()` trigger
-- [ ] `team-member-api.ts` + queries (list/add/remove on `team_members`)
-- [ ] Team-members management dialog (add/remove agents, `team.manage`-gated)
-- [ ] Category form default-team picker
-- [ ] Tickets list triage/unassigned quick filter
-- [ ] MSW: team_members store + auto-route + triage visibility parity
-- [ ] Tests: membership CRUD, auto-route, triage visibility, customer still own-only
+- [x] `can_access_ticket()` triage branch (unassigned + unteamed visible to `ticket.read.team`)
+- [x] `categories.default_team_id` + `route_ticket_on_create()` trigger
+- [x] `team-member-api.ts` + queries (list/add/remove on `team_members`)
+- [x] Team-members management dialog (add/remove agents; RLS `team.manage`-gated)
+- [x] Category form default-team picker (+ seeded category→team defaults)
+- [x] Tickets list triage/unassigned quick filter (shared `FILTER_IS_NULL` sentinel; live `.is()`)
+- [x] MSW: team_members store/handler + auto-route + `is.null` applier parity
+- [x] Tests: membership CRUD, auto-route, triage filter (MSW); triage visibility + customer own-only verified live via `can_access_ticket`
+
+Verified live (local DB): triage visibility 4/4, auto-route trigger sets team from category default, and bulk-triage scope (affected 32 = unassigned+unteamed, not all 500). Note: live categories need `bun run db:reset` to load the seeded defaults (the column was added empty by `migration up`).
+
+**Post-review fix:** `bulk_update_tickets` ignored the triage filter, so "select all matching" in triage mode would have mutated every accessible ticket — added a triage branch to the RPC (migration `..._bulk_update_triage_scope.sql`) + the MSW mock, with a regression test.
+
+**Deferred (low severity, from review):**
+
+- MSW request parser collapses duplicate same-column params (only matters for the contradictory triage + team-facet combo — live PostgREST ANDs them to empty).
+- `team_members_write` RLS gates on `team.manage` but not on the added user being an agent (the dialog roster already prevents adding a customer; harmless since a customer gains no visibility from `is_team_member`). Harden with a `has_permission(user_id,'ticket.update')` WITH CHECK when convenient.
 
 ## Success criteria
 

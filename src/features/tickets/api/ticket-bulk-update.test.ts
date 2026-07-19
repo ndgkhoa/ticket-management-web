@@ -55,6 +55,22 @@ describe('ticketApi.bulkUpdate over MSW', () => {
     expect(ticket.status).toBe(target.status);
   });
 
+  it('scopes a triage bulk update to unassigned + unteamed tickets only', async () => {
+    // The exact set the triage view shows — the bulk must touch this and nothing else.
+    const triageCount = ticketRows.filter(
+      (row) => row.assignee_id === null && row.team_id === null
+    ).length;
+    const owned = ticketRows.find((row) => row.assignee_id !== null || row.team_id !== null)!;
+
+    // "select all matching" in triage mode sends `{ triage: 'true' }` as the filter.
+    const count = await ticketApi.bulkUpdate({ triage: 'true' }, { status: 'closed' });
+
+    // Before the fix this closed every accessible ticket; now it's exactly the triage set.
+    expect(count).toBe(triageCount);
+    const untouched = await ticketApi.detail(owned.id);
+    expect(untouched.status).toBe(owned.status);
+  });
+
   it('stamps resolved_at when bulk-solving (same as the single-solve trigger)', async () => {
     const targets = ticketRows
       .filter((row) => row.status !== 'solved' && row.resolved_at === null)

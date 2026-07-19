@@ -7,7 +7,7 @@ import {
   userRoleRows,
   userRows,
 } from '~/mocks/fixtures';
-import type { ListParams } from '~/lib/list-query';
+import { FILTER_IS_NULL, type ListParams } from '~/lib/list-query';
 import { applyListQuery } from '~/mocks/lib/apply-list-query';
 import { ticketListConfig } from '~/mocks/config/ticket-list-config';
 import { ticketStore } from '~/mocks/stores/ticket-store';
@@ -72,7 +72,13 @@ const bulkUpdateTickets = http.post('*/rest/v1/rpc/bulk_update_tickets', async (
 
   const filters: ListParams['filters'] = {};
   for (const [key, value] of Object.entries(p_filters)) {
-    if (key !== 'tag_id') filters[key] = value;
+    // `tag_id` resolves through the junction below; `triage` is not a column — it maps to
+    // is-null constraints (mirrors the read path + the SQL triage branch).
+    if (key !== 'tag_id' && key !== 'triage') filters[key] = value;
+  }
+  if (p_filters.triage) {
+    filters.assignee_id = FILTER_IS_NULL;
+    filters.team_id = FILTER_IS_NULL;
   }
 
   // Resolve tags → ticket ids exactly as the list api does; an empty match means nothing.

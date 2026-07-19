@@ -13,6 +13,7 @@ const search: TicketSearch = {
   sort: 'created_at',
   dir: 'desc',
   smart: false,
+  triage: false,
   status: ['open'],
 };
 

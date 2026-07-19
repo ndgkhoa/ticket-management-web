@@ -4,6 +4,7 @@ import { authHandlers } from '~/mocks/handlers/auth-handlers';
 import { userRolesHandlers } from '~/mocks/handlers/user-roles-handlers';
 import { rpcHandlers } from '~/mocks/handlers/rpc-handlers';
 import { aiHandlers } from '~/mocks/handlers/ai-handlers';
+import { teamMembersHandlers } from '~/mocks/handlers/team-members-handlers';
 import { restHandlers } from '~/mocks/handlers/rest-handlers';
 
 /**
@@ -22,5 +23,7 @@ export const handlers: RequestHandler[] = [
   ...userRolesHandlers,
   ...rpcHandlers,
   ...aiHandlers,
+  // team_members before the generic table handlers — it has a composite key and its own set.
+  ...teamMembersHandlers,
   ...restHandlers,
 ];
