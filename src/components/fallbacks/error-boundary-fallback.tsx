@@ -1,23 +1,24 @@
-import { Result } from 'antd';
 import type { FallbackProps } from 'react-error-boundary';
 
 import { Button } from '~/components/ui';
+import { ErrorState } from '~/components/errors';
 
-export const ErrorBoundaryFallback = ({ resetErrorBoundary }: FallbackProps) => {
-  const onBack = () => {
+/**
+ * Renders for a render error in the shell components, above the router — so no router
+ * or i18n context is assumed here. Copy is intentionally plain English literals: an
+ * error boundary must render even when the tree (i18n included) is broken.
+ */
+export function ErrorBoundaryFallback({ resetErrorBoundary }: FallbackProps) {
+  const handleBack = () => {
     resetErrorBoundary();
     window.location.reload();
   };
   return (
-    <Result
-      status="500"
-      title="500"
-      subTitle="Sorry, something went wrong."
-      extra={
-        <Button type="primary" onClick={onBack}>
-          Trở về trang chủ
-        </Button>
-      }
+    <ErrorState
+      code="500"
+      title="Something went wrong"
+      description="Sorry, an unexpected error occurred."
+      action={<Button onClick={handleBack}>Back to home</Button>}
     />
   );
-};
+}

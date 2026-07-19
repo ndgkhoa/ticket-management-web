@@ -1,20 +1,17 @@
 import { Suspense } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Outlet } from '@tanstack/react-router';
 
-import { useAuthStore } from '~/stores/auth';
 import { FullscreenFallback } from '~/components/fallbacks';
 
-export const AuthLayout = () => {
-  const authState = useAuthStore((state) => state.auth);
-  const isAuthenticated = authState?.isAuthenticated;
-
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
+/**
+ * Shell for the auth screens. The "already signed in? go to the app" redirect lives
+ * in the route's `beforeLoad` (see `routes/auth/route.tsx`), so this only renders the
+ * outlet — one mechanism for the guard, not a component-level check racing it.
+ */
+export function AuthLayout() {
   return (
     <Suspense fallback={<FullscreenFallback />}>
       <Outlet />
     </Suspense>
   );
-};
+}

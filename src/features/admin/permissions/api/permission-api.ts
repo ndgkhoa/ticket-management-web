@@ -1,32 +1,27 @@
-import type { AxiosRequestConfig } from 'axios';
+import { z } from 'zod';
 
-import { axiosClient } from '~/config/axios';
-import { env } from '~/config/env';
-import type {
-  CreatePermissionBody,
-  Permission,
-  PermissionSearchParams,
-  UpdatePermissionBody,
-} from '~/features/admin/permissions/types/Permission';
-import type { BaseResponse } from '~/types';
+import { supabase } from '~/lib/supabase';
+import {
+  PERMISSION_COLUMNS,
+  permissionSchema,
+} from '~/features/admin/permissions/schemas/permission-schema';
 
-const BASE_PATH = `${env.VITE_BASE_API_URL}/permissions`;
-
+/**
+ * Data access for permissions. Read-only this stage — create/update/delete land with
+ * the admin UI rebuild. Rows are validated into domain models here so nothing
+ * downstream sees a snake_case column or an unvalidated shape.
+ *
+ * `.throwOnError()` is the SDK's own bridge from its `{ data, error }` return to the
+ * throw React Query expects — and it rethrows the real `PostgrestError` (code, hint,
+ * details intact), which a hand-rolled `new Error(error.message)` would flatten away.
+ */
 export const permissionApi = {
-  getAll: (params?: PermissionSearchParams, config?: AxiosRequestConfig) => {
-    const url = `${BASE_PATH}/get-list`;
-    return axiosClient.get<BaseResponse<Permission[]>>(url, { params, ...config });
-  },
-  getOne: (id: Permission['Id'], config?: AxiosRequestConfig) => {
-    return axiosClient.get(`${BASE_PATH}/get-by-id/${id}`, { ...config });
-  },
-  create: (body: CreatePermissionBody) => {
-    return axiosClient.post(`${BASE_PATH}/create`, body);
-  },
-  update: ({ Id, ...body }: UpdatePermissionBody) => {
-    return axiosClient.patch(`${BASE_PATH}/update/${Id}`, body);
-  },
-  delete: (id: Permission['Id']) => {
-    return axiosClient.delete(`${BASE_PATH}/delete/${id}`);
+  list: async () => {
+    const { data } = await supabase
+      .from('permissions')
+      .select(PERMISSION_COLUMNS)
+      .order('code')
+      .throwOnError();
+    return z.array(permissionSchema).parse(data);
   },
 };

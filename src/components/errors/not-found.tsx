@@ -1,24 +1,19 @@
-import { Result } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from '@tanstack/react-router';
 
 import { Button } from '~/components/ui';
+import { ErrorState } from '~/components/errors/error-state';
 
-export const NotFound = () => {
+export function NotFound() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const onBack = () => {
-    navigate('/');
-    window.location.reload();
-  };
+
   return (
-    <Result
-      status="404"
-      title="404"
-      subTitle="Sorry, the page you visited does not exist."
-      extra={
-        <Button type="primary" onClick={onBack}>
-          Trở về trang chủ
-        </Button>
-      }
+    <ErrorState
+      code="404"
+      title={t('Errors.NotFoundTitle')}
+      description={t('Errors.NotFoundDescription')}
+      action={<Button onClick={() => void navigate({ to: '/' })}>{t('Common.BackToHome')}</Button>}
     />
   );
-};
+}

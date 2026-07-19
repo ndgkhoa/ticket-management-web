@@ -1,3 +1,4 @@
 node_modules/
 dist/
-build/
+src/i18n/locales/
+src/routeTree.gen.ts

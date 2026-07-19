@@ -1,66 +1,149 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HomeOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
-import { Menu, Layout, Flex } from 'antd';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  FolderTree,
+  Home,
+  Inbox,
+  KeyRound,
+  MessagesSquare,
+  Tags,
+  Timer,
+  UserCog,
+  Users,
+  UsersRound,
+} from 'lucide-react';
+import { Link, useLocation } from '@tanstack/react-router';
+import type { LucideIcon } from 'lucide-react';
 
-import viagsLogoFull from '/images/viags-logo-full-2.png';
-import viagsLogo from '/images/viags-logo.png';
+import logoMark from '/images/logo-mark.svg';
+import { cn } from '~/utils/cn';
+import { Logo } from '~/components/ui/logo';
+import { useAuthStore } from '~/stores/auth';
+import { usePreferencesStore } from '~/stores/preferences';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
 
-export const Sidebar = memo(() => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+type NavPath =
+  | '/'
+  | '/tickets'
+  | '/admin/permissions'
+  | '/admin/roles'
+  | '/admin/users'
+  | '/admin/teams'
+  | '/admin/categories'
+  | '/admin/tags'
+  | '/admin/sla-policies'
+  | '/admin/canned-responses';
 
-  const parentKey = `/${pathname.split('/')[1]}`;
+type NavItem = { to: NavPath; icon: LucideIcon; label: string };
 
-  const [openKeys, setOpenKeys] = useState<string[]>([parentKey]);
-
-  const onClick: MenuProps['onClick'] = (e) => navigate(e.key);
-
-  const items: MenuProps['items'] = [
-    { key: '/', icon: <HomeOutlined />, label: t('Sidebar.Home') },
-    {
-      key: '/admin',
-      icon: <SafetyCertificateOutlined />,
-      label: t('Sidebar.Admin'),
-      children: [
-        { key: '/admin/permissions', label: t('Fields.Permissions') },
-        { key: '/admin/roles', label: t('Fields.Roles') },
-        { key: '/admin/users', label: t('Fields.Users') },
-      ],
-    },
-  ];
-
-  const renderedLogo = (
-    <Link to="/" className="flex h-16 items-center justify-center">
-      {collapsed ? (
-        <img src={viagsLogo} className="h-10" />
-      ) : (
-        <img src={viagsLogoFull} className="h-11" />
+function NavLink({
+  to,
+  icon: Icon,
+  label,
+  active,
+  collapsed,
+}: NavItem & { active: boolean; collapsed: boolean }) {
+  const link = (
+    <Link
+      to={to}
+      aria-label={collapsed ? label : undefined}
+      className={cn(
+        'flex items-center gap-3 rounded-md py-2 text-sm transition-colors',
+        collapsed ? 'justify-center px-0' : 'px-3',
+        active
+          ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+          : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground'
       )}
+    >
+      <Icon className="size-4 shrink-0" />
+      {!collapsed && <span>{label}</span>}
     </Link>
   );
 
+  // Collapsed: the label lives in a tooltip since it's hidden from the rail.
+  if (!collapsed) return link;
   return (
-    <Layout.Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} width={280}>
-      <Flex align="center" justify="center" className="h-16">
-        {renderedLogo}
-      </Flex>
-      <Menu
-        theme="dark"
-        onClick={onClick}
-        mode="inline"
-        items={items}
-        openKeys={openKeys}
-        selectedKeys={[pathname]}
-        onOpenChange={(keys) => setOpenKeys(keys)}
-        className={`h-[calc(100vh-110px)] overflow-y-auto transition-all duration-300 ${
-          collapsed ? 'overflow-hidden' : 'overflow-y-auto'
-        }`}
-      />
-    </Layout.Sider>
+    <Tooltip>
+      <TooltipTrigger asChild>{link}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+export const Sidebar = memo(function Sidebar() {
+  const { t } = useTranslation();
+  const { pathname } = useLocation();
+  // Role-aware nav: hide the admin group unless the user can manage it. This mirrors
+  // the `/admin` route guard (`user.manage`) — RLS is the real enforcement.
+  const canManageAdmin = useAuthStore((state) => state.hasPermission('user.manage'));
+  const collapsed = usePreferencesStore((state) => state.sidebarCollapsed);
+
+  const primary: NavItem[] = [
+    { to: '/', icon: Home, label: t('Sidebar.Home') },
+    { to: '/tickets', icon: Inbox, label: t('Fields.Tickets') },
+  ];
+
+  // Access control first (users → their roles → the permissions those roles grant), then
+  // the help-desk configuration tables. Permissions is read-only, so it trails the trio.
+  const admin: NavItem[] = [
+    { to: '/admin/users', icon: Users, label: t('Fields.Users') },
+    { to: '/admin/roles', icon: UserCog, label: t('Fields.Roles') },
+    { to: '/admin/permissions', icon: KeyRound, label: t('Fields.Permissions') },
+    { to: '/admin/teams', icon: UsersRound, label: t('Fields.Teams') },
+    { to: '/admin/categories', icon: FolderTree, label: t('Fields.Categories') },
+    { to: '/admin/tags', icon: Tags, label: t('Fields.Tags') },
+    { to: '/admin/sla-policies', icon: Timer, label: t('Fields.SlaPolicies') },
+    {
+      to: '/admin/canned-responses',
+      icon: MessagesSquare,
+      label: t('Fields.CannedResponses'),
+    },
+  ];
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <aside
+        className={cn(
+          'bg-sidebar text-sidebar-foreground flex h-full flex-col border-r transition-[width] duration-200',
+          collapsed ? 'w-16' : 'w-64'
+        )}
+      >
+        {/* Logo is the link's only content, so its label is the "go home" name. Inline
+            SVG wordmark expanded; just the mark when collapsed to fit the rail. */}
+        <Link to="/" className="flex h-16 items-center justify-center border-b">
+          {collapsed ? (
+            <img src={logoMark} alt={t('App.Name')} className="h-8" />
+          ) : (
+            <Logo label={t('App.Name')} className="h-11 w-auto" />
+          )}
+        </Link>
+
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+          {primary.map((item) => (
+            <NavLink key={item.to} {...item} active={pathname === item.to} collapsed={collapsed} />
+          ))}
+
+          {canManageAdmin && (
+            <>
+              {collapsed ? (
+                <div className="border-sidebar-border/50 my-2 border-t" />
+              ) : (
+                <div className="text-sidebar-foreground/60 px-3 pt-4 pb-1 text-xs font-medium tracking-wide uppercase">
+                  {t('Sidebar.Admin')}
+                </div>
+              )}
+              {admin.map((item) => (
+                <NavLink
+                  key={item.to}
+                  {...item}
+                  active={pathname === item.to}
+                  collapsed={collapsed}
+                />
+              ))}
+            </>
+          )}
+        </nav>
+      </aside>
+    </TooltipProvider>
   );
 });

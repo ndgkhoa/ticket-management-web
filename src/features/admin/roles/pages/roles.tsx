@@ -1,40 +1,76 @@
+import { KeyRound } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Space } from 'antd';
+import type { ColumnDef } from '@tanstack/react-table';
 
-import { useQueryParams } from '~/hooks/use-query-params';
-import { SearchKeyword } from '~/components/inputs';
-import { Container } from '~/components/ui';
-import CreateRoleModal from '~/features/admin/roles/components/create-role-model';
-import RoleList from '~/features/admin/roles/components/role-list';
+import { Badge, Button } from '~/components/ui';
+import { DataTableColumnHeader } from '~/components/data-table';
+import { AdminCrudPage } from '~/features/admin/shared/admin-crud-page';
+import { useRoleList, useRoleRemove } from '~/features/admin/roles/api/role-queries';
+import { RoleFormDialog } from '~/features/admin/roles/components/role-form-dialog';
+import { RolePermissionsDialog } from '~/features/admin/roles/components/role-permissions-dialog';
+import type { Role } from '~/features/admin/roles/schemas/role-schema';
 
-const Roles = () => {
+function Roles() {
   const { t } = useTranslation();
-  const { queryParams, setQueryParams } = useQueryParams();
+  const query = useRoleList();
+  const remove = useRoleRemove();
+  // The role whose permission matrix is open (null = closed).
+  const [permissionsRole, setPermissionsRole] = useState<Role | null>(null);
+
+  const columns: ColumnDef<Role>[] = [
+    {
+      accessorKey: 'name',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t('Fields.RoleName')} />
+      ),
+      cell: ({ row }) => (
+        <span className="flex items-center gap-2">
+          {/* min-width so the badge starts at the same x on every row instead of trailing
+              each name's own width — otherwise the badges look ragged. */}
+          <span className="min-w-24">{row.original.name}</span>
+          {row.original.isSystem && <Badge variant="secondary">{t('Common.System')}</Badge>}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'description',
+      header: t('Fields.Description'),
+      cell: ({ row }) => row.original.description ?? '—',
+    },
+  ];
 
   return (
-    <Container
-      title={t('Common.List', { name: t('Fields.Role2') })}
-      extraRight={
-        <Space>
-          <CreateRoleModal />
-          <SearchKeyword size="large" className="max-w-[12rem]" placeholder={t('Common.Search')} />
-        </Space>
-      }
-    >
-      <RoleList
-        searchParams={{
-          keyword: queryParams.keyword,
-          pageIndex: queryParams.page,
-          pageSize: queryParams.pageSize,
-        }}
-        pagination={{
-          current: queryParams.page,
-          pageSize: queryParams.pageSize,
-          onChange: (page: number, pageSize: number) => setQueryParams({ page, pageSize }),
-        }}
+    <>
+      <AdminCrudPage
+        entityKey="Fields.Role"
+        query={query}
+        remove={remove}
+        columns={columns}
+        // Seeded roles are load-bearing for RLS — the UI refuses to delete them.
+        canDelete={(role) => !role.isSystem}
+        rowActions={(role) => (
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={t('Fields.RolePermissions')}
+            onClick={() => setPermissionsRole(role)}
+          >
+            <KeyRound className="size-4" />
+          </Button>
+        )}
+        renderForm={(props) => <RoleFormDialog {...props} role={props.entity} />}
       />
-    </Container>
+
+      {permissionsRole && (
+        <RolePermissionsDialog
+          open
+          onOpenChange={(open) => !open && setPermissionsRole(null)}
+          role={permissionsRole}
+        />
+      )}
+    </>
   );
-};
+}
 
 export default Roles;

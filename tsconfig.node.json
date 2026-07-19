@@ -19,7 +19,18 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    /* Aliases — e2e and the config files import `~/...` too. */
+    "paths": {
+      "~/*": ["./src/*"]
+    }
   },
-  "include": ["vite.config.ts"]
+  /**
+   * Everything that runs outside the browser bundle. This list used to be just
+   * vite.config.ts, which meant `tsc -b` reported success while never looking at the
+   * Playwright config, the Vitest config, the e2e specs or the locale scripts — a
+   * typecheck that is green because it did not read the files is worse than none.
+   */
+  "include": ["vite.config.ts", "vitest.config.ts", "playwright.config.ts", "e2e", "scripts"]
 }

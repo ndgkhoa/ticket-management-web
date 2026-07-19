@@ -1,0 +1,22 @@
+# Codecov reports; it does not gate.
+#
+# Without this file Codecov applies its default `project` and `patch` statuses, and
+# `patch` would fail nearly every PR: coverage sits at ~8% because most of src/ is
+# legacy screens due for replacement, so almost any diff looks under-covered. That
+# would leave two gates disagreeing about the same number — and the one people would
+# learn to override is the one that is wrong more often.
+#
+# The real gate is the coverage floor in vitest.config.ts, which fails the build. This
+# file exists so Codecov stays a dashboard until the ratio is worth enforcing.
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true
+
+comment:
+  # Only comment when a PR actually moves coverage; otherwise it is noise on every PR.
+  require_changes: true

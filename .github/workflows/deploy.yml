@@ -1,0 +1,68 @@
+name: Deploy
+
+# Ships the LIVE stack on every push to main: the Supabase backend (migrations + edge functions)
+# then the frontend built against that project, served from Cloudflare Pages. The app runs in its
+# default `supabase` mode here — MSW is for local dev and tests, not the deployed demo.
+#
+# One-time setup by the repo owner (I can't — these are your accounts):
+#   Supabase: create a project; set the edge-function secret once
+#     `supabase secrets set GEMINI_API_KEY=... --project-ref <ref>`
+#   Cloudflare: create a Pages project (Direct Upload).
+#   Repo → Settings → Secrets and variables → Actions:
+#     secrets:  SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD,
+#               VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY,
+#               CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#     optional (observability — omit to disable): VITE_SENTRY_DSN, VITE_POSTHOG_KEY, VITE_POSTHOG_HOST
+#     variables: SUPABASE_PROJECT_REF, CLOUDFLARE_PAGES_PROJECT
+# The job is skipped until both project vars exist, so it never fails red before setup.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: supabase backend + cloudflare pages
+    runs-on: ubuntu-latest
+    if: ${{ vars.SUPABASE_PROJECT_REF != '' && vars.CLOUDFLARE_PAGES_PROJECT != '' }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      # --- Backend: schema/RLS/triggers/RPCs, then the Deno edge functions ---
+      - name: Link Supabase project
+        run: supabase link --project-ref "${{ vars.SUPABASE_PROJECT_REF }}"
+      - name: Push migrations
+        run: supabase db push
+      - name: Deploy edge functions
+        run: supabase functions deploy
+
+      # --- Frontend: built against the live project, then uploaded to Pages ---
+      - name: Build (live Supabase)
+        run: bun run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_AI_ENABLED: 'true'
+          # Observability (all optional) — Vite inlines VITE_* at build time, so they must be
+          # forwarded here or the deployed bundle bakes `undefined` and nothing sends. Blank
+          # secrets disable the respective SDK cleanly (no red build).
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ secrets.VITE_POSTHOG_HOST }}
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }}

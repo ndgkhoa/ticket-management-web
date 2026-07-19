@@ -2,9 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <!-- SVG first (scalable, modern browsers), PNG fallback, and the iOS home-screen icon. -->
+    <link rel="icon" type="image/svg+xml" href="/images/logo-mark.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <!-- Fallback title only: pages set their own via React 19's native metadata. -->
+    <title>Ticket Management</title>
+    <!--
+      Set the theme class before React paints. A Vite SPA renders this HTML first, so
+      without this a reload in dark mode flashes light while the JS loads and the
+      ThemeProvider mounts. Reads the same `vite-ui-theme` key the provider persists
+      to, resolving `system` against the OS. Wrapped in try/catch so a blocked
+      localStorage can never keep the app from rendering.
+    -->
+    <script>
+      (function () {
+        try {
+          var choice = localStorage.getItem('vite-ui-theme') || 'system';
+          var dark =
+            choice === 'dark' ||
+            (choice === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {
+          /* no stored preference — default light */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

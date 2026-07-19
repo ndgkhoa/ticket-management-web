@@ -1,60 +1,112 @@
-# Vite React Boilerplate
+# ticket-management-web
 
-A brief description of what this project does and who it's for
+[![CI](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml/badge.svg)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/ndgkhoa/ticket-management-web/graph/badge.svg)](https://codecov.io/gh/ndgkhoa/ticket-management-web)
 
-## Screenshots
+A **production-grade single-tenant help desk** built as a portfolio project. Customers open tickets → agents resolve them (by team) → admins manage permissions and SLAs. Full Supabase backend deployed live; MSW for local dev + tests.
 
-![App Screenshot](https://images.ctfassets.net/e5382hct74si/21Fjmtaeaj1PT6YLXEOcNf/bde1f4c53a829ddcd14c7600bcd710d1/CleanShot_2024-08-20_at_09.08.19_2x.png)
+## Demo Accounts
 
-## Run Locally
+Run it locally and sign in with any account below — all seeded
+with password **`password123`**:
 
-Clone the project
+| Email                  | Role     | Access                                  |
+| ---------------------- | -------- | --------------------------------------- |
+| `owner@example.com`    | Owner    | Everything (admin + all tickets)        |
+| `admin@example.com`    | Admin    | Users, organization, every ticket       |
+| `agent@example.com`    | Agent    | Team tickets + internal notes only      |
+| `customer@example.com` | Customer | Own tickets only (read-only for agents) |
 
-```bash
-  git clone https://link-to-project
-```
+---
 
-Go to the project directory
+## Stack
 
-```bash
-  cd my-project
-```
+**Frontend:** React 19 · Vite 8 · TypeScript 6 · TanStack Router + Query · Zustand · shadcn/ui + Tailwind CSS 4 · Zod · i18next (en/vi) · Recharts
 
-Install dependencies
+**Backend:** Supabase — Postgres, Auth, Realtime, Storage, pgvector · Edge Functions (Deno) for Gemini AI · row-level security · Postgres triggers for domain invariants (SLA stamping, triage routing, status lifecycle, audit trail)
 
-```bash
-  bun install
-```
+**Quality:** Vitest + Testing Library · Playwright + `@axe-core/playwright` (WCAG 2.1 AA) · MSW (offline dev + tests) · ESLint + Prettier + Husky · Lighthouse CI · GitHub Actions
 
-Start the server
-
-```bash
-  bun run dev
-```
-
-## Build and Start Locally
-
-To deploy this project run
-
-```bash
-  bun build
-```
-
-Start the server
-
-```bash
-  bun start
-```
-
-## Technologies Used
-
-- [ReactJS](https://react.dev/): The library for web and native user interfaces
-- [Tailwind CSS](https://tailwindcss.com/): A utility-first CSS framework for rapid UI development.
-- [TanStack Query](https://tanstack.com/query/latest/docs/framework/react/overview): is often described as the missing data-fetching library for web applications, but in more technical terms, it makes fetching, caching, synchronizing and updating server state in your web applications a breeze.
+---
 
 ## Features
 
-- Light/dark mode toggle
-- Live previews
-- Fullscreen mode
-- Cross platform
+### Tickets & Workflow
+
+- Customers open tickets (subject, description, attachments, priority)
+- AI triage suggests priority + category; auto-routed to a team by category
+- Agents reply publicly or leave internal notes; realtime updates + presence
+- SLA clock runs and pauses while pending/on_hold; auto-reopen on reply, auto-close after 7 days
+
+### Agent Tooling
+
+- Triage queue for unassigned tickets
+- Bulk assignment + team routing
+- Canned responses in the composer
+- AI-suggested replies + thread summary (Gemini)
+- Semantic search over ticket embeddings (`pgvector`)
+
+### Admin
+
+- RBAC — roles + granular permissions
+- Team membership + category → team routing
+- SLA policy editor
+- Canned-response library
+- Immutable audit trail
+
+### Dashboard
+
+- Role-scoped KPIs (open backlog, avg first-response, avg resolution, SLA compliance %)
+- Charts: daily volume, status/priority/category breakdown, agent performance
+- 7/30/90-day window; metrics aggregated in Postgres, scoped by RLS
+
+### Cross-Cutting
+
+- English + Vietnamese (type-safe i18n; unknown keys fail the build)
+- WCAG 2.1 AA in a real browser
+- Dark mode + read-only customer view
+- Optional observability (Sentry errors + PostHog analytics/replay), PII-scrubbed
+
+---
+
+## Local Setup
+
+**Requirements:** Bun · Node 24+ · Docker (only for local Supabase)
+
+```bash
+git clone git@github.com:ndgkhoa/ticket-management-web.git
+cd ticket-management-web
+bun install
+cp .env.example .env
+
+# Run fully in-browser — mocks + seeded demo data, no backend:
+VITE_API_MODE=msw bun run dev
+
+# Or run against local Supabase (Docker) to exercise realtime/RLS:
+bun run db:start && bun run db:reset && bun run dev
+```
+
+Open `http://localhost:5173` and sign in with a demo account. The app defaults to `supabase` mode
+(needs the `VITE_SUPABASE_*` vars); set `VITE_API_MODE=msw` to run entirely in the browser. All env
+vars live in `.env.example`, validated by a Zod schema at boot.
+
+**Common commands:** `bun run test` (unit) · `bun run e2e` (Playwright) · `bun run test:cov`
+(coverage) · `bun run db:reset` (reseed) · `bun run lint`
+
+---
+
+## Documentation
+
+- **[System Architecture](docs/system-architecture.md)** — layers, data flow, RLS/triggers, CI/CD
+- **[Codebase Summary](docs/codebase-summary.md)** — structure, principles, key files, data model
+- **[Deployment Guide](docs/deployment-guide.md)** — local setup, Cloudflare Pages + Supabase, secrets
+- **[Architecture Decisions](docs/adr/)** — trade-offs: router, shadcn, MSW parity, Gemini, TS 6
+- **[AI Features](docs/ai-features.md)** — Gemini integration, semantic search, rate limits
+- **[Code Standards](docs/code-standards.md)** — naming, patterns, architecture rules (ESLint-enforced)
+- **[Project Overview / PDR](docs/project-overview-pdr.md)** — vision, requirements, success criteria
+
+---
+
+## License
+
+[MIT](LICENSE) © ndgkhoa

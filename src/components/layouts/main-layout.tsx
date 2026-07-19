@@ -1,38 +1,28 @@
 import { memo, Suspense } from 'react';
-import { Layout } from 'antd';
-import { Outlet } from 'react-router-dom';
+import { Outlet } from '@tanstack/react-router';
 
 import { FullPageFallback } from '~/components/fallbacks';
-import { Sidebar, Navbar, Footer, Breadcrumb } from '~/components/ui';
-import { useAuthStore } from '~/stores/auth';
-import { useSyncAccessToken } from '~/hooks/use-sync-access-token';
+import { Sidebar, Navbar, Breadcrumb } from '~/components/ui';
 
-const LayoutContent = memo(() => {
+const LayoutContent = memo(function LayoutContent() {
   return (
-    <Layout.Content className="h-[calc(100vh)] px-4">
+    <main className="flex-1 [scrollbar-gutter:stable] overflow-auto px-4">
       <Breadcrumb />
       <Suspense fallback={<FullPageFallback />}>
         <Outlet />
       </Suspense>
-    </Layout.Content>
+    </main>
   );
 });
 
-export const MainLayout = () => {
-  const authState = useAuthStore((state) => state.auth);
-  useSyncAccessToken(authState);
-
-  // const infoMine = useInfoMine();
-  // useSyncPermissions(infoMine);
-
+export function MainLayout() {
   return (
-    <Layout className="h-screen w-screen overflow-hidden">
+    <div className="flex h-screen w-screen overflow-hidden">
       <Sidebar />
-      <Layout>
+      <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar />
         <LayoutContent />
-        <Footer />
-      </Layout>
-    </Layout>
+      </div>
+    </div>
   );
-};
+}

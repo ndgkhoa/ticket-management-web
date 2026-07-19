@@ -1,0 +1,169 @@
+import { Bold, Italic, List, ListOrdered, Send } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+
+import { Button } from '~/components/ui';
+import { cn } from '~/utils/cn';
+import { useAuthStore } from '~/stores/auth';
+import { useCreateMessage } from '~/features/tickets/api/ticket-message-queries';
+import { CannedResponsePicker } from '~/features/tickets/components/canned-response-picker';
+import type { MessageType } from '~/features/tickets/schemas/ticket-enums';
+
+type Props = {
+  ticketId: string;
+  /** Plain-text draft to load into the editor (e.g. an accepted AI reply). */
+  insertDraft?: string | null;
+  /** Called once a pending draft has been loaded, so the parent can clear it. */
+  onDraftConsumed?: () => void;
+};
+
+/** Escape HTML, then turn blank-line-separated text into paragraphs for the editor. */
+function draftToHtml(draft: string): string {
+  const escaped = draft.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return escaped
+    .split(/\n{2,}/)
+    .map((paragraph) => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
+    .join('');
+}
+
+/**
+ * The reply / internal-note composer: a Tiptap rich-text editor with a small formatting
+ * toolbar and a public/internal toggle. The internal option shows only for staff who hold
+ * `message.create.internal` (RLS rejects it otherwise). On send it posts the HTML body and
+ * clears the editor.
+ */
+export function TicketComposer({ ticketId, insertDraft, onDraftConsumed }: Props) {
+  const { t } = useTranslation();
+  const canInternal = useAuthStore((state) => state.hasPermission('message.create.internal'));
+  const canUseCanned = useAuthStore((state) => state.hasPermission('canned.read'));
+  const createMessage = useCreateMessage(ticketId);
+  const [type, setType] = useState<MessageType>('public_reply');
+
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: '',
+    editorProps: { attributes: { class: 'rich-text min-h-24 px-3 py-2' } },
+  });
+
+  // Insert a canned body at the cursor (not setContent) so it augments the current draft
+  // instead of replacing it. Plain-text bodies go through the same paragraph conversion as an
+  // accepted AI draft.
+  const insertCanned = (body: string) => {
+    editor?.chain().focus().insertContent(draftToHtml(body)).run();
+  };
+
+  // Load an accepted AI draft into the editor, then tell the parent to clear it so the
+  // same draft isn't re-inserted on every render.
+  useEffect(() => {
+    if (!editor || !insertDraft) return;
+    editor.commands.setContent(draftToHtml(insertDraft));
+    editor.commands.focus('end');
+    onDraftConsumed?.();
+  }, [editor, insertDraft, onDraftConsumed]);
+
+  const submit = () => {
+    if (!editor || editor.isEmpty) return;
+    createMessage.mutate(
+      { ticketId, type, body: editor.getHTML() },
+      {
+        onSuccess: () => editor.commands.clearContent(),
+        onError: (error) => toast.error(error.message),
+      }
+    );
+  };
+
+  const toolbarButton = (
+    active: boolean,
+    onClick: () => void,
+    icon: React.ReactNode,
+    label: string
+  ) => (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      aria-label={label}
+      aria-pressed={active}
+      className={cn('size-7', active && 'bg-accent text-accent-foreground')}
+      onClick={onClick}
+    >
+      {icon}
+    </Button>
+  );
+
+  return (
+    <div
+      className={cn(
+        'rounded-md border',
+        type === 'internal_note' && 'border-amber-400/60 bg-amber-50/40 dark:bg-amber-950/20'
+      )}
+    >
+      {canInternal && (
+        <div className="flex gap-1 border-b p-1">
+          <Button
+            type="button"
+            variant={type === 'public_reply' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7"
+            onClick={() => setType('public_reply')}
+          >
+            {t('Tickets.PublicReply')}
+          </Button>
+          <Button
+            type="button"
+            variant={type === 'internal_note' ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7"
+            onClick={() => setType('internal_note')}
+          >
+            {t('Tickets.InternalNote')}
+          </Button>
+        </div>
+      )}
+
+      <div className="flex items-center gap-0.5 border-b p-1">
+        {toolbarButton(
+          editor?.isActive('bold') ?? false,
+          () => editor?.chain().focus().toggleBold().run(),
+          <Bold className="size-4" />,
+          'Bold'
+        )}
+        {toolbarButton(
+          editor?.isActive('italic') ?? false,
+          () => editor?.chain().focus().toggleItalic().run(),
+          <Italic className="size-4" />,
+          'Italic'
+        )}
+        {toolbarButton(
+          editor?.isActive('bulletList') ?? false,
+          () => editor?.chain().focus().toggleBulletList().run(),
+          <List className="size-4" />,
+          'Bullet list'
+        )}
+        {toolbarButton(
+          editor?.isActive('orderedList') ?? false,
+          () => editor?.chain().focus().toggleOrderedList().run(),
+          <ListOrdered className="size-4" />,
+          'Ordered list'
+        )}
+        {canUseCanned && (
+          <div className="ml-auto">
+            <CannedResponsePicker onInsert={insertCanned} />
+          </div>
+        )}
+      </div>
+
+      <EditorContent editor={editor} />
+
+      <div className="flex justify-end border-t p-2">
+        <Button size="sm" onClick={submit} disabled={createMessage.isPending}>
+          <Send className="mr-1 size-4" />
+          {t('Tickets.Send')}
+        </Button>
+      </div>
+    </div>
+  );
+}

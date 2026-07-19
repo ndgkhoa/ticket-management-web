@@ -1,52 +1,44 @@
-import type { AxiosRequestConfig } from 'axios';
+import { z } from 'zod';
 
-import { axiosClient } from '~/config/axios';
-import { env } from '~/config/env';
-import type {
-  CreateRoleBody,
-  CreateRolePermissionsBody,
-  Role,
-  RoleSearchParams,
-  UpdateRoleBody,
-  UpdateRolePermissionsBody,
-} from '~/features/admin/roles/types/Role';
-import type { BaseResponse } from '~/types';
+import { supabase } from '~/lib/supabase';
+import { ROLE_COLUMNS, roleSchema, type Role } from '~/features/admin/roles/schemas/role-schema';
 
-const BASE_PATH = `${env.VITE_BASE_API_URL}/roles`;
+/** The writable columns of a role. `is_system` is not among them — see `create`. */
+export type RoleInput = { name: string; description: string | null };
 
+/**
+ * Data access for roles. A bounded table (a handful of rows), so the list is a plain
+ * ordered read. `is_system` marks the seeded roles the RLS model depends on; the UI
+ * refuses to delete them, and a role created here is never a system role.
+ */
 export const roleApi = {
-  getAll: (params?: RoleSearchParams, config?: AxiosRequestConfig) => {
-    const url = `${BASE_PATH}/get-list`;
-    return axiosClient.get<BaseResponse<Role[]>>(url, { params, ...config });
+  list: async (): Promise<Role[]> => {
+    const { data } = await supabase.from('roles').select(ROLE_COLUMNS).order('name').throwOnError();
+    return z.array(roleSchema).parse(data);
   },
-  getOne: (id: Role['Id'], config?: AxiosRequestConfig) => {
-    return axiosClient.get(`${BASE_PATH}/get-by-id/${id}`, { ...config });
+
+  create: async (input: RoleInput): Promise<Role> => {
+    const { data } = await supabase
+      .from('roles')
+      .insert({ ...input, is_system: false })
+      .select(ROLE_COLUMNS)
+      .single()
+      .throwOnError();
+    return roleSchema.parse(data);
   },
-  create: (body: CreateRoleBody) => {
-    return axiosClient.post(`${BASE_PATH}/create`, body);
+
+  update: async (id: string, input: RoleInput): Promise<Role> => {
+    const { data } = await supabase
+      .from('roles')
+      .update(input)
+      .eq('id', id)
+      .select(ROLE_COLUMNS)
+      .single()
+      .throwOnError();
+    return roleSchema.parse(data);
   },
-  update: ({ Id, ...body }: UpdateRoleBody) => {
-    return axiosClient.patch(`${BASE_PATH}/update/${Id}`, body);
-  },
-  delete: (id: Role['Id']) => {
-    return axiosClient.delete(`${BASE_PATH}/delete/${id}`);
-  },
-  getPermissions: (roleId: Role['Id']) => {
-    return axiosClient.get(`role-permissions/get-role-permissions/${roleId}`);
-  },
-  createPermissions(
-    { roleId, body }: { roleId: string; body: CreateRolePermissionsBody },
-    config?: AxiosRequestConfig
-  ) {
-    return axiosClient.post(`role-permissions/create-role-permissions/${roleId}`, body, config);
-  },
-  updatePermissions: (body: UpdateRolePermissionsBody, config?: AxiosRequestConfig) => {
-    return axiosClient.patch(`role-permissions/update-role-permissions`, body, config);
-  },
-  deletePermissions: (roleIds: string[], config?: AxiosRequestConfig) => {
-    return axiosClient.delete(`role-permissions/delete-role-permissions`, {
-      data: roleIds,
-      ...config,
-    });
+
+  remove: async (id: string): Promise<void> => {
+    await supabase.from('roles').delete().eq('id', id).throwOnError();
   },
 };

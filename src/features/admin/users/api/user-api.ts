@@ -1,57 +1,33 @@
-import type { AxiosRequestConfig } from 'axios';
+import { z } from 'zod';
 
-import { axiosClient } from '~/config/axios';
-import { env } from '~/config/env';
-import type {
-  CreateUserRolesBody,
-  User,
-  UserSearchParams,
-} from '~/features/admin/users/types/User';
-import type { BaseResponse } from '~/types';
+import { supabase } from '~/lib/supabase';
+import { runListQuery, type ListQueryConfig } from '~/lib/list-query-builder';
+import type { ListParams } from '~/lib/list-query';
+import { USER_COLUMNS, userSchema } from '~/features/admin/users/schemas/user-schema';
 
-const BASE_PATH = `${env.VITE_BASE_API_URL}/users`;
+/**
+ * List-query configuration for users — mirrors `ticket-api.ts`. `profiles` has no
+ * tsvector column, so there is no `searchColumn`; `q` always runs through the
+ * trigram `ilike` fallback on `email`.
+ */
+const userListConfig: ListQueryConfig = {
+  fallbackColumn: 'email',
+  sortableFields: ['created_at', 'email', 'full_name'],
+  defaultSort: { field: 'created_at', dir: 'desc' },
+  tiebreakers: [
+    { field: 'created_at', dir: 'desc' },
+    { field: 'id', dir: 'desc' },
+  ],
+};
 
 export const userApi = {
-  getAll: (params?: UserSearchParams, config?: AxiosRequestConfig) => {
-    const url = `${BASE_PATH}/get-list`;
-    return axiosClient.get<BaseResponse<User[]>>(url, { params, ...config });
-  },
-  getOne: (id: User['Id'], config?: AxiosRequestConfig) => {
-    return axiosClient.get(`${BASE_PATH}/get-by-id/${id}`, { ...config });
-  },
-  getInfoMine: () => {
-    return axiosClient.get<{ User: User; Permissions: unknown[] }>(`${BASE_PATH}/get-info-mine`);
-  },
-  create: (formData: FormData) => {
-    return axiosClient.post(`${BASE_PATH}/create`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-  },
-  update: ({ Id, formData }: { Id: string; formData: FormData }) => {
-    return axiosClient.patch(`${BASE_PATH}/update/${Id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-  },
-  delete: (id: User['Id']) => {
-    return axiosClient.delete(`${BASE_PATH}/delete/${id}`);
-  },
-  getRoles: (userId: User['Id']) => {
-    return axiosClient.get(`user-roles/get-user-roles/${userId}`);
-  },
-  createRoles(
-    { userId, body }: { userId: string; body: CreateUserRolesBody },
-    config?: AxiosRequestConfig
-  ) {
-    return axiosClient.post(`user-roles/create-user-roles/${userId}`, body, config);
-  },
-  deleteRoles: (roleIds: string[], config?: AxiosRequestConfig) => {
-    return axiosClient.delete(`user-roles/delete-user-roles`, {
-      data: roleIds,
-      ...config,
-    });
+  list: async (params: ListParams) => {
+    const { rows, totalCount, pageCount } = await runListQuery(
+      () => supabase.from('profiles').select(USER_COLUMNS, { count: 'estimated' }),
+      params,
+      userListConfig
+    );
+
+    return { rows: z.array(userSchema).parse(rows), totalCount, pageCount };
   },
 };

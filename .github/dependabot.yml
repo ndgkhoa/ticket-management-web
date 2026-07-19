@@ -1,0 +1,70 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      # Matches the commitlint config, so Dependabot's own PRs pass the hook.
+      prefix: build
+      prefix-development: build
+      include: scope
+    groups:
+      # One PR per ecosystem instead of a dozen: these packages are versioned and
+      # released together, so reviewing them together is the only way to read them.
+      react:
+        patterns:
+          - react
+          - react-dom
+          - '@types/react'
+          - '@types/react-dom'
+      tanstack:
+        patterns:
+          - '@tanstack/*'
+      eslint:
+        patterns:
+          - eslint
+          - '@eslint/*'
+          - eslint-*
+          - typescript-eslint
+      i18n:
+        patterns:
+          - i18next
+          - i18next-*
+          - react-i18next
+      dev-minor-and-patch:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Pinned by ecosystem support, not by preference: typescript-eslint peers
+      # `typescript >=4.8.4 <6.1.0`, so TS 7 would silently disable type-aware
+      # linting. Revisit when typescript-eslint ships TS 7 support.
+      - dependency-name: typescript
+        versions:
+          - '>=7.0.0'
+      # @types/node tracks the Node runtime, not npm's newest tag. Development runs on
+      # Node 24 (the Active LTS); @types/node@26 would describe APIs that are not there
+      # and hide ones that are. Raise this when the project moves to Node 26 — it
+      # becomes LTS in October 2026.
+      - dependency-name: '@types/node'
+        versions:
+          - '>=25.0.0'
+      # Both are being replaced by an owned design system, so a bump is wasted review.
+      # @ant-design/icons is versioned in lockstep with antd and leaves with it.
+      - dependency-name: antd
+      - dependency-name: '@ant-design/icons'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    commit-message:
+      prefix: ci
