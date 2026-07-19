@@ -5,7 +5,8 @@ import { useAuthStore } from '~/stores/auth';
 import { ticketApi } from '~/features/tickets/api/ticket-api';
 import { ticketMessageApi } from '~/features/tickets/api/ticket-message-api';
 import { ticketEventApi } from '~/features/tickets/api/ticket-event-api';
-import { agentUsers, customerUsers, ticketRows } from '~/mocks/fixtures';
+import { ticketTagApi } from '~/features/tickets/api/ticket-tag-api';
+import { agentUsers, customerUsers, tagRows, teamRows, ticketRows } from '~/mocks/fixtures';
 
 const USER_ID = ticketRows[0].requester_id;
 const AGENT_ID = agentUsers[0].id;
@@ -14,8 +15,9 @@ const CUSTOMER_ID = customerUsers[0].id;
 const asUser = (id: string) => useAuthStore.setState({ user: { id } as User });
 
 /**
- * Ticket write paths over MSW: create, single-field update, and the conversation/audit
- * inserts — against the writable tickets/messages/events handlers on the shared store.
+ * Ticket write paths over MSW: create, single-field update, the conversation, and the audit
+ * trail. Events are no longer written by the client — the tickets/messages/tags write handlers
+ * emit them (the mock twin of the database triggers), and the events handler is read-only.
  */
 describe('ticket workflow over MSW', () => {
   beforeEach(() => useAuthStore.setState({ user: { id: USER_ID } as User }));
@@ -59,18 +61,79 @@ describe('ticket workflow over MSW', () => {
     expect(messages.some((row) => row.id === message.id)).toBe(true);
   });
 
-  it('records an event and lists it newest-first', async () => {
-    const target = ticketRows[0];
+  it('emits one audit event per changed field on update (not written by the client)', async () => {
+    const target = ticketRows.find((row) => row.status !== 'on_hold' && row.priority !== 'urgent')!;
 
-    await ticketEventApi.create({
+    await ticketApi.update(target.id, { status: 'on_hold', priority: 'urgent' });
+
+    const events = await ticketEventApi.list(target.id);
+    const types = events.map((event) => event.eventType);
+    expect(types).toContain('status_changed');
+    expect(types).toContain('priority_changed');
+    // Newest-first: the change we just made leads the feed and carries the acting user.
+    expect(events[0]?.actorId).toBe(USER_ID);
+  });
+
+  it('emits a team_changed event when a ticket is routed to a team', async () => {
+    const newTeam = teamRows[0].id;
+    const target = ticketRows.find((row) => row.team_id !== newTeam)!;
+
+    await ticketApi.update(target.id, { teamId: newTeam });
+
+    const events = await ticketEventApi.list(target.id);
+    expect(events[0]?.eventType).toBe('team_changed');
+    expect(events[0]?.meta.to).toBe(newTeam);
+  });
+
+  it('emits a commented event on a message, attributed to its author', async () => {
+    const target = ticketRows[1];
+
+    await ticketMessageApi.create({
       ticketId: target.id,
-      eventType: 'status_changed',
-      meta: { to: 'solved' },
+      type: 'public_reply',
+      body: '<p>hi</p>',
     });
 
     const events = await ticketEventApi.list(target.id);
-    expect(events[0]?.eventType).toBe('status_changed');
-    expect(events[0]?.meta.to).toBe('solved');
+    expect(events[0]?.eventType).toBe('commented');
+    expect(events[0]?.actorId).toBe(USER_ID);
+  });
+
+  it('emits both commented and status_changed when a customer reopens a solved ticket', async () => {
+    asUser(CUSTOMER_ID);
+    const ticket = await ticketApi.create({
+      subject: 'Reopen me',
+      description: 'x',
+      priority: 'normal',
+      categoryId: null,
+    });
+    await ticketApi.update(ticket.id, { status: 'solved' });
+
+    // The requester replies — the message reopens the ticket (Phase 03) and, live, the reopen's
+    // status update fires the audit trigger. The mock must produce the same pair.
+    await ticketMessageApi.create({
+      ticketId: ticket.id,
+      type: 'public_reply',
+      body: '<p>still broken</p>',
+    });
+
+    const reread = await ticketApi.detail(ticket.id);
+    expect(reread.status).toBe('open');
+    const types = (await ticketEventApi.list(ticket.id)).map((event) => event.eventType);
+    expect(types).toContain('commented');
+    expect(types).toContain('status_changed');
+  });
+
+  it('emits a tagged event when a tag is added', async () => {
+    const target = ticketRows[2];
+    const tagId = tagRows[0].id;
+
+    await ticketTagApi.add(target.id, tagId);
+
+    const events = await ticketEventApi.list(target.id);
+    expect(events[0]?.eventType).toBe('tagged');
+    expect(events[0]?.meta.tag_id).toBe(tagId);
+    expect(events[0]?.meta.added).toBe(true);
   });
 });
 

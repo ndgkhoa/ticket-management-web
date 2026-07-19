@@ -14,7 +14,6 @@ import {
   type CreateTicketInput,
   type UpdateTicketPatch,
 } from '~/features/tickets/api/ticket-api';
-import { ticketEventApi, type CreateEventInput } from '~/features/tickets/api/ticket-event-api';
 import { embedTicketInBackground } from '~/features/tickets/api/embed-ticket';
 import { ticketKeys } from '~/features/tickets/constants/ticket-keys';
 
@@ -47,7 +46,7 @@ export const useTicketList = (params: ListParams) => useQuery(ticketQueries.list
 export const useTicketDetail = (id: string) => useSuspenseQuery(ticketQueries.detail(id));
 
 /**
- * Create a ticket, then record the `created` event so it appears in the activity timeline.
+ * Create a ticket. The `created` event is emitted by a database trigger, not written here.
  * Returns the new ticket so the caller can navigate to its detail page.
  */
 export const useCreateTicket = () => {
@@ -55,7 +54,6 @@ export const useCreateTicket = () => {
   return useMutation({
     mutationFn: async (input: CreateTicketInput) => {
       const ticket = await ticketApi.create(input);
-      await ticketEventApi.create({ ticketId: ticket.id, eventType: 'created' });
       // Best-effort semantic embedding so the new ticket is searchable and can surface as
       // a "similar ticket". Not awaited — it must never delay or fail the create itself.
       embedTicketInBackground(ticket.id);
@@ -66,22 +64,16 @@ export const useCreateTicket = () => {
 };
 
 /**
- * A single-ticket field change from the detail workflow. Optionally records the matching
- * event (status_changed, assigned, …) in the same mutation, then invalidates the ticket's
- * detail (which cascades to its messages/events/tags) and every list.
+ * A single-ticket field change from the detail workflow. The matching event
+ * (status_changed, assigned, team_changed, …) is emitted by a database trigger on the update,
+ * so the mutation only invalidates the ticket's detail (which cascades to its messages/events/
+ * tags) and every list.
  */
 export const useUpdateTicket = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (args: {
-      id: string;
-      patch: UpdateTicketPatch;
-      event?: CreateEventInput;
-    }) => {
-      const ticket = await ticketApi.update(args.id, args.patch);
-      if (args.event) await ticketEventApi.create(args.event);
-      return ticket;
-    },
+    mutationFn: (args: { id: string; patch: UpdateTicketPatch }) =>
+      ticketApi.update(args.id, args.patch),
     onSuccess: (ticket) => {
       void queryClient.invalidateQueries({ queryKey: ticketKeys.detail(ticket.id) });
       void queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });

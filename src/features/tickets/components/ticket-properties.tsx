@@ -13,7 +13,6 @@ import { DataTableFacetedFilter, type FacetOption } from '~/components/data-tabl
 import { useUpdateTicket } from '~/features/tickets/api/ticket-queries';
 import { useToggleTicketTag } from '~/features/tickets/api/ticket-tag-queries';
 import type { UpdateTicketPatch } from '~/features/tickets/api/ticket-api';
-import type { CreateEventInput } from '~/features/tickets/api/ticket-event-api';
 import {
   ticketPrioritySchema,
   ticketStatusSchema,
@@ -37,9 +36,9 @@ type Props = {
 
 /**
  * The workflow sidebar: change a ticket's status, priority, assignee, team, category, and
- * tags inline. Status/priority/assignment write the matching `ticket_event` (so the change
- * shows in the activity feed); team/category have no event type in the enum, so they update
- * silently. Tags toggle through the junction.
+ * tags inline. Every field change is a plain patch — a database trigger emits the matching
+ * `ticket_event` (status_changed, assigned, team_changed, …) so the change shows in the
+ * activity feed without the client writing the audit trail. Tags toggle through the junction.
  */
 export function TicketProperties({
   ticket,
@@ -53,17 +52,12 @@ export function TicketProperties({
   const updateTicket = useUpdateTicket();
   const toggleTag = useToggleTicketTag(ticket.id);
 
-  const apply = (patch: UpdateTicketPatch, event?: CreateEventInput) => {
+  const apply = (patch: UpdateTicketPatch) => {
     updateTicket.mutate(
-      { id: ticket.id, patch, event },
+      { id: ticket.id, patch },
       { onError: (error) => toast.error(error.message) }
     );
   };
-
-  const event = (
-    eventType: CreateEventInput['eventType'],
-    meta: Record<string, unknown>
-  ): CreateEventInput => ({ ticketId: ticket.id, eventType, meta });
 
   const onTagsChange = (nextIds: string[]) => {
     const current = new Set(ticketTagIds);
@@ -77,15 +71,7 @@ export function TicketProperties({
       <Field label={t('Fields.Status')}>
         <Select
           value={ticket.status}
-          onValueChange={(value) =>
-            apply(
-              { status: value as TicketStatus },
-              event('status_changed', {
-                from: ticket.status,
-                to: value,
-              })
-            )
-          }
+          onValueChange={(value) => apply({ status: value as TicketStatus })}
         >
           <SelectTrigger className="w-full">
             <SelectValue />
@@ -103,15 +89,7 @@ export function TicketProperties({
       <Field label={t('Fields.Priority')}>
         <Select
           value={ticket.priority}
-          onValueChange={(value) =>
-            apply(
-              { priority: value as TicketPriority },
-              event('priority_changed', {
-                from: ticket.priority,
-                to: value,
-              })
-            )
-          }
+          onValueChange={(value) => apply({ priority: value as TicketPriority })}
         >
           <SelectTrigger className="w-full">
             <SelectValue />
@@ -131,9 +109,7 @@ export function TicketProperties({
           value={ticket.assigneeId}
           options={assigneeOptions}
           placeholder={t('Tickets.Unassigned')}
-          onChange={(value) =>
-            apply({ assigneeId: value }, event('assigned', { assigneeId: value }))
-          }
+          onChange={(value) => apply({ assigneeId: value })}
         />
       </Field>
 

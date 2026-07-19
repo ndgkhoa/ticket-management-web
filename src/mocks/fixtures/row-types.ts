@@ -19,7 +19,14 @@ export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
 export type TicketChannel = 'web' | 'email' | 'chat';
 export type MessageType = 'public_reply' | 'internal_note';
 export type TicketEventType =
-  'created' | 'assigned' | 'status_changed' | 'priority_changed' | 'commented' | 'tagged';
+  | 'created'
+  | 'assigned'
+  | 'status_changed'
+  | 'priority_changed'
+  | 'team_changed'
+  | 'category_changed'
+  | 'commented'
+  | 'tagged';
 
 /** An auth.users row plus its profile — seeded together, since the trigger links them. */
 export type UserRow = {
@@ -109,7 +116,8 @@ export type TicketMessageRow = {
 export type TicketEventRow = {
   id: string;
   ticket_id: string;
-  actor_id: string;
+  /** Null for a system write with no acting user (mirrors the DB's nullable actor_id). */
+  actor_id: string | null;
   event_type: TicketEventType;
   meta: Record<string, unknown>;
   created_at: string;

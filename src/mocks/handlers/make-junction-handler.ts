@@ -51,6 +51,13 @@ function matchesRead<Row extends Record<string, unknown>>(
 export function makeJunctionHandler<Row extends Record<string, unknown>>(config: {
   table: string;
   rows: readonly Row[];
+  /**
+   * MSW parity for triggers on the junction (which don't run under MSW). `afterInsert` /
+   * `afterDelete` run a side effect per affected row — e.g. emit a `tagged` ticket_event when
+   * a ticket↔tag link is added or removed. Mirrors a specific trigger; keep them tiny.
+   */
+  afterInsert?: (row: Row) => void;
+  afterDelete?: (row: Row) => void;
 }): HttpHandler[] {
   const store = createJunctionStore(config.rows);
   const path = `*/rest/v1/${config.table}`;
@@ -68,7 +75,15 @@ export function makeJunctionHandler<Row extends Record<string, unknown>>(config:
   const create = http.post(path, async ({ request }) => {
     const query = parsePostgrestRequest(request);
     const body = (await request.json().catch(() => ({}))) as Row | Row[];
-    const inserted = (Array.isArray(body) ? body : [body]).map((row) => store.insert(row));
+    const inserted = (Array.isArray(body) ? body : [body]).map((row) => {
+      // Fire the side effect only when the row was actually added — `insert` returns the
+      // existing row on a duplicate composite key (the real table would 409), and a no-op add
+      // must not emit an event.
+      const before = store.all().length;
+      const saved = store.insert(row);
+      if (store.all().length > before) config.afterInsert?.(saved);
+      return saved;
+    });
     return query.single ? objectResponse(inserted[0]) : collectionResponse(inserted);
   });
 
@@ -77,6 +92,7 @@ export function makeJunctionHandler<Row extends Record<string, unknown>>(config:
     const match = eqFilters(query);
     const removed = matching(match);
     store.removeWhere(match);
+    for (const row of removed) config.afterDelete?.(row);
     return collectionResponse(removed);
   });
 

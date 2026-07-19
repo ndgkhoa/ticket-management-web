@@ -253,6 +253,15 @@ const sections = [
     cannedResponseRows
   ),
   '-- Tickets ------------------------------------------------------------------',
+  // The audit triggers emit ticket_events on every insert/update. The seed carries its own
+  // hand-authored event history (with real actors, not the seed's null auth context), so the
+  // triggers are held off across the load to avoid a second, duplicate set of events. Runtime
+  // writes still fire them. The whole span is one transaction: if any load statement fails, the
+  // disable rolls back with it, so the triggers are never left disabled on the live table.
+  'begin;',
+  'alter table public.tickets disable trigger tickets_emit_change_events;',
+  'alter table public.ticket_messages disable trigger ticket_messages_emit_comment;',
+  'alter table public.ticket_tags disable trigger ticket_tags_emit_event;',
   insertInto(
     'public.tickets',
     [
@@ -286,6 +295,10 @@ const sections = [
     ['id', 'ticket_id', 'actor_id', 'event_type', 'meta', 'created_at'],
     ticketEventRows
   ),
+  'alter table public.tickets enable trigger tickets_emit_change_events;',
+  'alter table public.ticket_messages enable trigger ticket_messages_emit_comment;',
+  'alter table public.ticket_tags enable trigger ticket_tags_emit_event;',
+  'commit;',
   '-- Saved views --------------------------------------------------------------',
   insertInto(
     'public.saved_views',

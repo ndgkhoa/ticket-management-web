@@ -1,5 +1,6 @@
 import { ticketStore } from '~/mocks/stores/ticket-store';
 import { dueFromNow } from '~/mocks/lib/sla-stamp';
+import { emitTicketChangeEvents } from '~/mocks/lib/ticket-audit';
 import type { TicketMessageRow } from '~/mocks/fixtures/row-types';
 
 /**
@@ -22,5 +23,8 @@ export function reopenOnCustomerReply(message: TicketMessageRow): void {
       sla_paused_ms: 0,
       updated_at: new Date().toISOString(),
     });
+    // Live, the reopen's `update tickets set status='open'` fires the audit trigger too, so
+    // the feed shows a status_changed (solved→open) beside the commented event — mirror it.
+    emitTicketChangeEvents({ status: 'open' }, ticket);
   }
 }

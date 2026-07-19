@@ -85,6 +85,8 @@ const en = {
       "assigned": "changed the assignee",
       "status_changed": "set status to {{to}}",
       "priority_changed": "set priority to {{to}}",
+      "team_changed": "changed the team",
+      "category_changed": "changed the category",
       "commented": "added a reply",
       "noted": "added an internal note",
       "tagged": "updated tags"

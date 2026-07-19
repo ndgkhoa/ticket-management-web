@@ -80,6 +80,8 @@ Tickets:
     assigned: 'đã đổi người phụ trách'
     status_changed: 'đặt trạng thái thành {{to}}'
     priority_changed: 'đặt độ ưu tiên thành {{to}}'
+    team_changed: 'đã đổi nhóm phụ trách'
+    category_changed: 'đã đổi danh mục'
     commented: 'đã thêm trả lời'
     noted: 'đã thêm ghi chú nội bộ'
     tagged: 'đã cập nhật nhãn'

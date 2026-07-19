@@ -723,7 +723,14 @@ export type Database = {
       message_type: 'public_reply' | 'internal_note';
       ticket_channel: 'web' | 'email' | 'chat';
       ticket_event_type:
-        'created' | 'assigned' | 'status_changed' | 'priority_changed' | 'commented' | 'tagged';
+        | 'created'
+        | 'assigned'
+        | 'status_changed'
+        | 'priority_changed'
+        | 'commented'
+        | 'tagged'
+        | 'team_changed'
+        | 'category_changed';
       ticket_priority: 'low' | 'normal' | 'high' | 'urgent';
       ticket_status: 'open' | 'pending' | 'on_hold' | 'solved' | 'closed';
     };
@@ -859,6 +866,8 @@ export const Constants = {
         'priority_changed',
         'commented',
         'tagged',
+        'team_changed',
+        'category_changed',
       ],
       ticket_priority: ['low', 'normal', 'high', 'urgent'],
       ticket_status: ['open', 'pending', 'on_hold', 'solved', 'closed'],

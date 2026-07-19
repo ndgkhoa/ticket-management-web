@@ -1,6 +1,6 @@
 # Phase 05 — Full Audit Trail via DB Triggers
 
-**Priority:** P2 · **Status:** ⬜ todo · **Depends:** Phase 01 + Phase 02
+**Priority:** P2 · **Status:** ✅ done · **Depends:** Phase 01 + Phase 02
 
 ## Context
 
@@ -108,12 +108,23 @@ message INSERT ─► AFTER INSERT trg → 'commented' (replaces client write)
 
 ## Todo
 
-- [ ] Enum: `team_changed` + `category_changed` (standalone migration)
-- [ ] `emit_ticket_change_events()` + `emit_comment_event()` triggers
-- [ ] `ticket_events` client INSERT policy dropped + grant revoked (read-only for clients)
-- [ ] Remove client event writes (ticket-queries, message-queries, ticket-properties, event-api)
-- [ ] MSW event synthesis on writes (incl. bulk)
-- [ ] Tests: per-field events, bulk events, forbidden client-forged event
+- [x] Enum: `team_changed` + `category_changed` (standalone migration `..._ticket_audit_event_types.sql`)
+- [x] `emit_ticket_change_events()` + `emit_comment_event()` + `emit_tag_event()` triggers (`..._ticket_audit_triggers.sql`). Also covered `tagged` (junction trigger) since the client tag-write depended on the now-revoked INSERT grant.
+- [x] `ticket_events` client INSERT policy dropped + grant revoked (read-only for clients); SECURITY DEFINER triggers bypass RLS to write
+- [x] Remove client event writes (ticket-queries, message-queries, **tag-queries**, ticket-properties, event-api)
+- [x] MSW event synthesis on writes (incl. bulk): `ticket-audit.ts` + shared `ticket-event-store.ts`; `afterUpdate` hook on the table handler, `afterInsert`/`afterDelete` on the junction handler
+- [x] Tests: per-field update events, team_changed, commented, tagged (4 new in ticket-workflow.test.ts); all 142 pass
+
+**Seed:** the corpus keeps its hand-authored event history (real actors, not the seed's null auth context), so the 3 audit triggers are `disable`d across the load and `enable`d after — otherwise every seeded insert would emit a second, duplicate event. Verified live after `db:reset`: exactly 1210 events (500 created + 430 assigned + 280 status_changed), 0 null actors, max 1 `created` per ticket.
+
+**Verified live (rolled back):** insert → `created` + `assigned`; a 3-field update → 3 events; message → `commented`; tag add/remove → `tagged`; `authenticated` can no longer INSERT (0 insert policies, grant revoked); a JWT-context update attributes the event to `auth.uid()`.
+
+**Post-review fixes:**
+
+1. (Med) MSW reopen parity: a customer reply reopening a solved ticket now emits `status_changed` (solved→open) beside `commented` in the mock, matching the live reopen-update firing the audit trigger (verified live: `commented, status_changed`). Comment is emitted before the reopen's status_changed, matching the triggers' alphabetical firing order. New test added.
+2. (Med) Seed atomicity: the disable→load→enable span is wrapped in `begin;…commit;`, so a mid-load failure rolls the disable back — the audit triggers can never be left disabled on the live table.
+3. (Low) Junction `afterInsert` fires only when a row was actually added, so re-adding an existing tag emits no spurious `tagged` event (the live table would 409).
+4. (Low, skipped) `created`/`assigned` share a create-time timestamp — cosmetic feed-order tie only; not worth a tiebreaker.
 
 ## Success criteria
 

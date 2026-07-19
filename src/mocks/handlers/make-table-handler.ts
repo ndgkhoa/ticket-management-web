@@ -58,11 +58,14 @@ type TableConfig<Row extends Record<string, unknown> & { id: string }> = {
    * row before it is stored (e.g. resolve SLA due_at from priority); `stampUpdate` augments a
    * PATCH from the current row (e.g. stamp resolved_at when a ticket enters `solved`);
    * `afterInsert` runs a side effect on another store (e.g. an agent reply stamps its ticket's
-   * first_response_at). Each mirrors a specific trigger — keep them tiny and colocated.
+   * first_response_at); `afterUpdate` runs one from the incoming patch + the pre-update row
+   * (e.g. emit ticket_events for each changed field). Each mirrors a specific trigger — keep
+   * them tiny and colocated.
    */
   stampInsert?: (row: Row) => Row;
   stampUpdate?: (patch: Partial<Row>, current: Row) => Partial<Row>;
   afterInsert?: (row: Row) => void;
+  afterUpdate?: (patch: Partial<Row>, current: Row) => void;
 };
 
 /** eq / in matching for the plain-read and detail paths — dynamic column access, since a
@@ -163,6 +166,7 @@ export function makeTableHandler<Row extends Record<string, unknown> & { id: str
     const finalPatch = config.stampUpdate && current ? config.stampUpdate(patch, current) : patch;
     const updated = id ? store.update(id, finalPatch) : undefined;
     if (!updated) return notFoundResponse();
+    if (current) config.afterUpdate?.(patch, current);
     if (config.realtime) publishChange(table, { eventType: 'UPDATE', new: updated, old: null });
     return query.single ? objectResponse(updated) : collectionResponse([updated]);
   });

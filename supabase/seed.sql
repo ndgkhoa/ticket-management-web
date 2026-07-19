@@ -371,6 +371,10 @@ insert into public.canned_responses (id, title, body, created_by, created_at) va
   ('00000008-0000-4000-8000-000000000005', 'Closing after silence', 'I haven''t heard back, so I''m closing this for now. That''s not a problem at all — just reply here if it''s still happening and the ticket reopens with all the context intact.', '00000001-0000-4000-8000-000000000002', '2025-11-02T09:00:00.000Z');
 
 -- Tickets ------------------------------------------------------------------
+begin;
+alter table public.tickets disable trigger tickets_emit_change_events;
+alter table public.ticket_messages disable trigger ticket_messages_emit_comment;
+alter table public.ticket_tags disable trigger ticket_tags_emit_event;
 insert into public.tickets (id, subject, description, status, priority, channel, requester_id, assignee_id, team_id, category_id, sla_policy_id, first_response_at, resolved_at, due_at, created_at, updated_at) values
   ('00000009-0000-4000-8000-000000000001', 'Charged twice for invoice INV-18905', 'The amount taken does not match the invoice total. The difference is small but the reconciliation will not balance until it is explained.', 'solved', 'normal', 'email', '00000001-0000-4000-8000-00000000000e', '00000001-0000-4000-8000-000000000009', '00000004-0000-4000-8000-000000000001', '00000005-0000-4000-8000-000000000001', '00000007-0000-4000-8000-000000000003', '2026-04-29T18:43:54.716Z', '2026-05-02T05:11:54.716Z', '2026-05-01T16:51:54.716Z', '2026-04-29T16:51:54.716Z', '2026-05-02T05:11:54.716Z'),
   ('00000009-0000-4000-8000-000000000002', 'Cannot login after password reset', 'The reset email arrives and the link works, but signing in with the new password fails immediately.', 'pending', 'high', 'web', '00000001-0000-4000-8000-000000000032', '00000001-0000-4000-8000-000000000008', '00000004-0000-4000-8000-000000000003', '00000005-0000-4000-8000-000000000004', '00000007-0000-4000-8000-000000000002', '2026-07-15T14:00:49.403Z', null, '2026-07-15T15:56:49.403Z', '2026-07-15T07:56:49.403Z', '2026-07-15T14:00:49.403Z'),
@@ -3846,6 +3850,10 @@ insert into public.ticket_events (id, ticket_id, actor_id, event_type, meta, cre
   ('0000000b-0000-4000-8000-0000000004b9', '00000009-0000-4000-8000-0000000001f4', '00000001-0000-4000-8000-000000000006', 'assigned', '{"assignee_id":"00000001-0000-4000-8000-000000000006","team_id":"00000004-0000-4000-8000-000000000002"}'::jsonb, '2026-07-12T21:50:29.675Z'),
   ('0000000b-0000-4000-8000-0000000004ba', '00000009-0000-4000-8000-0000000001f4', '00000001-0000-4000-8000-000000000006', 'status_changed', '{"from":"open","to":"solved"}'::jsonb, '2026-07-16T23:18:29.675Z');
 
+alter table public.tickets enable trigger tickets_emit_change_events;
+alter table public.ticket_messages enable trigger ticket_messages_emit_comment;
+alter table public.ticket_tags enable trigger ticket_tags_emit_event;
+commit;
 -- Saved views --------------------------------------------------------------
 insert into public.saved_views (id, user_id, name, search, is_shared, created_at) values
   ('0000000c-0000-4000-8000-000000000001', '00000001-0000-4000-8000-000000000003', 'Open tickets', '{"page":1,"pageSize":20,"sort":"created_at","dir":"desc","status":["open"]}'::jsonb, true, '2025-11-05T09:00:00.000Z'),

@@ -10,6 +10,7 @@ import {
 import { FILTER_IS_NULL, type ListParams } from '~/lib/list-query';
 import type { TicketRow } from '~/mocks/fixtures/row-types';
 import { stampTicketSlaOnUpdate } from '~/mocks/lib/sla-stamp';
+import { emitTicketChangeEvents } from '~/mocks/lib/ticket-audit';
 import { applyListQuery } from '~/mocks/lib/apply-list-query';
 import { ticketListConfig } from '~/mocks/config/ticket-list-config';
 import { ticketStore } from '~/mocks/stores/ticket-store';
@@ -109,9 +110,11 @@ const bulkUpdateTickets = http.post('*/rest/v1/rpc/bulk_update_tickets', async (
   // Route each row through the same update stamp the single-ticket PATCH uses, so the bulk
   // path inherits resolved_at-on-solve, reopen (due_at + pause reset) and pause accumulation
   // identically — no duplicated subset to drift (mirrors the live trigger firing on the UPDATE).
+  // Then emit the audit events for the change, exactly as the single PATCH does.
   for (const row of matched) {
     const stamped = stampTicketSlaOnUpdate(patch as Partial<TicketRow>, row);
     ticketStore.update(row.id, stamped as never);
+    emitTicketChangeEvents(patch as Partial<TicketRow>, row);
   }
   return HttpResponse.json(matched.length);
 });

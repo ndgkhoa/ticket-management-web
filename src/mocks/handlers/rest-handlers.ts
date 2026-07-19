@@ -1,4 +1,4 @@
-import type { AttachmentRow } from '~/mocks/fixtures/row-types';
+import type { AttachmentRow, TicketTagRow } from '~/mocks/fixtures/row-types';
 import {
   cannedResponseRows,
   categoryRows,
@@ -22,6 +22,7 @@ import { makeTableHandler } from '~/mocks/handlers/make-table-handler';
 import { makeJunctionHandler } from '~/mocks/handlers/make-junction-handler';
 import { ticketStore } from '~/mocks/stores/ticket-store';
 import { ticketMessageStore } from '~/mocks/stores/ticket-message-store';
+import { ticketEventStore } from '~/mocks/stores/ticket-event-store';
 import {
   stampFirstResponseOnMessage,
   stampTicketSlaOnInsert,
@@ -29,6 +30,12 @@ import {
 } from '~/mocks/lib/sla-stamp';
 import { routeTicketOnInsert } from '~/mocks/lib/ticket-routing';
 import { reopenOnCustomerReply } from '~/mocks/lib/ticket-lifecycle';
+import {
+  emitCommentEvent,
+  emitTagEvent,
+  emitTicketChangeEvents,
+  emitTicketCreatedEvents,
+} from '~/mocks/lib/ticket-audit';
 
 /**
  * PostgREST table handlers for every `/rest/v1/*` read the app makes today, plus writes
@@ -57,6 +64,10 @@ export const restHandlers = [
     // (due_at/sla_policy_id); resolved_at on solve.
     stampInsert: (row) => stampTicketSlaOnInsert(routeTicketOnInsert(row)),
     stampUpdate: stampTicketSlaOnUpdate,
+    // Mirror the audit triggers: created (+ initial assignment) on insert, one event per
+    // changed field on update. The client no longer writes ticket_events itself.
+    afterInsert: emitTicketCreatedEvents,
+    afterUpdate: emitTicketChangeEvents,
   }),
   // The ticket conversation and its audit trail — read by ticket_id, append-only inserts. The
   // conversation uses the shared store + realtime so a reply appears in another tab's timeline.
@@ -66,14 +77,19 @@ export const restHandlers = [
     store: ticketMessageStore,
     writable: true,
     realtime: true,
-    // Mirror the message triggers: first public agent reply stamps first_response_at, and a
-    // customer public reply reopens a solved ticket.
+    // Mirror the message triggers: first public agent reply stamps first_response_at, every
+    // message logs a commented event, and a customer public reply reopens a solved ticket. The
+    // commented event is emitted before the reopen's status_changed, matching the live triggers'
+    // alphabetical firing order (ticket_messages_emit_comment before ...reopen...).
     afterInsert: (message) => {
       stampFirstResponseOnMessage(message);
+      emitCommentEvent(message);
       reopenOnCustomerReply(message);
     },
   }),
-  makeTableHandler({ table: 'ticket_events', rows: ticketEventRows, writable: true }),
+  // Read-only: the audit trail is written by the triggers mirrored above, never by the client
+  // (the DB revoked the client's insert). Shares the store the synthesis appends to.
+  makeTableHandler({ table: 'ticket_events', rows: ticketEventRows, store: ticketEventStore }),
   // Attachments start empty — files are uploaded in-session (blob URLs in msw). Read by ticket.
   makeTableHandler<AttachmentRow>({ table: 'attachments', rows: [], writable: true }),
   makeTableHandler({ table: 'profiles', rows: profileRows, applyConfig: profileListConfig }),
@@ -96,6 +112,12 @@ export const restHandlers = [
   // Role→permission membership for the matrix editor (composite key, no id).
   makeJunctionHandler({ table: 'role_permissions', rows: rolePermissionRows }),
   // Ticket↔tag membership — read feeds the list's tag filter (resolves tags → ticket ids);
-  // write surface is here for the detail tag editor.
-  makeJunctionHandler({ table: 'ticket_tags', rows: ticketTagRows }),
+  // write surface is here for the detail tag editor. Each add/remove emits a `tagged` event,
+  // mirroring the junction trigger (the client no longer writes ticket_events).
+  makeJunctionHandler<TicketTagRow>({
+    table: 'ticket_tags',
+    rows: ticketTagRows,
+    afterInsert: (row) => emitTagEvent(row.ticket_id, row.tag_id, true),
+    afterDelete: (row) => emitTagEvent(row.ticket_id, row.tag_id, false),
+  }),
 ].flat();
