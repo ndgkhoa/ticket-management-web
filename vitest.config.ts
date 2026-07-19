@@ -61,27 +61,34 @@ export default mergeConfig(
           // Type-only files emit no runtime code to cover.
           'src/**/*.d.ts',
           'src/vite-env.d.ts',
+          // Generated code — the router tree (from src/routes/) and the Supabase types.
+          // Testing generated output tests the generator, not this codebase.
+          'src/routeTree.gen.ts',
+          'src/lib/database.types.ts',
+          // Declarative route modules: `createFileRoute({ loader, component })` glue with no
+          // branching of its own. The logic they wire lives in features/ (unit-tested) and the
+          // routes themselves are exercised end-to-end by Playwright, which v8 can't see.
+          'src/routes/**',
+          // App bootstrap + Storybook stories — not unit-test targets.
+          'src/main.tsx',
+          'src/**/*.stories.tsx',
         ],
         /**
-         * A floor with deliberate headroom — it catches a collapse, not a dip.
+         * A floor with headroom — it catches a collapse, not a dip.
          *
-         * The suite currently measures ~8.45 / 5.53 / 5.37 / 8.51. Setting the floor at
-         * those numbers was the obvious move and the wrong one: coverage is a ratio, so
-         * *adding untested code lowers it even when no test was lost*. Measured: one new
-         * 60-function file with no tests takes statements to 7.08% and turns CI red
-         * while nothing regressed. Every phase from here adds new code, so a tight floor
-         * would have meant a permanently red gate — the kind people learn to ignore.
-         *
-         * These numbers are low, and honest about why: coverage counts all of `src/`,
-         * most of which is antd screens due to be replaced wholesale, and testing those
-         * would mean writing tests to delete. This gate only catches the tests
-         * disappearing. Raise it — deliberately — as each phase lands code meant to stay.
+         * This measures Vitest unit/integration coverage only (~40%). It reads low by design,
+         * not by neglect: this is a UI-heavy app whose components and full user flows are covered
+         * by Playwright in a real browser (`e2e/`), which V8 here can't see — unit tests target
+         * the logic (schemas, list-query, SLA/audit mirrors, stores, guards, api). Generated code
+         * (router tree, DB types) and declarative route glue are excluded above. Raising this
+         * floor toward the e2e-covered surface would mean writing unit tests that duplicate the
+         * e2e suite, so the gate stays a collapse-detector, set just under the current numbers.
          */
         thresholds: {
-          statements: 5,
-          branches: 4,
-          functions: 4,
-          lines: 5,
+          statements: 35,
+          branches: 25,
+          functions: 30,
+          lines: 35,
         },
       },
     },

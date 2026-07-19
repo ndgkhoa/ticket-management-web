@@ -48,7 +48,7 @@ See `code-standards.md`. Key rules:
 | 06  | [Help desk core features](phase-06-helpdesk-features.md)           | ✅ done |
 | 07  | [AI features + semantic search](phase-07-ai-features.md)           | ✅ done |
 | 08  | [Dashboard analytics](phase-08-dashboard-analytics.md)             | ✅ done |
-| 09  | [Polish, docs, deploy](phase-09-polish-docs-deploy.md)             | ⬜ todo |
+| 09  | [Polish, docs, deploy](phase-09-polish-docs-deploy.md)             | ✅ done |
 
 ## Key dependencies
 

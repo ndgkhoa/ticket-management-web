@@ -2,10 +2,10 @@ import { expect, test, type Page } from '@playwright/test';
 
 async function signIn(page: Page) {
   await page.goto('/auth/sign-in');
-  await page.getByLabel('Email').fill('owner@demo.local');
+  await page.getByLabel('Email').fill('owner@example.com');
   await page.getByLabel('Password', { exact: true }).fill('password123');
   await page.getByRole('button', { name: 'Login' }).click();
-  await expect(page.getByRole('heading', { name: 'Welcome to Our Platform' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
 }
 
 /**

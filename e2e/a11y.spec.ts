@@ -1,5 +1,13 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+
+async function signIn(page: Page) {
+  await page.goto('/auth/sign-in');
+  await page.getByLabel('Email').fill('owner@example.com');
+  await page.getByLabel('Password', { exact: true }).fill('password123');
+  await page.getByRole('button', { name: 'Login' }).click();
+  await page.getByRole('heading', { name: 'Dashboard' }).waitFor();
+}
 
 /**
  * Accessibility is asserted in a real browser, deliberately.
@@ -40,6 +48,21 @@ test.describe('accessibility', () => {
     // Vietnamese string, and localising this page (which is planned) would otherwise
     // break the test for reasons that have nothing to do with accessibility.
     await page.getByText('404').waitFor();
+
+    const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+
+    expect(
+      violations,
+      violations.map((v) => `${v.id} (${v.impact}): ${v.help}`).join('\n')
+    ).toEqual([]);
+  });
+
+  test('the dashboard has no WCAG 2.1 AA violations', async ({ page }) => {
+    await signIn(page);
+    // Wait for a metric to paint — a KPI value, not just the label — so the scan runs against
+    // the resolved dashboard (charts + cards), not its loading skeletons.
+    await page.getByText('Open tickets').waitFor();
+    await page.getByRole('img', { name: 'Ticket volume' }).waitFor();
 
     const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
 

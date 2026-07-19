@@ -13,15 +13,15 @@ import { DEMO_PASSWORD, demoUserByRole } from '~/mocks/fixtures';
 
 describe('password sign-in over MSW', () => {
   it('returns a session for a seeded account', async () => {
-    const { data, error } = await authApi.signInWithPassword('owner@demo.local', 'password123');
+    const { data, error } = await authApi.signInWithPassword('owner@example.com', 'password123');
 
     expect(error).toBeNull();
     expect(data.session?.access_token).toBeTruthy();
-    expect(data.user?.email).toBe('owner@demo.local');
+    expect(data.user?.email).toBe('owner@example.com');
   });
 
   it('rejects a wrong password', async () => {
-    const { error } = await authApi.signInWithPassword('owner@demo.local', 'wrong');
+    const { error } = await authApi.signInWithPassword('owner@example.com', 'wrong');
 
     expect(error).not.toBeNull();
   });

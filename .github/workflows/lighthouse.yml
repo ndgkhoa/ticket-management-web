@@ -1,0 +1,33 @@
+name: Lighthouse
+
+# Perf / a11y / best-practices budgets on the deployed-mode build. PR-only: it's slower than the
+# unit gate and consumes minutes (thresholds in lighthouserc.json; a11y is a hard gate, the rest
+# warn). Builds in the app's default `supabase` mode — the same shape the demo ships — so it needs
+# the Supabase env; the job is skipped until the project is configured (like the deploy workflow).
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lighthouse:
+    name: lighthouse budgets
+    runs-on: ubuntu-latest
+    if: ${{ vars.SUPABASE_PROJECT_REF != '' }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      # The pre-auth sign-in page is what's scored; it makes no backend call, but the app boots in
+      # supabase mode so it needs the project URL + anon key (both public) to pass env validation.
+      - name: Build (supabase)
+        run: bun run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_AI_ENABLED: 'false'
+
+      - name: Lighthouse CI
+        run: bunx @lhci/cli@0.14.x autorun

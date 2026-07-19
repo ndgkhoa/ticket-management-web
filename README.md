@@ -1,136 +1,109 @@
 # ticket-management-web
 
 [![CI](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml/badge.svg)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/ndgkhoa/ticket-management-web/branch/develop/graph/badge.svg)](https://codecov.io/gh/ndgkhoa/ticket-management-web)
 
-A single-tenant help desk: customers open tickets, agents resolve them by team, and
-admins manage roles and permissions.
+A **production-grade single-tenant help desk** built as a portfolio project. Customers open tickets → agents resolve them (by team) → admins manage permissions and SLAs. Full Supabase backend deployed live; MSW for local dev + tests.
 
-> **Status: in progress.** The repo is being taken from an old React boilerplate to a
-> production-shaped app in tracked phases. What exists today is the admin surface
-> (users, roles, permissions) on a rebuilt foundation — React 19, TypeScript 6, Vite 8,
-> Zod-validated env, type-safe i18n, and a tested CI pipeline. Ticket workflows, the
-> Supabase data layer and the shadcn design system are the phases that follow. Plans
-> live in [`plans/`](plans/), conventions in [`docs/code-standards.md`](docs/code-standards.md).
+## Demo Accounts
 
-## Requirements
+Run it locally and sign in with any account below — all seeded
+with password **`password123`**:
 
-- **Bun** — package manager and script runner; CI runs every script through it
-- **Node** `>=24` — the Active LTS, and what this is actually developed and tested
-  against. Vite 8 would run on 22.12, but 22 is in maintenance (security fixes only,
-  EOL April 2027) and nothing here is tested on it, so `engines` declares what is
-  supported rather than what might work. Node 26 does not reach LTS until October 2026.
+| Email                  | Role     | Access                                  |
+| ---------------------- | -------- | --------------------------------------- |
+| `owner@example.com`    | Owner    | Everything (admin + all tickets)        |
+| `admin@example.com`    | Admin    | Users, organization, every ticket       |
+| `agent@example.com`    | Agent    | Team tickets + internal notes only      |
+| `customer@example.com` | Customer | Own tickets only (read-only for agents) |
 
-## Getting started
+---
+
+## Stack
+
+**Frontend:** React 19 · Vite 8 · TypeScript 6 · TanStack Router + Query · Zustand · shadcn/ui + Tailwind CSS 4 · Zod · i18next (en/vi) · Recharts
+
+**Backend:** Supabase — Postgres, Auth, Realtime, Storage, pgvector · Edge Functions (Deno) for Gemini AI · row-level security · Postgres triggers for domain invariants (SLA stamping, triage routing, status lifecycle, audit trail)
+
+**Quality:** Vitest + Testing Library · Playwright + `@axe-core/playwright` (WCAG 2.1 AA) · MSW (offline dev + tests) · ESLint + Prettier + Husky · Lighthouse CI · GitHub Actions
+
+---
+
+## Features
+
+### Tickets & Workflow
+
+- Customers open tickets (subject, description, attachments, priority)
+- AI triage suggests priority + category; auto-routed to a team by category
+- Agents reply publicly or leave internal notes; realtime updates + presence
+- SLA clock runs and pauses while pending/on_hold; auto-reopen on reply, auto-close after 7 days
+
+### Agent Tooling
+
+- Triage queue for unassigned tickets
+- Bulk assignment + team routing
+- Canned responses in the composer
+- AI-suggested replies + thread summary (Gemini)
+- Semantic search over ticket embeddings (`pgvector`)
+
+### Admin
+
+- RBAC — roles + granular permissions
+- Team membership + category → team routing
+- SLA policy editor
+- Canned-response library
+- Immutable audit trail
+
+### Dashboard
+
+- Role-scoped KPIs (open backlog, avg first-response, avg resolution, SLA compliance %)
+- Charts: daily volume, status/priority/category breakdown, agent performance
+- 7/30/90-day window; metrics aggregated in Postgres, scoped by RLS
+
+### Cross-Cutting
+
+- English + Vietnamese (type-safe i18n; unknown keys fail the build)
+- WCAG 2.1 AA in a real browser
+- Dark mode + read-only customer view
+
+---
+
+## Local Setup
+
+**Requirements:** Bun · Node 24+ · Docker (only for local Supabase)
 
 ```bash
 git clone git@github.com:ndgkhoa/ticket-management-web.git
 cd ticket-management-web
 bun install
+cp .env.example .env
 
-cp .env.example .env    # env is Zod-validated and fails fast at boot
-bun run dev             # http://localhost:5173
+# Run fully in-browser — mocks + seeded demo data, no backend:
+VITE_API_MODE=msw bun run dev
+
+# Or run against local Supabase (Docker) to exercise realtime/RLS:
+bun run db:start && bun run db:reset && bun run dev
 ```
 
-### Data source: `VITE_API_MODE`
+Open `http://localhost:5173` and sign in with a demo account. The app defaults to `supabase` mode
+(needs the `VITE_SUPABASE_*` vars); set `VITE_API_MODE=msw` to run entirely in the browser. All env
+vars live in `.env.example`, validated by a Zod schema at boot.
 
-The build reads its data source from one env var, chosen at build/deploy time:
+**Common commands:** `bun run test` (unit) · `bun run e2e` (Playwright) · `bun run test:cov`
+(coverage) · `bun run db:reset` (reseed) · `bun run lint`
 
-- **`msw`** — Mock Service Worker answers every request from the seeded fixtures,
-  including a mocked auth (GoTrue) layer, so the app runs with **no backend at all**.
-  This is the mode for the always-on static demo and for the whole test suite. The same
-  fixtures seed the live database, so the demo and production agree by construction.
-- **`supabase`** — talks to a live Supabase project (`VITE_SUPABASE_*`). Realtime,
-  Storage and server-side RPCs need this mode.
+---
 
-```bash
-VITE_API_MODE=msw bun run dev        # no backend needed
-VITE_API_MODE=supabase bun run dev   # requires supabase start + VITE_SUPABASE_*
-```
+## Documentation
 
-### Demo accounts (msw mode)
+- **[System Architecture](docs/system-architecture.md)** — layers, data flow, RLS/triggers, CI/CD
+- **[Codebase Summary](docs/codebase-summary.md)** — structure, principles, key files, data model
+- **[Deployment Guide](docs/deployment-guide.md)** — local setup, Cloudflare Pages + Supabase, secrets
+- **[Architecture Decisions](docs/adr/)** — trade-offs: router, shadcn, MSW parity, Gemini, TS 6
+- **[AI Features](docs/ai-features.md)** — Gemini integration, semantic search, rate limits
+- **[Code Standards](docs/code-standards.md)** — naming, patterns, architecture rules (ESLint-enforced)
+- **[Project Overview / PDR](docs/project-overview-pdr.md)** — vision, requirements, success criteria
 
-Sign in with any of the seeded accounts below — shared password **`password123`**. Each
-maps to a role, so you can see the app from every side (the admin surface appears only
-for owner/admin). The Google button, which can't run OAuth on a static build, signs in
-as the owner.
-
-| Email                 | Role     | Sees                                     |
-| --------------------- | -------- | ---------------------------------------- |
-| `owner@demo.local`    | Owner    | Everything, including the permission set |
-| `admin@demo.local`    | Admin    | Users, org data, every ticket            |
-| `agent@demo.local`    | Agent    | Their team's tickets + internal notes    |
-| `customer@demo.local` | Customer | Their own tickets                        |
-
-These are fabricated demo credentials against seeded data — there is nothing to protect.
-
-## Scripts
-
-| Script               | What it does                                          |
-| -------------------- | ----------------------------------------------------- |
-| `bun run dev`        | Dev server on Vite's default port (5173)              |
-| `bun run build`      | Typecheck, then production build to `dist/`           |
-| `bun run preview`    | Serve the production build                            |
-| `bun run lint`       | ESLint (import order, a11y, architectural boundaries) |
-| `bun run test`       | Unit + component tests (Vitest)                       |
-| `bun run test:watch` | Same, in watch mode                                   |
-| `bun run test:cov`   | Tests with coverage; fails below the threshold        |
-| `bun run e2e`        | End-to-end + accessibility tests (Playwright)         |
-| `bun run e2e:ui`     | Playwright UI mode                                    |
-| `bun run lang:gen`   | Generate locale bundles from `scripts/data/*.yaml`    |
-| `bun run lang:check` | Fail if `en`/`vi` drift apart                         |
-
-## Testing
-
-| Layer            | Tool                                                                                                             | Runs on           |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------- |
-| Unit + component | Vitest · Testing Library · jsdom                                                                                 | every push and PR |
-| Mock API         | MSW — one handler registry shared by tests and the demo build (PostgREST tables + mocked auth over the fixtures) | every push and PR |
-| End-to-end       | Playwright, against the **production build**                                                                     | PRs               |
-| Accessibility    | axe-core via Playwright, WCAG 2.1 AA                                                                             | PRs               |
-
-Two choices worth knowing about:
-
-- **e2e runs against `vite build` output, not the dev server.** Vite 8 bundles with
-  Rolldown for builds and a different pipeline for dev, so a bundler-only breakage is
-  invisible to a dev-server test.
-- **Accessibility is checked in a real browser, not jsdom.** axe cannot evaluate colour
-  contrast without layout — in jsdom it reports `incomplete`, which the usual matcher
-  ignores, so unreadable text passes silently. The first real violation found here was
-  exactly that: antd's default primary button is 4.10:1, under the 4.5:1 AA needs.
-  - **Caveat — a real browser is necessary but not sufficient.** axe still returns
-    `incomplete` (not `violation`) for contrast when it cannot resolve the effective
-    background — which is the case on any element whose background is painted by an
-    absolutely-positioned `::before`/`::after`, as the sign-in screen's is. The suite
-    asserts on `violations` only, so a contrast failure on sign-in passes silently even
-    in the browser. The `not-found` scan (plain background) does catch contrast. Closing
-    this properly — assert on `incomplete`, or give the scanned surface a real
-    background — is deferred to the Phase 05 UI rebuild, which replaces these screens.
-
-The coverage threshold is a floor with headroom, not the current number. Coverage is a
-ratio, so setting it at the measured value would fail CI whenever untested code is
-_added_ — even with no regression at all. It is deliberately low while most of `src/` is
-legacy screens awaiting replacement, and it rises as each phase lands code meant to stay.
-
-## Architecture
-
-```
-src/
-  app/          application shell — provider, app
-  components/   shared UI (ui primitives, layouts, fallbacks)
-  config/       values — Zod-validated env
-  lib/          configured clients — axios, query-client
-  utils/        pure helpers, zero app deps
-  stores/       global client state (Zustand)
-  features/     feature-based: api, components, pages, hooks, constants
-  mocks/        MSW handlers, node server, browser worker
-  testing/      test setup and the shared render helper
-  i18n/         i18next + generated locale bundles
-```
-
-The dependency arrow only points one way: features may use `config/`, `lib/` and
-`utils/`; none of the three may reach back. ESLint enforces it rather than a paragraph
-asking nicely.
+---
 
 ## License
 

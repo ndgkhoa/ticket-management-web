@@ -1,0 +1,4 @@
+# SPA fallback for Cloudflare Pages: every path serves index.html so client-side routes
+# (e.g. /tickets/abc) survive a hard refresh or a direct link instead of 404-ing. Without this
+# the app works in dev and on first load from the homepage, then 404s only on refresh/deep-link.
+/*    /index.html   200

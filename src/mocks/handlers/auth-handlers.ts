@@ -80,7 +80,7 @@ async function handleSignUp({ request }: { request: Request }) {
   // a real new sign-up gets. Enough to land in the app as a customer.
   const row: DemoAccount = {
     id: crypto.randomUUID(),
-    email: body.email ?? 'new-user@demo.local',
+    email: body.email ?? 'new-user@example.com',
     full_name: body.data?.full_name ?? null,
     avatar_url: null,
   };

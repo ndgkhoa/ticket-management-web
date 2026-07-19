@@ -30,10 +30,10 @@ faker.seed(1001);
 export const DEMO_PASSWORD = 'password123';
 
 const DEMO_ACCOUNTS = [
-  ['owner', 'owner@demo.local', 'Ophelia Vance'],
-  ['admin', 'admin@demo.local', 'Adrian Cole'],
-  ['agent', 'agent@demo.local', 'Aiko Tanaka'],
-  ['customer', 'customer@demo.local', 'Chris Mahoney'],
+  ['owner', 'owner@example.com', 'Ophelia Vance'],
+  ['admin', 'admin@example.com', 'Adrian Cole'],
+  ['agent', 'agent@example.com', 'Aiko Tanaka'],
+  ['customer', 'customer@example.com', 'Chris Mahoney'],
 ] as const satisfies readonly (readonly [RoleName, string, string])[];
 
 const EXTRA_AGENT_COUNT = 8;

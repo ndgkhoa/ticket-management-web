@@ -11,7 +11,16 @@ import type { AgentPerformance } from '~/features/dashboard/schemas/dashboard-sc
 export function AgentPerformanceTable({ data }: { data: AgentPerformance[] }) {
   const { t } = useTranslation();
   return (
-    <div className="max-h-64 overflow-auto">
+    <div
+      className="focus-visible:ring-ring max-h-64 overflow-auto rounded-sm focus-visible:ring-2 focus-visible:outline-none"
+      // A scrollable region must be keyboard-focusable so it can be scrolled without a mouse
+      // (axe scrollable-region-focusable). The static rule can't see the overflow; axe, run in a
+      // real browser, is the authority here.
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+      tabIndex={0}
+      role="group"
+      aria-label={t('Dashboard.AgentPerformance')}
+    >
       <Table>
         <TableHeader>
           <TableRow>

@@ -73,7 +73,7 @@ describe.skipIf(!RUN)('list-query parity: MSW applier vs live Supabase', () => {
 
     const client = createClient(URL, ANON);
     const { error } = await client.auth.signInWithPassword({
-      email: 'admin@demo.local',
+      email: 'admin@example.com',
       password: 'password123',
     });
     if (error) throw new Error(`admin sign-in: ${error.message}`);
