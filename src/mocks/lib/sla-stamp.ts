@@ -37,6 +37,15 @@ function dueAtFor(priority: TicketRow['priority'], createdAt: string): string | 
   return new Date(new Date(createdAt).getTime() + mins * 60_000).toISOString();
 }
 
+/** Resolution deadline measured from now — a fresh window, granted when a ticket reopens. */
+export function dueFromNow(priority: TicketRow['priority']): string | null {
+  const mins = resolutionMinsByPriority.get(priority);
+  if (mins === undefined) return null;
+  return new Date(Date.now() + mins * 60_000).toISOString();
+}
+
+const ACTIVE_STATUSES: TicketRow['status'][] = ['open', 'pending', 'on_hold'];
+
 /** BEFORE INSERT: resolve sla_policy_id + due_at from priority; SLA stamps default to null.
  *  Mirrors the trigger's `least(created_at, now())` clamp so a forged future date can't push
  *  the deadline out. */
@@ -71,6 +80,11 @@ export function stampTicketSlaOnUpdate(
   if (patch.priority && patch.priority !== current.priority && !current.resolved_at) {
     next.sla_policy_id = slaPolicyIdByPriority.get(patch.priority) ?? null;
     next.due_at = dueAtFor(patch.priority, current.created_at);
+  }
+
+  // Reopen (solved → active) restarts the resolution clock with a fresh window from now.
+  if (current.status === 'solved' && patch.status && ACTIVE_STATUSES.includes(patch.status)) {
+    next.due_at = dueFromNow(patch.priority ?? current.priority);
   }
 
   return next;

@@ -1,6 +1,6 @@
 # Phase 03 — Status Lifecycle: Reopen + Auto-Close
 
-**Priority:** P2 · **Status:** ⬜ todo · **Depends:** Phase 01 (shares ticket triggers/stamps)
+**Priority:** P2 · **Status:** ✅ done · **Depends:** Phase 01 (shares ticket triggers/stamps)
 
 ## Context
 
@@ -93,12 +93,16 @@ lives in one `SECURITY DEFINER` SQL function; only the trigger of that function 
 
 ## Todo
 
-- [ ] Confirm `pg_cron` availability (else edge-function fallback)
-- [ ] `reopen_on_customer_reply()` trigger (solved→open, clears resolved_at, requester + public_reply only)
-- [ ] `close_stale_solved_tickets(p_days=7)` + daily schedule
-- [ ] (Optional) status transition allowlist — per decision
-- [ ] MSW reopen parity
-- [ ] Tests: reopen matrix + auto-close matrix (fail on unfixed code)
+- [x] Confirm `pg_cron` availability — **available** (1.6.4) and used; `create extension pg_cron` + `cron.schedule` daily at 02:00
+- [x] `reopen_on_customer_reply()` trigger (solved→open, clears resolved_at, requester + public_reply only)
+- [x] `close_stale_solved_tickets(p_days=7)` + daily schedule
+- [~] (Optional) status transition allowlist — **skipped** (YAGNI per the plan; reopen/close cover the real cases)
+- [x] MSW reopen parity (`ticket-lifecycle.ts` wired into the message afterInsert)
+- [x] Tests: reopen matrix (MSW, 3 cases); auto-close matrix verified live via psql
+
+Verified live (local DB, rolled back): customer reply reopens solved (+ clears resolved_at); agent reply does not; closed stays closed; aged solved (>7d) auto-closes; fresh solved stays. Cron job `close-stale-solved-tickets` registered.
+
+**Post-review fix (decision confirmed):** reopen now **restarts the resolution SLA** — leaving `solved` for an active status recomputes `due_at = now() + resolution_mins` (migration `..._reopen_restarts_resolution_sla.sql` extends `stamp_ticket_sla`; MSW mirrors it). Without this an aged reopened ticket read as breached immediately. Applies to any solved→active path (customer reply + agent manual reopen); solved→closed is terminal and doesn't restart. Verified live: old solved ticket's due_at moves from past → future on reopen.
 
 ## Success criteria
 

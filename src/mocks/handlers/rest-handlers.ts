@@ -28,6 +28,7 @@ import {
   stampTicketSlaOnUpdate,
 } from '~/mocks/lib/sla-stamp';
 import { routeTicketOnInsert } from '~/mocks/lib/ticket-routing';
+import { reopenOnCustomerReply } from '~/mocks/lib/ticket-lifecycle';
 
 /**
  * PostgREST table handlers for every `/rest/v1/*` read the app makes today, plus writes
@@ -65,8 +66,12 @@ export const restHandlers = [
     store: ticketMessageStore,
     writable: true,
     realtime: true,
-    // Mirror stamp_first_response: first public agent reply stamps its ticket's first response.
-    afterInsert: stampFirstResponseOnMessage,
+    // Mirror the message triggers: first public agent reply stamps first_response_at, and a
+    // customer public reply reopens a solved ticket.
+    afterInsert: (message) => {
+      stampFirstResponseOnMessage(message);
+      reopenOnCustomerReply(message);
+    },
   }),
   makeTableHandler({ table: 'ticket_events', rows: ticketEventRows, writable: true }),
   // Attachments start empty — files are uploaded in-session (blob URLs in msw). Read by ticket.
