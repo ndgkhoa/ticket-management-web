@@ -17,4 +17,5 @@ export const assigneeQueries = {
     }),
 };
 
-export const useAssigneeOptions = () => useQuery(assigneeQueries.list());
+export const useAssigneeOptions = (options?: { enabled?: boolean }) =>
+  useQuery({ ...assigneeQueries.list(), enabled: options?.enabled ?? true });

@@ -15,6 +15,10 @@ import type { Assignee } from '~/features/tickets/schemas/assignee-schema';
  *
  * Teams/categories/tags are the bounded admin lookups (fetch-all); assignees the agent
  * roster from the `assignable_agents` RPC.
+ *
+ * `enabled` (default on) lets a caller skip every fetch when the options won't be shown — the
+ * read-only customer ticket view hides the whole workflow sidebar, so it shouldn't pull the
+ * agent roster/taxonomy into the client at all.
  */
 export type TicketFilterOptions = {
   assigneeOptions: FacetOption[];
@@ -26,11 +30,11 @@ export type TicketFilterOptions = {
   categoryNameById: Map<string, string>;
 };
 
-export function useTicketFilterOptions(): TicketFilterOptions {
-  const assigneeQuery = useAssigneeOptions();
-  const teamQuery = useTeamList();
-  const categoryQuery = useCategoryList();
-  const tagQuery = useTagList();
+export function useTicketFilterOptions(enabled = true): TicketFilterOptions {
+  const assigneeQuery = useAssigneeOptions({ enabled });
+  const teamQuery = useTeamList({ enabled });
+  const categoryQuery = useCategoryList({ enabled });
+  const tagQuery = useTagList({ enabled });
 
   const assigneeOptions = useMemo(
     () => (assigneeQuery.data ?? []).map((a) => ({ label: a.fullName ?? '—', value: a.id })),

@@ -1,6 +1,6 @@
 # Phase 06 — Gate Agent UI / Read-Only Ticket Detail for Customers
 
-**Priority:** P2 (UX correctness) · **Status:** ⬜ todo · **Depends:** none
+**Priority:** P2 (UX correctness) · **Status:** ✅ done · **Depends:** none
 
 ## Context
 
@@ -84,11 +84,17 @@ ticket-detail render:
 
 ## Todo
 
-- [ ] `ticket-detail.tsx` gates Properties + SLA + AI (+ Activity per decision) on `ticket.update`
-- [ ] Customer keeps: badges, conversation, attachments, public-reply composer
-- [ ] Hooks stay above conditional JSX (no early-return hook-order break)
-- [ ] Component tests: customer hides controls, agent shows them
-- [ ] i18n keys (if any) in `en` + `vi`
+- [x] `ticket-detail.tsx` gates Properties + SLA + AI + Similar tickets + Activity on `ticket.update` (user confirmed: hide all agent panels)
+- [x] Customer keeps: header badges, conversation, attachments, public-reply composer
+- [x] Hooks stay above conditional JSX (`canWork` selector sits with the other hooks; queries still run, only the JSX is gated — no hook-order break)
+- [x] Component tests: `ticket-detail.test.tsx` renders the real route (so `getRouteApi` resolves) with agent vs customer permissions; asserts sidebar headings present/absent. Realtime presence stubbed (websocket, orthogonal). 2 tests, 145 total pass.
+- [x] i18n: none needed (customer sidebar shows the Attachments card, no empty-state copy)
+
+**Decision (user-confirmed):** hide Properties + SLA + AI + Similar tickets **and** the Activity feed from customers; keep the Attachments card. So a customer sees: status/priority badges, the conversation, attachments, and the public-reply composer only.
+
+**Post-review fix (Medium):** gating the UI wasn't enough — the hidden panels' queries still ran, so a customer's client fetched the agent roster (`assignable_agents`), the team/category/tag lookups (all `SELECT true` under RLS) and their ticket's internal audit events. Threaded `enabled` (default on) through `useTicketEvents`, `useTicketTags`, `useTicketFilterOptions` → the 4 list hooks (`useAssigneeOptions` + the shared `createCrudQueries.useList`), and pass `canWork`. Now a customer fetches none of it. Test asserts the agent-roster RPC is called for an agent and **never** for a customer.
+
+**Presence gating (user-approved follow-up):** `useTicketDetailRealtime(ticketId, trackPresence)` now gates only the presence roster — a customer still gets live thread refetches on a new message, but does not join presence, so agents viewing their ticket are never shown to them (and the customer isn't broadcast either). Live thread updates stay on for everyone.
 
 ## Success criteria
 

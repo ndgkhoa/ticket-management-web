@@ -11,7 +11,8 @@ export const ticketTagQueries = {
     }),
 };
 
-export const useTicketTags = (ticketId: string) => useQuery(ticketTagQueries.list(ticketId));
+export const useTicketTags = (ticketId: string, enabled = true) =>
+  useQuery({ ...ticketTagQueries.list(ticketId), enabled });
 
 /**
  * Toggle one tag on a ticket (add when `next` is true, remove otherwise), then refresh the

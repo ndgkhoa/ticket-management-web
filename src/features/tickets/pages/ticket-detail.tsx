@@ -21,6 +21,7 @@ import { useTicketTags } from '~/features/tickets/api/ticket-tag-queries';
 import { useProfileLookup } from '~/features/tickets/api/profile-lookup-queries';
 import { useTicketFilterOptions } from '~/features/tickets/hooks/use-ticket-filter-options';
 import { useTicketDetailRealtime } from '~/features/tickets/hooks/use-ticket-detail-realtime';
+import { useAuthStore } from '~/stores/auth';
 
 const route = getRouteApi('/_app/tickets/$ticketId');
 
@@ -38,11 +39,18 @@ function TicketDetail() {
   const { t } = useTranslation();
   const { ticketId } = route.useParams();
 
+  // The agent workflow (properties, SLA, AI, similar tickets, activity) is gated on the same
+  // permission RLS enforces for writes. A customer without it gets a clean read-only detail —
+  // their thread, attachments and reply box — not agent controls RLS would reject anyway.
+  const canWork = useAuthStore((state) => state.hasPermission('ticket.update'));
+
   const ticketQuery = useTicketDetail(ticketId);
   const messagesQuery = useTicketMessages(ticketId);
-  const eventsQuery = useTicketEvents(ticketId);
-  const tagsQuery = useTicketTags(ticketId);
-  const options = useTicketFilterOptions();
+  // The audit trail, tag set and the agent roster/taxonomy feed only the gated agent panels, so
+  // a customer shouldn't fetch them at all — skip the queries when the workflow is hidden.
+  const eventsQuery = useTicketEvents(ticketId, canWork);
+  const tagsQuery = useTicketTags(ticketId, canWork);
+  const options = useTicketFilterOptions(canWork);
 
   const ticket = ticketQuery.data;
   const messages = useMemo(() => messagesQuery.data ?? [], [messagesQuery.data]);
@@ -60,7 +68,9 @@ function TicketDetail() {
     return [...ids];
   }, [ticket.requesterId, ticket.assigneeId, messages, events]);
   const profiles = useProfileLookup(profileIds);
-  const viewers = useTicketDetailRealtime(ticketId);
+  // Live thread updates for everyone, but presence (who's viewing) only for agents — a customer
+  // is never shown the agents on their ticket, nor broadcast to them.
+  const viewers = useTicketDetailRealtime(ticketId, canWork);
   const authorNameById = useMemo(
     () => new Map([...profiles].map(([id, profile]) => [id, profile.fullName])),
     [profiles]
@@ -102,12 +112,14 @@ function TicketDetail() {
           <TicketMessageList messages={messages} authors={profiles} />
           {/* The whole page is keyed by ticketId at the route (see $ticketId.tsx), so these
               reset per ticket without needing their own keys. */}
-          <AiSuggestionPanel
-            subject={ticket.subject}
-            messages={messages}
-            authorNameById={authorNameById}
-            onUseDraft={setAiDraft}
-          />
+          {canWork && (
+            <AiSuggestionPanel
+              subject={ticket.subject}
+              messages={messages}
+              authorNameById={authorNameById}
+              onUseDraft={setAiDraft}
+            />
+          )}
           <TicketComposer
             ticketId={ticketId}
             insertDraft={aiDraft}
@@ -116,28 +128,34 @@ function TicketDetail() {
         </div>
 
         <div className="space-y-4">
-          <Card title={t('Tickets.Sla')}>
-            <TicketSlaCard ticket={ticket} />
-          </Card>
-          <Card title={t('Ai.SimilarTickets')}>
-            <SimilarTicketsPanel ticketId={ticketId} />
-          </Card>
-          <Card title={t('Tickets.Properties')}>
-            <TicketProperties
-              ticket={ticket}
-              assigneeOptions={options.assigneeOptions}
-              teamOptions={options.teamOptions}
-              categoryOptions={options.categoryOptions}
-              tagOptions={options.tagOptions}
-              ticketTagIds={tagsQuery.data ?? []}
-            />
-          </Card>
+          {canWork && (
+            <>
+              <Card title={t('Tickets.Sla')}>
+                <TicketSlaCard ticket={ticket} />
+              </Card>
+              <Card title={t('Ai.SimilarTickets')}>
+                <SimilarTicketsPanel ticketId={ticketId} />
+              </Card>
+              <Card title={t('Tickets.Properties')}>
+                <TicketProperties
+                  ticket={ticket}
+                  assigneeOptions={options.assigneeOptions}
+                  teamOptions={options.teamOptions}
+                  categoryOptions={options.categoryOptions}
+                  tagOptions={options.tagOptions}
+                  ticketTagIds={tagsQuery.data ?? []}
+                />
+              </Card>
+            </>
+          )}
           <Card title={t('Tickets.Attachments')}>
             <TicketAttachments ticketId={ticketId} />
           </Card>
-          <Card title={t('Tickets.Activity')}>
-            <TicketActivity events={events} actors={profiles} />
-          </Card>
+          {canWork && (
+            <Card title={t('Tickets.Activity')}>
+              <TicketActivity events={events} actors={profiles} />
+            </Card>
+          )}
         </div>
       </div>
     </Container>

@@ -33,7 +33,10 @@ export function createCrudQueries<Row, Input>(config: {
 
   const listQuery = () => queryOptions({ queryKey: keys.list(), queryFn: api.list });
 
-  const useList = () => useQuery(listQuery());
+  // `enabled` lets a caller skip the fetch when the data won't be shown (e.g. a read-only
+  // customer view that hides the admin lookups). Defaults on, so existing callers are unchanged.
+  const useList = (options?: { enabled?: boolean }) =>
+    useQuery({ ...listQuery(), enabled: options?.enabled ?? true });
 
   const useInvalidate = () => {
     const queryClient = useQueryClient();

@@ -11,4 +11,7 @@ export const ticketEventQueries = {
     }),
 };
 
-export const useTicketEvents = (ticketId: string) => useQuery(ticketEventQueries.list(ticketId));
+// `enabled` (default on) so the read-only customer view can skip pulling the internal audit
+// trail into the client — the activity feed it feeds is hidden there anyway.
+export const useTicketEvents = (ticketId: string, enabled = true) =>
+  useQuery({ ...ticketEventQueries.list(ticketId), enabled });
