@@ -41,6 +41,8 @@ const ticketRowSchema = z.object({
   first_response_at: z.string().nullable(),
   resolved_at: z.string().nullable(),
   due_at: z.string().nullable(),
+  sla_paused_at: z.string().nullable(),
+  sla_paused_ms: z.number(),
   created_at: z.string(),
   updated_at: z.string(),
 }) satisfies z.ZodType<Omit<Tables<'tickets'>, 'search_vector' | 'embedding'>>;
@@ -60,6 +62,8 @@ export const ticketSchema = ticketRowSchema.transform((row) => ({
   firstResponseAt: row.first_response_at,
   resolvedAt: row.resolved_at,
   dueAt: row.due_at,
+  slaPausedAt: row.sla_paused_at,
+  slaPausedMs: row.sla_paused_ms,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 }));
@@ -73,4 +77,4 @@ export type Ticket = z.infer<typeof ticketSchema>;
  * ever read by the client.
  */
 export const TICKET_COLUMNS =
-  'id, subject, description, status, priority, channel, requester_id, assignee_id, team_id, category_id, sla_policy_id, first_response_at, resolved_at, due_at, created_at, updated_at';
+  'id, subject, description, status, priority, channel, requester_id, assignee_id, team_id, category_id, sla_policy_id, first_response_at, resolved_at, due_at, sla_paused_at, sla_paused_ms, created_at, updated_at';

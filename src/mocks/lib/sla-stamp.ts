@@ -46,6 +46,30 @@ export function dueFromNow(priority: TicketRow['priority']): string | null {
 
 const ACTIVE_STATUSES: TicketRow['status'][] = ['open', 'pending', 'on_hold'];
 
+const isPaused = (status: TicketRow['status']) => status === 'pending' || status === 'on_hold';
+
+/**
+ * MSW mirror of accumulate_sla_pause: on a status transition into the paused set start the
+ * current pause; on leaving it bank the elapsed paused time. Nothing on a non-status change.
+ */
+export function accumulatePauseOnUpdate(
+  patch: Partial<TicketRow>,
+  current: TicketRow
+): Partial<TicketRow> {
+  if (patch.status === undefined || patch.status === current.status) return {};
+  const wasPaused = isPaused(current.status);
+  const willPause = isPaused(patch.status);
+
+  if (!wasPaused && willPause) return { sla_paused_at: new Date().toISOString() };
+  if (wasPaused && !willPause) {
+    const banked = current.sla_paused_at
+      ? current.sla_paused_ms + (Date.now() - new Date(current.sla_paused_at).getTime())
+      : current.sla_paused_ms;
+    return { sla_paused_ms: banked, sla_paused_at: null };
+  }
+  return {};
+}
+
 /** BEFORE INSERT: resolve sla_policy_id + due_at from priority; SLA stamps default to null.
  *  Mirrors the trigger's `least(created_at, now())` clamp so a forged future date can't push
  *  the deadline out. */
@@ -60,6 +84,9 @@ export function stampTicketSlaOnInsert(row: TicketRow): TicketRow {
     due_at: dueAtFor(row.priority, createdAt),
     first_response_at: row.first_response_at ?? null,
     resolved_at: row.resolved_at ?? null,
+    // Mirror accumulate_sla_pause on insert: a ticket created paused starts paused.
+    sla_paused_at: isPaused(row.status) ? createdAt : (row.sla_paused_at ?? null),
+    sla_paused_ms: row.sla_paused_ms ?? 0,
   };
 }
 
@@ -82,12 +109,14 @@ export function stampTicketSlaOnUpdate(
     next.due_at = dueAtFor(patch.priority, current.created_at);
   }
 
-  // Reopen (solved → active) restarts the resolution clock with a fresh window from now.
+  // Reopen (solved → active) restarts the resolution clock with a fresh window and a fresh
+  // pause budget — banked pause from before the solve does not carry into the new window.
   if (current.status === 'solved' && patch.status && ACTIVE_STATUSES.includes(patch.status)) {
     next.due_at = dueFromNow(patch.priority ?? current.priority);
+    next.sla_paused_ms = 0;
   }
 
-  return next;
+  return { ...next, ...accumulatePauseOnUpdate(patch, current) };
 }
 
 /** AFTER INSERT on ticket_messages: first public agent reply stamps first_response_at once. */

@@ -8,6 +8,8 @@ import {
   userRows,
 } from '~/mocks/fixtures';
 import { FILTER_IS_NULL, type ListParams } from '~/lib/list-query';
+import type { TicketRow } from '~/mocks/fixtures/row-types';
+import { stampTicketSlaOnUpdate } from '~/mocks/lib/sla-stamp';
 import { applyListQuery } from '~/mocks/lib/apply-list-query';
 import { ticketListConfig } from '~/mocks/config/ticket-list-config';
 import { ticketStore } from '~/mocks/stores/ticket-store';
@@ -104,15 +106,12 @@ const bulkUpdateTickets = http.post('*/rest/v1/rpc/bulk_update_tickets', async (
     patch.assignee_id = p_patch.assignee_id === '' ? null : p_patch.assignee_id;
   }
 
-  // Mirror stamp_ticket_sla on the bulk path: entering `solved` stamps resolved_at once.
-  const solving = p_patch.status === 'solved';
+  // Route each row through the same update stamp the single-ticket PATCH uses, so the bulk
+  // path inherits resolved_at-on-solve, reopen (due_at + pause reset) and pause accumulation
+  // identically — no duplicated subset to drift (mirrors the live trigger firing on the UPDATE).
   for (const row of matched) {
-    const rowPatch = { ...patch };
-    // Same gate as the single-update path and the live trigger: stamp only on entering solved.
-    if (solving && row.status !== 'solved' && row.resolved_at == null) {
-      rowPatch.resolved_at = new Date().toISOString();
-    }
-    ticketStore.update(row.id, rowPatch as never);
+    const stamped = stampTicketSlaOnUpdate(patch as Partial<TicketRow>, row);
+    ticketStore.update(row.id, stamped as never);
   }
   return HttpResponse.json(matched.length);
 });

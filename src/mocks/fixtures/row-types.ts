@@ -89,6 +89,8 @@ export type TicketRow = {
   first_response_at: string | null;
   resolved_at: string | null;
   due_at: string | null;
+  sla_paused_at: string | null;
+  sla_paused_ms: number;
   created_at: string;
   updated_at: string;
 };

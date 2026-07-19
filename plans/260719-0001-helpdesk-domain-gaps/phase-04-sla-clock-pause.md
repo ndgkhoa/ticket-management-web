@@ -1,6 +1,6 @@
 # Phase 04 — Pause SLA Clock During pending/on_hold
 
-**Priority:** P2 · **Status:** ⬜ todo · **Depends:** Phase 01 (needs stamps + `due_at`)
+**Priority:** P2 · **Status:** ✅ done · **Depends:** Phase 01 (needs stamps + `due_at`)
 
 ## Context
 
@@ -88,12 +88,25 @@ render ──► effectiveNow = now - sla_paused_ms - (paused ? now - sla_paused
 
 ## Todo
 
-- [ ] Migration: `sla_paused_at` + `sla_paused_ms` + `accumulate_sla_pause()` trigger
-- [ ] `db:types` + `ticket-schema` + fixtures updated
-- [ ] `sla-pause.ts` pure helper + unit tests
-- [ ] `ticket-sla-card.tsx` uses effective now
-- [ ] MSW accumulator parity (single + bulk status change)
-- [ ] Pause/resume regression tests (fail on unfixed code)
+- [x] Migration: `sla_paused_at` + `sla_paused_ms` + `accumulate_sla_pause()` trigger (BEFORE INSERT/UPDATE)
+- [x] `db:types` + `ticket-schema` (`slaPausedAt`/`slaPausedMs`) + fixtures updated
+- [x] `sla-pause.ts` `effectiveNow()` pure helper + unit tests
+- [x] `ticket-sla-card.tsx` uses effective now; **also** switched resolution to the DB `due_at` so Phase 03's reopen-restart actually shows (the card previously recomputed from `created + mins`, ignoring `due_at`)
+- [x] MSW accumulator parity (`accumulatePauseOnUpdate` in single-update stamp + bulk RPC + insert)
+- [x] Tests: `effectiveNow` (5), `slaVariant` refactor (5), MSW pause accumulator (3)
+
+Verified live (local DB, rolled back): new/open ticket → paused_at null, ms 0; entering pending sets paused_at; created-pending starts paused; a 2h pause banks 7,200,000 ms on resume. (Single-transaction `now()` can't measure elapsed — used a backdated pause start.)
+
+**Note:** `slaVariant` now takes the deadline (`due`) directly instead of recomputing `created + dueMinutes`, so the card honours the DB-maintained `due_at` (reopen-aware). First response has no stored deadline → still computed; resolution uses `due_at`.
+
+**Post-review fixes (migration `..._sla_pause_reopen_fixes.sql`):**
+
+1. (High) met/late judgment now credits paused time too — the card passes an effective doneAt (`doneWall − sla_paused_ms`), so a target hit within SLA after excluding parked time reads `met`, not `met-late`.
+2. Reopen resets the pause budget (`sla_paused_ms := 0`) so banked pre-solve pause doesn't leak extra grace into the fresh window (DB + MSW). Verified live: reopen → 0.
+3. `accumulate_sla_pause` INSERT clamps `sla_paused_at` to `least(created_at, now())`, matching the created_at clamp (it fires before `stamp_ticket_sla`). Verified live: future created_at → clamped.
+4. The bulk RPC mock now routes each row through `stampTicketSlaOnUpdate` (solve + reopen + pause) instead of a duplicated subset, so bulk can't drift from the single-update path.
+
+**Known model limitation:** a single `sla_paused_ms` accumulator serves both first-response and resolution. Pause after first response, or across a reopen, isn't split per-target — acceptable for this desk; a per-target model is a future refinement.
 
 ## Success criteria
 

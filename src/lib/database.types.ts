@@ -491,6 +491,8 @@ export type Database = {
           requester_id: string;
           resolved_at: string | null;
           search_vector: unknown;
+          sla_paused_at: string | null;
+          sla_paused_ms: number;
           sla_policy_id: string | null;
           status: Database['public']['Enums']['ticket_status'];
           subject: string;
@@ -511,6 +513,8 @@ export type Database = {
           requester_id: string;
           resolved_at?: string | null;
           search_vector?: unknown;
+          sla_paused_at?: string | null;
+          sla_paused_ms?: number;
           sla_policy_id?: string | null;
           status?: Database['public']['Enums']['ticket_status'];
           subject: string;
@@ -531,6 +535,8 @@ export type Database = {
           requester_id?: string;
           resolved_at?: string | null;
           search_vector?: unknown;
+          sla_paused_at?: string | null;
+          sla_paused_ms?: number;
           sla_policy_id?: string | null;
           status?: Database['public']['Enums']['ticket_status'];
           subject?: string;
@@ -639,6 +645,7 @@ export type Database = {
         };
         Returns: boolean;
       };
+      close_stale_solved_tickets: { Args: { p_days?: number }; Returns: number };
       has_permission: {
         Args: { permission_code: string; uid: string };
         Returns: boolean;

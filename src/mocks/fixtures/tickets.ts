@@ -175,6 +175,10 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
     first_response_at: firstResponseAt?.toISOString() ?? null,
     resolved_at: resolvedAt?.toISOString() ?? null,
     due_at: dueAt.toISOString(),
+    // A ticket parked in a paused state is currently paused (mirrors the INSERT branch of
+    // accumulate_sla_pause); anything else runs. No banked pause time in the seed.
+    sla_paused_at: status === 'pending' || status === 'on_hold' ? createdAt.toISOString() : null,
+    sla_paused_ms: 0,
     created_at: createdAt.toISOString(),
     updated_at: updatedAt.toISOString(),
   });

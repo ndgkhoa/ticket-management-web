@@ -16,8 +16,10 @@ export function reopenOnCustomerReply(message: TicketMessageRow): void {
     ticketStore.update(ticket.id, {
       status: 'open',
       resolved_at: null,
-      // Reopen grants a fresh resolution window (mirrors stamp_ticket_sla's reopen branch).
+      // Reopen grants a fresh resolution window and a fresh pause budget (mirrors
+      // stamp_ticket_sla's reopen branch).
       due_at: dueFromNow(ticket.priority),
+      sla_paused_ms: 0,
       updated_at: new Date().toISOString(),
     });
   }

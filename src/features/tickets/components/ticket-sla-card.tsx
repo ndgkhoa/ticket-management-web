@@ -4,6 +4,7 @@ import { Badge } from '~/components/ui';
 import { cn } from '~/utils/cn';
 import { useSlaPolicyList } from '~/features/admin/sla-policies/api/sla-policy-queries';
 import { slaVariant, type SlaVariant } from '~/features/tickets/components/sla-state';
+import { effectiveNow } from '~/features/tickets/components/sla-pause';
 import type { Ticket } from '~/features/tickets/schemas/ticket-schema';
 
 type Props = { ticket: Ticket };
@@ -57,13 +58,20 @@ export function TicketSlaCard({ ticket }: Props) {
   if (!policy) return null;
 
   const created = new Date(ticket.createdAt).getTime();
-  const now = Date.now();
+  // Effective now freezes the clock while the ticket is paused (pending/on_hold).
+  const now = effectiveNow({
+    now: Date.now(),
+    pausedMs: ticket.slaPausedMs,
+    pausedAt: ticket.slaPausedAt ? new Date(ticket.slaPausedAt).getTime() : null,
+  });
 
-  const stateFor = (dueMinutes: number, doneAt: string | null): SlaState => {
-    const { variant, due } = slaVariant({
-      createdAt: created,
-      dueMinutes,
-      doneAt: doneAt ? new Date(doneAt).getTime() : null,
+  const stateFor = (due: number, windowMs: number, doneAt: string | null): SlaState => {
+    const { variant } = slaVariant({
+      due,
+      windowMs,
+      // Credit paused time to the met/late judgment too, same frame as `now`: a target hit
+      // within the deadline after excluding parked time reads as met, not met-late.
+      doneAt: doneAt ? new Date(doneAt).getTime() - ticket.slaPausedMs : null,
       now,
     });
     const labelKey = SLA_LABEL_KEY[variant];
@@ -71,8 +79,17 @@ export function TicketSlaCard({ ticket }: Props) {
     return { label, variant, due };
   };
 
-  const firstResponse = stateFor(policy.first_response_mins, ticket.firstResponseAt);
-  const resolution = stateFor(policy.resolution_mins, ticket.resolvedAt);
+  const firstResponseMs = policy.first_response_mins * 60_000;
+  const resolutionMs = policy.resolution_mins * 60_000;
+  // First response has no stored deadline — compute it. Resolution uses the DB-maintained
+  // due_at so a reopened ticket's restarted deadline shows correctly (falls back for old rows).
+  const resolutionDue = ticket.dueAt ? new Date(ticket.dueAt).getTime() : created + resolutionMs;
+  const firstResponse = stateFor(
+    created + firstResponseMs,
+    firstResponseMs,
+    ticket.firstResponseAt
+  );
+  const resolution = stateFor(resolutionDue, resolutionMs, ticket.resolvedAt);
 
   return (
     <div className="space-y-2">
