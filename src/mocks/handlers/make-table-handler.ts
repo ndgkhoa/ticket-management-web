@@ -53,6 +53,16 @@ type TableConfig<Row extends Record<string, unknown> & { id: string }> = {
    * demo react (the live twin is Supabase Realtime replicating the write). Off by default.
    */
   realtime?: boolean;
+  /**
+   * MSW parity for database triggers, which don't run under MSW. `stampInsert` transforms a
+   * row before it is stored (e.g. resolve SLA due_at from priority); `stampUpdate` augments a
+   * PATCH from the current row (e.g. stamp resolved_at when a ticket enters `solved`);
+   * `afterInsert` runs a side effect on another store (e.g. an agent reply stamps its ticket's
+   * first_response_at). Each mirrors a specific trigger — keep them tiny and colocated.
+   */
+  stampInsert?: (row: Row) => Row;
+  stampUpdate?: (patch: Partial<Row>, current: Row) => Partial<Row>;
+  afterInsert?: (row: Row) => void;
 };
 
 /** eq / in matching for the plain-read and detail paths — dynamic column access, since a
@@ -135,7 +145,9 @@ export function makeTableHandler<Row extends Record<string, unknown> & { id: str
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const rows = (Array.isArray(body) ? body : [body]).map((row) => {
       const withId = { ...row, id: row.id ?? crypto.randomUUID() } as Row;
-      const inserted = store.insert(withId);
+      const stamped = config.stampInsert ? config.stampInsert(withId) : withId;
+      const inserted = store.insert(stamped);
+      config.afterInsert?.(inserted);
       if (config.realtime) publishChange(table, { eventType: 'INSERT', new: inserted, old: null });
       return inserted;
     });
@@ -147,7 +159,9 @@ export function makeTableHandler<Row extends Record<string, unknown> & { id: str
     const query = parsePostgrestRequest(request);
     const patch = (await request.json().catch(() => ({}))) as Partial<Row>;
     const id = query.filters.id?.value;
-    const updated = id ? store.update(id, patch) : undefined;
+    const current = id ? store.all().find((row) => getId(row) === id) : undefined;
+    const finalPatch = config.stampUpdate && current ? config.stampUpdate(patch, current) : patch;
+    const updated = id ? store.update(id, finalPatch) : undefined;
     if (!updated) return notFoundResponse();
     if (config.realtime) publishChange(table, { eventType: 'UPDATE', new: updated, old: null });
     return query.single ? objectResponse(updated) : collectionResponse([updated]);

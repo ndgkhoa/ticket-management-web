@@ -1,6 +1,6 @@
 # Phase 01 — SLA Correctness via DB Triggers
 
-**Priority:** P1 (highest impact) · **Status:** ⬜ todo · **Depends:** none (keystone phase)
+**Priority:** P1 (highest impact) · **Status:** ✅ done · **Depends:** none (keystone phase)
 
 ## Context
 

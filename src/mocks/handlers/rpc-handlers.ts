@@ -98,7 +98,16 @@ const bulkUpdateTickets = http.post('*/rest/v1/rpc/bulk_update_tickets', async (
     patch.assignee_id = p_patch.assignee_id === '' ? null : p_patch.assignee_id;
   }
 
-  for (const row of matched) ticketStore.update(row.id, patch as never);
+  // Mirror stamp_ticket_sla on the bulk path: entering `solved` stamps resolved_at once.
+  const solving = p_patch.status === 'solved';
+  for (const row of matched) {
+    const rowPatch = { ...patch };
+    // Same gate as the single-update path and the live trigger: stamp only on entering solved.
+    if (solving && row.status !== 'solved' && row.resolved_at == null) {
+      rowPatch.resolved_at = new Date().toISOString();
+    }
+    ticketStore.update(row.id, rowPatch as never);
+  }
   return HttpResponse.json(matched.length);
 });
 

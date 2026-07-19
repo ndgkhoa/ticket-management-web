@@ -155,9 +155,10 @@ export const ticketApi = {
     const requesterId = useAuthStore.getState().user?.id;
     if (!requesterId) throw new Error('Not authenticated');
     const now = new Date().toISOString();
-    // Every column the domain schema reads is sent explicitly: the mock insert fills only
-    // `id`, so the server-defaulted and nullable columns must be present for the returned
-    // row to round-trip against MSW as it does against the live defaults.
+    // The SLA columns (sla_policy_id, due_at, first_response_at, resolved_at) are NOT sent:
+    // they are owned by the database triggers (stamp_ticket_sla), which resolve due_at +
+    // sla_policy_id from priority on insert. Sending them would let a client forge an SLA.
+    // MSW mirrors that stamping on its ticket insert so the returned row round-trips.
     const { data } = await supabase
       .from('tickets')
       .insert({
@@ -170,10 +171,6 @@ export const ticketApi = {
         assignee_id: null,
         team_id: null,
         category_id: input.categoryId,
-        sla_policy_id: null,
-        first_response_at: null,
-        resolved_at: null,
-        due_at: null,
         created_at: now,
         updated_at: now,
       })

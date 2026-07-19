@@ -22,6 +22,11 @@ import { makeTableHandler } from '~/mocks/handlers/make-table-handler';
 import { makeJunctionHandler } from '~/mocks/handlers/make-junction-handler';
 import { ticketStore } from '~/mocks/stores/ticket-store';
 import { ticketMessageStore } from '~/mocks/stores/ticket-message-store';
+import {
+  stampFirstResponseOnMessage,
+  stampTicketSlaOnInsert,
+  stampTicketSlaOnUpdate,
+} from '~/mocks/lib/sla-stamp';
 
 /**
  * PostgREST table handlers for every `/rest/v1/*` read the app makes today, plus writes
@@ -46,6 +51,9 @@ export const restHandlers = [
     // through the same shared store the list reads; realtime so other tabs see the change.
     writable: true,
     realtime: true,
+    // Mirror the SLA-stamping triggers: due_at/sla_policy_id on create, resolved_at on solve.
+    stampInsert: stampTicketSlaOnInsert,
+    stampUpdate: stampTicketSlaOnUpdate,
   }),
   // The ticket conversation and its audit trail — read by ticket_id, append-only inserts. The
   // conversation uses the shared store + realtime so a reply appears in another tab's timeline.
@@ -55,6 +63,8 @@ export const restHandlers = [
     store: ticketMessageStore,
     writable: true,
     realtime: true,
+    // Mirror stamp_first_response: first public agent reply stamps its ticket's first response.
+    afterInsert: stampFirstResponseOnMessage,
   }),
   makeTableHandler({ table: 'ticket_events', rows: ticketEventRows, writable: true }),
   // Attachments start empty — files are uploaded in-session (blob URLs in msw). Read by ticket.

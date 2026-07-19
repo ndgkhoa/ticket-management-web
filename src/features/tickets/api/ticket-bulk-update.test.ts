@@ -54,4 +54,19 @@ describe('ticketApi.bulkUpdate over MSW', () => {
     const ticket = await ticketApi.detail(target.id);
     expect(ticket.status).toBe(target.status);
   });
+
+  it('stamps resolved_at when bulk-solving (same as the single-solve trigger)', async () => {
+    const targets = ticketRows
+      .filter((row) => row.status !== 'solved' && row.resolved_at === null)
+      .slice(0, 3);
+    const ids = targets.map((row) => row.id);
+
+    await ticketApi.bulkUpdate({ id: ids }, { status: 'solved' });
+
+    for (const id of ids) {
+      const ticket = await ticketApi.detail(id);
+      expect(ticket.status).toBe('solved');
+      expect(ticket.resolvedAt).not.toBeNull();
+    }
+  });
 });
