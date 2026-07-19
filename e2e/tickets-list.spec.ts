@@ -18,7 +18,9 @@ test('narrows the list with the status facet and reflects it in the URL', async 
   await page.goto('/tickets');
   await expect(page.getByRole('heading', { name: 'List of tickets' })).toBeVisible();
 
-  // The faceted-filter trigger (toolbar) precedes the sortable 'Status' column header.
+  // The faceted filters are collapsed behind the "Filters" button; reveal them first.
+  await page.getByRole('button', { name: 'Filters' }).click();
+  // Now the toolbar's 'Status' facet trigger precedes the sortable 'Status' column header.
   await page.getByRole('button', { name: 'Status' }).first().click();
   await page.getByRole('option', { name: 'open', exact: true }).click();
   await page.keyboard.press('Escape');
