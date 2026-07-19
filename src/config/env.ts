@@ -35,8 +35,13 @@ const envSchema = z
      * every row it can reach is gated by RLS. It ships in the client bundle exactly as
      * intended. The service-role key must never appear in any `VITE_`-prefixed var.
      */
-    VITE_SUPABASE_URL: z.url().optional(),
-    VITE_SUPABASE_ANON_KEY: z.string().min(1).optional(),
+    // A CI-forwarded secret that is unset arrives as "" (empty string), not undefined; coerce it
+    // so `.optional()` reads it as absent instead of running `z.url()`/`min(1)` on "" and throwing.
+    VITE_SUPABASE_URL: z.preprocess((value) => value || undefined, z.url().optional()),
+    VITE_SUPABASE_ANON_KEY: z.preprocess(
+      (value) => value || undefined,
+      z.string().min(1).optional()
+    ),
 
     /**
      * Cloudflare Turnstile site key (public). Optional: when unset, the auth forms skip
@@ -67,10 +72,13 @@ const envSchema = z
      * PostHog key are public/write-only ingest keys (safe in the bundle, like the Supabase
      * anon key) — never put a PostHog personal/admin key in a `VITE_` var.
      */
-    VITE_SENTRY_DSN: z.url().optional(),
-    VITE_POSTHOG_KEY: z.string().min(1).optional(),
+    VITE_SENTRY_DSN: z.preprocess((value) => value || undefined, z.url().optional()),
+    VITE_POSTHOG_KEY: z.preprocess((value) => value || undefined, z.string().min(1).optional()),
     // Defaults to the US cloud; set `https://eu.i.posthog.com` for an EU project.
-    VITE_POSTHOG_HOST: z.url().default('https://us.i.posthog.com'),
+    VITE_POSTHOG_HOST: z.preprocess(
+      (value) => value || undefined,
+      z.url().default('https://us.i.posthog.com')
+    ),
   })
   .refine(
     (env) =>
