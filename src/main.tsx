@@ -34,15 +34,34 @@ const enableMocking = async () => {
 };
 
 /**
- * `finally`, never `then`. The mock API failing — worker 404, insecure origin, service
- * workers disabled — must not take the app down with it: a rejected promise here would
- * skip render() entirely and leave a blank page with nothing in the UI to explain it.
- * Rendering is unconditional; only the mocking is best-effort.
+ * Load and start observability (Sentry + PostHog) only when it's actually configured: never in
+ * `msw` mode (tests/demo) and never when both keys are unset. The import is dynamic so the SDKs
+ * stay out of the main bundle and never load in those cases. Own catch so an init failure logs
+ * as observability, not as an MSW problem, and never blocks render.
+ */
+const observabilityEnabled =
+  env.VITE_API_MODE === 'supabase' && Boolean(env.VITE_SENTRY_DSN || env.VITE_POSTHOG_KEY);
+
+const startObservability = () =>
+  observabilityEnabled
+    ? import('~/lib/observability')
+        .then((module) => module.initObservability())
+        .catch((error: unknown) => {
+          console.error('[observability] init failed; app continues', error);
+        })
+    : Promise.resolve();
+
+/**
+ * `finally`, never `then`. The mock API or observability failing — worker 404, insecure origin,
+ * service workers disabled, a bad DSN — must not take the app down with it: a rejected promise
+ * here would skip render() entirely and leave a blank page with nothing in the UI to explain it.
+ * Rendering is unconditional; only mocking and observability are best-effort.
  */
 enableMocking()
   .catch((error: unknown) => {
     console.error('[msw] mock API failed to start; continuing against the real API', error);
   })
+  .then(startObservability)
   .finally(() => {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>

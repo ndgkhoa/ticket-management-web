@@ -51,6 +51,16 @@ Dev: MSW (local)              Deployed: Supabase (live)
 - **MSW (local dev + test suite):** All APIs answered in-browser; no network calls; offline-capable
 - **Supabase (production deployment):** Live backend — Auth, Realtime, RLS, Edge Functions all active
 
+**Observability boundary (`src/lib/observability/`):** Optional Sentry (errors) + PostHog
+(analytics/replay), key-gated and off by default. The heavy SDKs live behind a single dynamic
+`import()` in `main.tsx`, guarded by `api_mode === 'supabase' && key set`, so they never enter the
+main bundle nor load in MSW/tests. The React error boundaries forward through a light, SDK-free
+`reporter` bridge (`reportError`) — a no-op until init registers a handler — which is what keeps
+`@sentry/react` out of the shell's import graph. `initObservability` initializes each SDK in its
+own try/catch (one failed chunk can't silence the other) and syncs the auth-store user to both by
+**id only**, deduped on id. PII is scrubbed by allowlist (URLs normalized to `:id`, query strings
+and element text dropped); replay masks all inputs/text.
+
 ### 2. Backend — Supabase
 
 #### Database (Postgres)

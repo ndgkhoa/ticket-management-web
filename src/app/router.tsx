@@ -3,7 +3,7 @@ import { createRouter } from '@tanstack/react-router';
 import { routeTree } from '~/routeTree.gen';
 import { queryClient } from '~/lib/query-client';
 import { FullPageFallback } from '~/components/fallbacks';
-import { ErrorPage, NotFound } from '~/components/errors';
+import { NotFound, RouteErrorReporter } from '~/components/errors';
 
 /**
  * The router.
@@ -17,14 +17,14 @@ import { ErrorPage, NotFound } from '~/components/errors';
  * route that doesn't set its own: a loader in flight shows the fallback, and a
  * route/data error renders `ErrorPage`. This is the router half of the error split —
  * render errors in shell components outside the route tree are caught by the
- * react-error-boundary in `app/provider.tsx`.
+ * react-error-boundary in `app/app.tsx`.
  */
 export const router = createRouter({
   routeTree,
   context: { queryClient },
   defaultPreload: 'intent',
   defaultPendingComponent: FullPageFallback,
-  defaultErrorComponent: ({ error }) => <ErrorPage subTitle={error.message} />,
+  defaultErrorComponent: RouteErrorReporter,
   // Unmatched paths render the 404 outside the auth guard (it is on `_app`, which an
   // unmatched path never enters), so a bad URL shows the not-found page to anyone
   // rather than bouncing an unauthenticated visitor to sign-in.

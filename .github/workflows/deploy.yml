@@ -12,6 +12,7 @@ name: Deploy
 #     secrets:  SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD,
 #               VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY,
 #               CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#     optional (observability — omit to disable): VITE_SENTRY_DSN, VITE_POSTHOG_KEY, VITE_POSTHOG_HOST
 #     variables: SUPABASE_PROJECT_REF, CLOUDFLARE_PAGES_PROJECT
 # The job is skipped until both project vars exist, so it never fails red before setup.
 on:
@@ -52,6 +53,12 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_AI_ENABLED: 'true'
+          # Observability (all optional) — Vite inlines VITE_* at build time, so they must be
+          # forwarded here or the deployed bundle bakes `undefined` and nothing sends. Blank
+          # secrets disable the respective SDK cleanly (no red build).
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ secrets.VITE_POSTHOG_HOST }}
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3

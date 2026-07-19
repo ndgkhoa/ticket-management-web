@@ -60,6 +60,17 @@ const envSchema = z
       .enum(['true', 'false'])
       .default('true')
       .transform((value) => value === 'true'),
+
+    /**
+     * Observability (optional). All three are unused unless their key is set; unset disables
+     * the SDK entirely (it is never even loaded — see `~/lib/observability`). The DSN and
+     * PostHog key are public/write-only ingest keys (safe in the bundle, like the Supabase
+     * anon key) — never put a PostHog personal/admin key in a `VITE_` var.
+     */
+    VITE_SENTRY_DSN: z.url().optional(),
+    VITE_POSTHOG_KEY: z.string().min(1).optional(),
+    // Defaults to the US cloud; set `https://eu.i.posthog.com` for an EU project.
+    VITE_POSTHOG_HOST: z.url().default('https://us.i.posthog.com'),
   })
   .refine(
     (env) =>
