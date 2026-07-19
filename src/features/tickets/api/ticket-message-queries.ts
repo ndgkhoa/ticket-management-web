@@ -37,6 +37,9 @@ export const useCreateMessage = (ticketId: string) => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ticketKeys.messages(ticketId) });
       void queryClient.invalidateQueries({ queryKey: ticketKeys.events(ticketId) });
+      // A first agent public reply stamps the ticket's first_response_at (Phase 01 trigger),
+      // so refetch the ticket itself — otherwise the SLA card only updates on a reload.
+      void queryClient.invalidateQueries({ queryKey: ticketKeys.detail(ticketId), exact: true });
     },
   });
 };

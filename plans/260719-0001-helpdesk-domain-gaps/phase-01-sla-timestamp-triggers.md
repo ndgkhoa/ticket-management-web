@@ -110,12 +110,14 @@ agent replies ──► AFTER INSERT on ticket_messages ──► if first publi
 
 ## Todo
 
-- [ ] Migration: `sla_policy_for_priority()` + `stamp_ticket_sla()` + `stamp_first_response()` + triggers
-- [ ] `first_response_at` / `resolved_at` write-once (idempotent) verified
-- [ ] `ticket-api.ts` create no longer sends SLA nulls
-- [ ] MSW parity: insert stamps due_at/policy; message stamps first response; bulk stamps resolved_at
-- [ ] Regression tests incl. customer-reply-does-not-stamp case (must fail on unfixed code)
-- [ ] `db:types` regenerated, `seed:check` + build green
+- [x] Migration: `sla_policy_for_priority()` + `stamp_ticket_sla()` + `stamp_first_response()` + triggers
+- [x] `first_response_at` / `resolved_at` write-once (idempotent) verified — MSW test + live psql smoke-test
+- [x] `ticket-api.ts` create no longer sends SLA nulls
+- [x] MSW parity: insert stamps due_at/policy; message stamps first response; bulk stamps resolved_at
+- [x] Regression tests incl. customer-reply-does-not-stamp case (single + bulk solve, write-once)
+- [x] `seed:check` + build green (`db:types` not regenerated — the migration adds triggers/functions only, no column changes the client consumes)
+- [x] Review fix: clamp `created_at` to `now()` so a forged future date can't push `due_at` out
+- [x] Verified live: migration applied to local DB; all trigger paths smoke-tested and cleaned up
 
 ## Success criteria
 
