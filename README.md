@@ -1,6 +1,7 @@
 # ticket-management-web
 
 [![CI](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml/badge.svg)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/ndgkhoa/ticket-management-web/graph/badge.svg)](https://codecov.io/gh/ndgkhoa/ticket-management-web)
 
 A **production-grade single-tenant help desk** built as a portfolio project. Customers open tickets → agents resolve them (by team) → admins manage permissions and SLAs. Full Supabase backend deployed live; MSW for local dev + tests.
 
@@ -64,6 +65,7 @@ with password **`password123`**:
 - English + Vietnamese (type-safe i18n; unknown keys fail the build)
 - WCAG 2.1 AA in a real browser
 - Dark mode + read-only customer view
+- Optional observability (Sentry errors + PostHog analytics/replay), PII-scrubbed
 
 ---
 

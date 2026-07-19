@@ -13,6 +13,10 @@ jobs:
     name: lighthouse budgets
     runs-on: ubuntu-latest
     if: ${{ vars.SUPABASE_PROJECT_REF != '' }}
+    # Lets the results step post/update its PR comment.
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
@@ -31,3 +35,35 @@ jobs:
 
       - name: Lighthouse CI
         run: bunx @lhci/cli@0.14.x autorun
+
+      - name: Comment Lighthouse scores
+        # Runs even when the a11y gate above fails, so the PR shows the scores that failed it.
+        # `.lighthouseci/manifest.json` is written during collection (before assertion), and
+        # marks one representative (median) run per URL.
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = '.lighthouseci/manifest.json';
+            if (!fs.existsSync(path)) { core.info('No Lighthouse manifest; skipping comment.'); return; }
+            const runs = JSON.parse(fs.readFileSync(path, 'utf8')).filter((r) => r.isRepresentativeRun);
+            const pct = (n) => Math.round(n * 100);
+            const cell = (n, min) => { const v = pct(n); return `${v >= min ? '✅' : '⚠️'} ${v}`; };
+            const pathname = (u) => { try { return new URL(u).pathname; } catch { return u; } };
+            let rows = '';
+            for (const r of runs) {
+              const s = r.summary;
+              rows += `| \`${pathname(r.url)}\` | ${cell(s.performance, 90)} | ${cell(s.accessibility, 95)} | ${cell(s['best-practices'], 90)} |\n`;
+            }
+            const marker = '<!-- lighthouse-comment -->';
+            const body = `${marker}\n## 🔦 Lighthouse (desktop · median run)\n\n`
+              + `| Page | Performance | Accessibility | Best Practices |\n|---|---|---|---|\n${rows}\n`
+              + `<sub>Accessibility is a hard gate (≥ 95); performance & best-practices warn (≥ 90).</sub>`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            if (!issue_number) return;
+            const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });
