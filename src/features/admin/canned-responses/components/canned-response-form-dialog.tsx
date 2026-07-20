@@ -21,16 +21,9 @@ import type { CannedResponse } from '~/features/admin/canned-responses/schemas/c
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The row being edited, or null/undefined to create a new one. */
   cannedResponse?: CannedResponse | null;
 };
 
-/**
- * Create/edit dialog for a canned response. One form serves both: an absent
- * `cannedResponse` is a create, a present one pre-fills for an edit. Mount with a
- * `key` tied to the target id so the defaults reset when the edited row changes
- * (TanStack Form reads them once) — mirrors `category-form-dialog.tsx`.
- */
 export function CannedResponseFormDialog({ open, onOpenChange, cannedResponse }: Props) {
   const { t } = useTranslation();
   const create = useCannedResponseCreate();

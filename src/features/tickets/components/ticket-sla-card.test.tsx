@@ -5,11 +5,6 @@ import { render, screen } from '~/testing/render';
 import type { Ticket } from '~/features/tickets/schemas/ticket-schema';
 import { TicketSlaCard } from '~/features/tickets/components/ticket-sla-card';
 
-/**
- * SLA classification (met / breached / pause credit), exercised through the card that owns it —
- * the pure helpers were inlined, so coverage lives here. `sla_policies` comes from MSW; timings
- * are relative to the real clock so the deadlines land unambiguously either side of "now".
- */
 const MIN = 60 * 1000;
 const HOUR = 60 * MIN;
 
@@ -62,8 +57,6 @@ describe('TicketSlaCard', () => {
 
   it('credits paused time so a resolve past the deadline still reads met', async () => {
     const now = Date.now();
-    // Resolved 1h after the deadline in wall time, but 2h was paused → effective resolve is
-    // before the deadline, so it must read met, not met-late.
     await render(
       <TicketSlaCard
         ticket={makeTicket({
@@ -76,7 +69,6 @@ describe('TicketSlaCard', () => {
       />
     );
 
-    // Resolution reads met (pause-credited); first response met (answered in 10 min).
     expect(await screen.findAllByText('Met')).toHaveLength(2);
   });
 });

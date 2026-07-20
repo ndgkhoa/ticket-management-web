@@ -2,16 +2,10 @@ import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
 import { Suspense, lazy } from 'react';
 import type { QueryClient } from '@tanstack/react-query';
 
-/**
- * The router's context carries the QueryClient so loaders can call
- * `ensureQueryData` without importing the singleton — the same client the app
- * renders with, injected once in `app/router.tsx`.
- */
 export type RouterContext = {
   queryClient: QueryClient;
 };
 
-// Devtools are dev-only and lazily loaded, so they never reach the production bundle.
 const RouterDevtools = import.meta.env.PROD
   ? () => null
   : lazy(() =>
@@ -34,7 +28,3 @@ function RootComponent() {
     </>
   );
 }
-
-// The root intentionally renders no providers: the ThemeProvider, QueryClient and the
-// outer error boundary wrap `RouterProvider` in `app/provider.tsx`, so they exist above
-// the router and cover it.

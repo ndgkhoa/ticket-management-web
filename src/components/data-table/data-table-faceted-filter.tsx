@@ -25,17 +25,10 @@ export type FacetOption = {
 type Props = {
   title: string;
   options: FacetOption[];
-  /** Selected values — controlled from the URL, not the table's internal state. */
   selected: string[];
   onChange: (values: string[]) => void;
 };
 
-/**
- * Multi-select column filter. Controlled by the caller (selected values come from the
- * URL and changes navigate), because filtering is server-side — the table computes
- * nothing. The trigger shows the active selection as badges; the popover is a
- * searchable checkbox list.
- */
 export function DataTableFacetedFilter({ title, options, selected, onChange }: Props) {
   const selectedSet = new Set(selected);
 
@@ -81,7 +74,7 @@ export function DataTableFacetedFilter({ title, options, selected, onChange }: P
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0" align="start">
+      <PopoverContent className="w-50 p-0" align="start">
         <Command>
           <CommandInput placeholder={title} />
           <CommandList>

@@ -25,7 +25,6 @@ import { useAuthStore } from '~/stores/auth';
 
 const route = getRouteApi('/_app/tickets/$ticketId');
 
-/** A bordered sidebar section with a heading. */
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-md border p-4">
@@ -39,15 +38,10 @@ function TicketDetail() {
   const { t } = useTranslation();
   const { ticketId } = route.useParams();
 
-  // The agent workflow (properties, SLA, AI, similar tickets, activity) is gated on the same
-  // permission RLS enforces for writes. A customer without it gets a clean read-only detail —
-  // their thread, attachments and reply box — not agent controls RLS would reject anyway.
   const canWork = useAuthStore((state) => state.hasPermission('ticket.update'));
 
   const ticketQuery = useTicketDetail(ticketId);
   const messagesQuery = useTicketMessages(ticketId);
-  // The audit trail, tag set and the agent roster/taxonomy feed only the gated agent panels, so
-  // a customer shouldn't fetch them at all — skip the queries when the workflow is hidden.
   const eventsQuery = useTicketEvents(ticketId, canWork);
   const tagsQuery = useTicketTags(ticketId, canWork);
   const options = useTicketFilterOptions(canWork);
@@ -56,10 +50,8 @@ function TicketDetail() {
   const messages = useMemo(() => messagesQuery.data ?? [], [messagesQuery.data]);
   const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
 
-  // A draft accepted from the AI panel, handed to the composer to load then cleared.
   const [aiDraft, setAiDraft] = useState<string | null>(null);
 
-  // Every profile the page names — requester, assignee, message authors, event actors.
   const profileIds = useMemo(() => {
     const ids = new Set<string>([ticket.requesterId]);
     if (ticket.assigneeId) ids.add(ticket.assigneeId);
@@ -68,8 +60,6 @@ function TicketDetail() {
     return [...ids];
   }, [ticket.requesterId, ticket.assigneeId, messages, events]);
   const profiles = useProfileLookup(profileIds);
-  // Live thread updates for everyone, but presence (who's viewing) only for agents — a customer
-  // is never shown the agents on their ticket, nor broadcast to them.
   const viewers = useTicketDetailRealtime(ticketId, canWork);
   const authorNameById = useMemo(
     () => new Map([...profiles].map(([id, profile]) => [id, profile.fullName])),
@@ -110,8 +100,7 @@ function TicketDetail() {
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           <TicketMessageList messages={messages} authors={profiles} />
-          {/* The whole page is keyed by ticketId at the route (see $ticketId.tsx), so these
-              reset per ticket without needing their own keys. */}
+          {}
           {canWork && (
             <AiSuggestionPanel
               subject={ticket.subject}

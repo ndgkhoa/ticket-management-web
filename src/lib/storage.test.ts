@@ -2,10 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { revokeAttachmentUrl, uploadAttachment } from '~/lib/storage';
 
-/**
- * The upload facade in MSW mode (the suite runs `VITE_API_MODE=msw`): bytes become an in-memory
- * object URL rather than a Storage upload, and only those object URLs get revoked.
- */
 describe('attachment storage (msw mode)', () => {
   beforeEach(() => {
     URL.createObjectURL = vi.fn(() => 'blob:mock-url');

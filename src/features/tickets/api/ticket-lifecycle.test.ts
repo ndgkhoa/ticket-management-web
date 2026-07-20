@@ -23,11 +23,6 @@ async function solvedTicketOwnedByCustomer(): Promise<string> {
   return ticket.id;
 }
 
-/**
- * Reopen lifecycle (Phase 03), mirrored in MSW. A customer public reply reopens a solved
- * ticket and clears resolved_at; an agent reply does not; a closed ticket stays closed.
- * (Auto-close is a scheduled DB job with no MSW twin — verified at the SQL level.)
- */
 describe('ticket reopen lifecycle over MSW', () => {
   afterEach(() => useAuthStore.setState({ user: null }));
 
@@ -44,7 +39,6 @@ describe('ticket reopen lifecycle over MSW', () => {
     const ticket = await ticketApi.detail(id);
     expect(ticket.status).toBe('open');
     expect(ticket.resolvedAt).toBeNull();
-    // Reopen restarts the resolution SLA — a fresh due date in the future.
     expect(ticket.dueAt).not.toBeNull();
     expect(new Date(ticket.dueAt!).getTime()).toBeGreaterThan(Date.now());
   });

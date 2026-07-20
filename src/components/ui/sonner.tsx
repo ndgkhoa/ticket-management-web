@@ -10,11 +10,6 @@ import type { CSSProperties } from 'react';
 
 import { useTheme } from '~/components/theme-provider';
 
-/**
- * Toaster wired to the app's ThemeProvider rather than next-themes (shadcn's default),
- * so it matches light/dark. `system` is passed straight through — sonner resolves it
- * against the OS itself.
- */
 function Toaster({ ...props }: ToasterProps) {
   const { theme } = useTheme();
 

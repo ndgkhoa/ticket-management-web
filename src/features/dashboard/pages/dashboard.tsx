@@ -20,11 +20,6 @@ import { PriorityBar } from '~/features/dashboard/components/charts/priority-bar
 import { CategoryBar } from '~/features/dashboard/components/charts/category-bar';
 import { AgentPerformanceTable } from '~/features/dashboard/components/charts/agent-performance-table';
 
-/**
- * Operational dashboard: role-scoped KPIs + charts over a 7/30/90-day window. Every metric is a
- * Postgres aggregation (see `dashboard-api`); the page only picks the window and lays the cards
- * out. Each card owns its loading/empty state, so a slow or empty metric never blocks the rest.
- */
 function Dashboard() {
   const { t } = useTranslation();
   const { range } = useDashboardRange();

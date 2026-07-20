@@ -1,17 +1,13 @@
--- Storage for ticket attachments. The `attachments` table (metadata) already exists with its
--- own RLS in the ticket-core migration; this adds the bucket the files live in and the
--- object-level policies.
---
--- Public bucket keeps the demo simple — links resolve without signing. A real deployment would
--- make it private and serve short-lived signed URLs; the `attachments` table RLS still governs
--- who can discover the link in the first place.
+-- Storage for ticket attachments. The `attachments` metadata table + its RLS already exist; this
+-- adds the bucket and object-level policies. Public bucket keeps the demo simple (links resolve
+-- without signing); a real deployment would go private + signed URLs. The `attachments` RLS still
+-- governs who can discover the link.
 
 insert into storage.buckets (id, name, public)
 values ('attachments', 'attachments', true)
 on conflict (id) do nothing;
 
--- Any authenticated user may upload into the bucket; the table's insert policy is what ties a
--- file to a ticket the caller may touch.
+-- Any authenticated user may upload; the table's insert policy ties a file to a ticket the caller may touch.
 create policy "attachments authenticated upload"
 on storage.objects
 for insert to authenticated

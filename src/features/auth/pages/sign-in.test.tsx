@@ -4,18 +4,7 @@ import SignIn from '~/features/auth/pages/sign-in';
 import i18n from '~/i18n';
 import { render, screen } from '~/testing/render';
 
-/**
- * Exercises the shared `render` helper against a real page: providers and i18n all
- * have to work together for any component test to be worth writing.
- *
- * Copy is asserted as literal strings, never as `i18n.t('Common.Login')`. Comparing
- * the render against `t()` is a tautology: if i18n breaks, `t()` returns the raw key,
- * the component renders that same key, and the test still passes — which is precisely
- * the failure it is supposed to catch.
- */
 describe('SignIn', () => {
-  // i18n is a module singleton. Without this, a test that throws mid-language-switch
-  // leaves every later test running in the wrong language.
   afterEach(async () => {
     await i18n.changeLanguage('en');
   });
@@ -24,8 +13,6 @@ describe('SignIn', () => {
     await render(<SignIn />);
 
     expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
-    // getByLabelText, not getByPlaceholderText: it only passes if the label is actually
-    // associated with the input, so the query doubles as an a11y assertion.
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
   });
@@ -33,8 +20,6 @@ describe('SignIn', () => {
   it('renders translated copy rather than raw i18n keys', async () => {
     await render(<SignIn />);
 
-    // A missing key renders as the key itself — that is how `Validation.Username`
-    // reached real users.
     expect(screen.getByRole('heading', { name: 'Help Desk' })).toBeInTheDocument();
     expect(screen.queryByText(/^(Common|Login|App|Fields|Validation)\./)).not.toBeInTheDocument();
   });
@@ -47,8 +32,6 @@ describe('SignIn', () => {
   });
 
   it('sets the document title natively, without a helmet provider', async () => {
-    // React 19 hoists <title> from anywhere in the tree; this is what replaced
-    // react-helmet-async.
     await render(<SignIn />);
 
     expect(document.title).toBe('Login');

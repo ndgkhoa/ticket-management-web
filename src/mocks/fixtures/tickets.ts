@@ -1,12 +1,3 @@
-/**
- * The generated ticket corpus: tickets plus their tags, messages and events.
- *
- * ~500 tickets rather than the ~30 a demo needs to *look* populated. Pagination,
- * offset drift and search ranking only misbehave at volume — a 30-row seed makes
- * every page the first page, and a pagination bug that only appears on page 12 is
- * exactly the bug this data exists to catch.
- */
-
 import { en, Faker } from '@faker-js/faker';
 
 import { uuid } from './uuid';
@@ -35,20 +26,12 @@ faker.seed(2002);
 
 export const TICKET_COUNT = 500;
 
-/**
- * Fixed "now" for the corpus.
- *
- * Never `Date.now()`: a fixture that moves with the wall clock regenerates a
- * different seed.sql on every run, and any test asserting "3 tickets are overdue"
- * would pass today and fail tomorrow for no reason anyone can find.
- */
 const NOW = new Date('2026-07-16T00:00:00.000Z');
 const CORPUS_DAYS = 180;
 
 const MINUTE_MS = 60_000;
 const DAY_MS = 24 * 60 * MINUTE_MS;
 
-/** Which team handles which category. Mirrors how a real desk routes on triage. */
 const TEAM_BY_TOPIC: Record<TicketTopic, string> = {
   'Billing question': 'Billing',
   'Bug report': 'Technical',
@@ -80,9 +63,6 @@ let nextEventIndex = 1;
 for (let index = 1; index <= TICKET_COUNT; index += 1) {
   const id = uuid('ticket', index);
 
-  // Skewed toward recent: a help desk's backlog is dense in the last fortnight and
-  // thins out going back. A uniform spread would make every "last 7 days" filter
-  // return a suspiciously round 4% of the corpus.
   const ageDays = Math.floor(CORPUS_DAYS * faker.number.float({ min: 0, max: 1 }) ** 2);
   const createdAt = new Date(
     NOW.getTime() - ageDays * DAY_MS - faker.number.int({ min: 0, max: DAY_MS - 1 })
@@ -102,17 +82,11 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
     ['urgent', 10],
   ]);
 
-  // 8% arrive untriaged: no category, no team, no assignee. That is the state the
-  // "unassigned queue" screen exists for, so the data has to contain it.
   const isTriaged = faker.datatype.boolean({ probability: 0.92 });
   const topic = faker.helpers.arrayElement(Object.keys(TICKET_CONTENT) as TicketTopic[]);
   const category = categoryRows.find((row) => row.name === topic)!;
   const teamId = isTriaged ? teamIdByName.get(TEAM_BY_TOPIC[topic])! : null;
 
-  // An assignee is always drawn from the ticket's own team. Otherwise the agent RLS
-  // policy ("assigned to me OR my team") would be satisfied by rows that make no
-  // organisational sense, and the demo would show Billing agents holding Technical
-  // tickets.
   const teamAgentIds = teamId ? (agentIdsByTeamId.get(teamId) ?? []) : [];
   const assigneeId =
     teamId && status !== 'open'
@@ -131,9 +105,6 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
 
   const slaPolicyId = slaPolicyIdByPriority.get(priority) ?? null;
 
-  // First response only exists once someone has actually replied — which is what
-  // makes an unanswered `open` ticket breach its SLA. Tying it to "has an assignee"
-  // would erase the breach case entirely.
   const hasResponded = assigneeId !== null && (status !== 'open' || faker.datatype.boolean());
   const firstResponseAt = hasResponded
     ? new Date(createdAt.getTime() + faker.number.int({ min: 5, max: 600 }) * MINUTE_MS)
@@ -175,8 +146,6 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
     first_response_at: firstResponseAt?.toISOString() ?? null,
     resolved_at: resolvedAt?.toISOString() ?? null,
     due_at: dueAt.toISOString(),
-    // A ticket parked in a paused state is currently paused (mirrors the INSERT branch of
-    // accumulate_sla_pause); anything else runs. No banked pause time in the seed.
     sla_paused_at: status === 'pending' || status === 'on_hold' ? createdAt.toISOString() : null,
     sla_paused_ms: 0,
     created_at: createdAt.toISOString(),
@@ -213,15 +182,10 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
       ticket_id: id,
       author_id: assigneeId,
       type: 'public_reply',
-      // Wrapped in <p> to match the Tiptap composer's HTML output — the body column holds
-      // rich text, so seed and live-authored messages render identically through RichTextView.
       body: `<p>${faker.helpers.arrayElement(AGENT_REPLIES)}</p>`,
       created_at: firstResponseAt.toISOString(),
     });
 
-    // A quarter of worked tickets carry an internal note — the row a customer must
-    // never see. Any RLS test worth running needs these to exist in bulk, not as a
-    // single hand-placed row.
     if (faker.datatype.boolean({ probability: 0.25 })) {
       ticketMessageRows.push({
         id: uuid('ticketMessage', nextMessageIndex++),

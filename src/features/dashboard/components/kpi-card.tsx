@@ -10,7 +10,6 @@ type Props = {
   isError?: boolean;
 };
 
-/** One headline metric: a label, a large value, and an optional sub-line. */
 export function KpiCard({ label, value, hint, isLoading, isError }: Props) {
   const { t } = useTranslation();
   return (

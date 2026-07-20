@@ -8,11 +8,6 @@ import type { ListParams } from '~/lib/list-query';
 
 const CUSTOMER_ID = customerUsers[0].id;
 
-/**
- * Auto-routing + the triage queue (Phase 02), mirrored in MSW. A new ticket routes to its
- * category's default team; a ticket with no default stays unteamed and surfaces in the triage
- * filter (unassigned AND unteamed).
- */
 describe('ticket triage + auto-routing over MSW', () => {
   beforeEach(() => useAuthStore.setState({ user: { id: CUSTOMER_ID } as User }));
   afterEach(() => useAuthStore.setState({ user: null }));
@@ -47,7 +42,6 @@ describe('ticket triage + auto-routing over MSW', () => {
     } as ListParams);
 
     expect(rows.some((row) => row.id === ticket.id)).toBe(true);
-    // The triage queue is exactly the unassigned + unteamed set.
     expect(rows.every((row) => row.assigneeId === null && row.teamId === null)).toBe(true);
   });
 });

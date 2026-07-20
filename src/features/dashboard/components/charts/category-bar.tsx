@@ -9,7 +9,6 @@ import {
 } from '~/components/ui';
 import type { DistributionSlice } from '~/features/dashboard/schemas/dashboard-schema';
 
-/** Tickets per category, busiest first — horizontal so long category names stay readable. */
 export function CategoryBar({ data }: { data: DistributionSlice[] }) {
   return (
     <ChartContainer>

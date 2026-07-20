@@ -5,11 +5,6 @@ type Props = {
   rowCount?: number;
 };
 
-/**
- * Skeleton rows for the first load only, matching the real column count and row
- * height so the table shell doesn't resize when data lands. Subsequent page loads
- * dim the existing rows instead (no skeleton), which is what avoids the layout jump.
- */
 export function DataTableSkeleton({ columnCount, rowCount = 10 }: Props) {
   return (
     <>

@@ -20,18 +20,12 @@ type Props = { ticketId: string };
 
 const IMAGE_EXTENSIONS = /\.(png|jpe?g|gif|webp|svg|avif)$/i;
 
-/** Human file size — bytes → KB/MB, one decimal. */
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-/**
- * A file name that truncates in the MIDDLE, keeping the extension visible — the head shrinks
- * with an ellipsis while the tail (last few chars + extension) always shows, so `.pdf`/`.png`
- * never gets cut off. Done with two spans rather than a JS char count so it stays responsive.
- */
 function FileName({ name }: { name: string }) {
   const dot = name.lastIndexOf('.');
   const base = dot > 0 ? name.slice(0, dot) : name;
@@ -100,13 +94,6 @@ function AttachmentRow({
   );
 }
 
-/**
- * Ticket attachments: drag-drop (or click) to upload, and a list with thumbnails, download
- * links, and middle-truncated names. Upload goes through the storage facade — a Supabase bucket
- * live, an in-memory object URL in the demo — then records the row. Only the uploader deletes.
- */
-/** How long an upload's progress bar stays on screen at minimum — so an instant (mock) upload
- *  still reads as a real transfer rather than a one-frame flash. */
 const MIN_UPLOAD_MS = 700;
 
 type UploadProgress = { id: string; name: string; percent: number };
@@ -121,8 +108,6 @@ export function TicketAttachments({ ticketId }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [uploads, setUploads] = useState<UploadProgress[]>([]);
-  // Pending interval/timeout ids, cleared on unmount so a navigation mid-upload leaves nothing
-  // running.
   const timers = useRef<Set<number>>(new Set());
   useEffect(() => {
     const pending = timers.current;
@@ -138,7 +123,6 @@ export function TicketAttachments({ ticketId }: Props) {
     const startedAt = Date.now();
     setUploads((current) => [...current, { id, name: file.name, percent: 8 }]);
 
-    // Creep toward 90% while the upload runs; the real completion snaps it to 100.
     const timer = window.setInterval(() => {
       setUploads((current) =>
         current.map((item) =>
@@ -157,15 +141,12 @@ export function TicketAttachments({ ticketId }: Props) {
       const removal = window.setTimeout(() => {
         setUploads((current) => current.filter((item) => item.id !== id));
         timers.current.delete(removal);
-        // Refresh the list now, as the bar leaves — so the new row appears in its place rather
-        // than on top of a still-running progress bar.
         void queryClient.invalidateQueries({ queryKey: ticketKeys.attachments(ticketId) });
       }, 350);
       timers.current.add(removal);
     };
 
     upload.mutate(file, {
-      // Hold the bar for a minimum so a mock (instant) upload still animates.
       onSuccess: () => {
         const hold = window.setTimeout(
           finish,

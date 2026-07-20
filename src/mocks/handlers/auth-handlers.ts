@@ -8,19 +8,6 @@ import {
   userIdFromRefreshToken,
 } from '~/mocks/lib/fake-session';
 
-/**
- * The auth half of the mock backend: enough of GoTrue for the demo build to sign in with
- * no live Supabase behind it. Only the flows the app uses are here — password sign-in,
- * sign-up, sign-out, the silent token refresh, and the `getUser` lookup.
- *
- * OAuth is deliberately absent: `signInWithOAuth` is a full-page redirect across origins,
- * outside a Service Worker's reach, so it cannot be mocked. In msw mode the Google button
- * short-circuits to a demo sign-in instead of starting a flow that cannot complete.
- *
- * The `user_roles` permission query lives in its own handler (`user-roles-handlers`), so
- * it shares the mutable junction store the admin role editor writes to.
- */
-
 type DemoAccount = {
   id: string;
   email: string;
@@ -28,12 +15,6 @@ type DemoAccount = {
   avatar_url: string | null;
 };
 
-/**
- * Accounts created via sign-up this session. They have no fixture row, so without this
- * the background token refresh (`autoRefreshToken`) and any `getUser` would fail against
- * `userRows` and silently sign the visitor out after the token's first hour. In-memory
- * only — a reload starts fresh, which is correct for a stateless demo.
- */
 const signedUpAccounts = new Map<string, DemoAccount>();
 
 function findAccount(id: string | null | undefined): DemoAccount | undefined {
@@ -62,8 +43,6 @@ async function handleToken({ request }: { request: Request }) {
     return row ? HttpResponse.json(buildSession(row)) : invalidCredentials();
   }
 
-  // Default + `grant_type=password`: match a seeded account against the shared demo
-  // password. Anything else is a failed sign-in, same as the live project would answer.
   const email = String(body.email ?? '').toLowerCase();
   const row = userRows.find((user) => user.email.toLowerCase() === email);
   if (!row || body.password !== DEMO_PASSWORD) return invalidCredentials();
@@ -75,16 +54,12 @@ async function handleSignUp({ request }: { request: Request }) {
     email?: string;
     data?: { full_name?: string };
   };
-  // A fresh account with no fixture rows behind it: the permission query below has no
-  // `user_roles` for this id and falls back to the customer role, which is exactly what
-  // a real new sign-up gets. Enough to land in the app as a customer.
   const row: DemoAccount = {
     id: crypto.randomUUID(),
     email: body.email ?? 'new-user@example.com',
     full_name: body.data?.full_name ?? null,
     avatar_url: null,
   };
-  // Remember it so the later refresh/getUser calls resolve, not just this first session.
   signedUpAccounts.set(row.id, row);
   return HttpResponse.json(buildSession(row));
 }

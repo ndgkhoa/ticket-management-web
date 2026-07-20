@@ -4,11 +4,6 @@ import { roleApi } from '~/features/admin/roles/api/role-api';
 import { rolePermissionApi } from '~/features/admin/roles/api/role-permission-api';
 import { permissionRows, roleIdByName } from '~/mocks/fixtures';
 
-/**
- * Role CRUD + the permission matrix over the mock backend. The matrix writes the
- * composite-key `role_permissions` junction, which needs its own MSW handler (rows have
- * no id). Stores re-seed between tests, so writes here don't leak.
- */
 describe('role CRUD over MSW', () => {
   it('creates a role that is never a system role', async () => {
     const created = await roleApi.create({ name: 'Auditor', description: 'Read-only access' });

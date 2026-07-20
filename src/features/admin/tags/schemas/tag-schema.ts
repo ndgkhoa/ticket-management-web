@@ -2,10 +2,6 @@ import { z } from 'zod';
 
 import type { Tables } from '~/lib/database.types';
 
-/**
- * Tag: the `tags` row as a domain model. A ticket tag is a name plus a swatch color
- * used to render it in lists and filters.
- */
 const tagRowSchema = z.object({
   id: z.uuid(),
   name: z.string(),

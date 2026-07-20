@@ -5,29 +5,14 @@ import { listParamsSchema, type ListParams } from '~/lib/list-query';
 import { applyListQuery } from '~/mocks/lib/apply-list-query';
 import { ticketListConfig } from '~/mocks/config/ticket-list-config';
 import { ticketRows } from '~/mocks/fixtures';
-// Type-only: erased at runtime, so importing it does not load the module before the
-// beforeAll doMock repoints its supabase client.
 import type { ticketApi as ImportedTicketApi } from '~/features/tickets/api/ticket-api';
 
-/**
- * The parity guard: the MSW applier and the live Supabase query must return the same
- * `{ rows, totalCount, pageCount }` for the same params — filter, search and sort
- * combined. If they drift, one is wrong, and the demo (MSW) would disagree with
- * production (Supabase) exactly where a test can't see it.
- *
- * This needs the local Supabase stack, so it is excluded from the default suite and
- * skipped unless RUN_INTEGRATION is set (`bun run test:parity`). CI's unit job has no
- * database; this belongs to a Supabase-enabled run.
- */
-// `process` isn't in the app's tsconfig types, so reach it structurally rather than
-// pulling node globals into the whole project for one env read.
 const RUN = Boolean(
   (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env
     ?.RUN_INTEGRATION
 );
 
 const URL = 'http://127.0.0.1:54321';
-// The fixed local-dev anon key — identical on every machine, not a secret.
 const ANON =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 
@@ -78,8 +63,6 @@ describe.skipIf(!RUN)('list-query parity: MSW applier vs live Supabase', () => {
     });
     if (error) throw new Error(`admin sign-in: ${error.message}`);
 
-    // Point the ticket api at the signed-in admin client (sees all 500 — no RLS
-    // scoping — so it compares against the full fixture set the applier runs over).
     vi.doMock('~/lib/supabase', () => ({ supabase: client }));
     ({ ticketApi } = await import('~/features/tickets/api/ticket-api'));
   });

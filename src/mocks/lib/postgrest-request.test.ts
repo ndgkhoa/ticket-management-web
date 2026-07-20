@@ -2,13 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { parsePostgrestRequest, toListParams } from '~/mocks/lib/postgrest-request';
 
-/**
- * The parser is the reverse of the Supabase list builder — it must read back exactly the
- * wire format supabase-js emits (verified against the real client's output). If these
- * drift, the MSW handler mis-reads a live-shaped request and the demo diverges from
- * production precisely where no higher-level test looks.
- */
-
 const BASE = 'http://msw.local/rest/v1/tickets';
 
 function parse(query: string, headers?: Record<string, string>) {
@@ -91,7 +84,6 @@ describe('toListParams', () => {
   });
 
   it('unescapes a trigram ilike pattern back to the raw query', () => {
-    // The builder escapes `%`/`_`, wraps in `%…%`; the reverse must recover the literal.
     const params = toListParams(parse('subject=ilike.%2550%5C%25+off%25&limit=20'));
 
     expect(params.q).toBe('50% off');

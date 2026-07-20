@@ -3,16 +3,10 @@ import { ChevronRight, Home } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from '@tanstack/react-router';
 
-// The derived path is cast to a router path since every navigable value here is a real,
-// currently-navigable route.
 type RoutePath = '/';
 
-// Path segments that are group prefixes without a page of their own — rendered as plain
-// text, never a link (`/admin` only redirects to its first child).
 const NON_NAVIGABLE_SEGMENTS = new Set(['admin']);
 
-// Path segment → i18n key, so a crumb reads in the active language. A segment with no
-// entry (a future id, say) falls back to its capitalised raw value — never a raw key.
 type LabelKey =
   | 'Sidebar.Admin'
   | 'Fields.Tickets'
@@ -55,7 +49,6 @@ export function Breadcrumb() {
       navigable: !isLast && !NON_NAVIGABLE_SEGMENTS.has(value),
       to: `/${segments.slice(0, index + 1).join('/')}`,
       label: labelKey ? t(labelKey) : value,
-      // Only the raw-value fallback needs title-casing; translated labels are already cased.
       isFallback: labelKey === undefined,
     };
   });

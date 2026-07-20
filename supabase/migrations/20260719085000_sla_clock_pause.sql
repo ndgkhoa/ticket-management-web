@@ -1,13 +1,8 @@
--- Pause the SLA clock while a ticket is pending or on_hold.
---
--- Those two states mean "waiting on the requester" / "waiting on something internal" — time
--- spent there must NOT count toward the SLA deadline (audit gap #5). Today the clock keeps
--- running, so a parked ticket breaches unfairly.
---
--- Accumulate paused time on the ticket: `sla_paused_at` marks when the current pause began
--- (null when running); `sla_paused_ms` banks total paused milliseconds across repeated
--- pause/resume cycles. The SLA display subtracts this from wall time. Maintained by a trigger
--- so single, bulk and message-driven status changes all stay consistent and can't be forged.
+-- Pause the SLA clock while a ticket is pending or on_hold — time waiting on the requester or on
+-- something internal must not count toward the deadline (else a parked ticket breaches unfairly).
+-- `sla_paused_at` marks when the current pause began (null while running); `sla_paused_ms` banks
+-- total paused milliseconds across pause/resume cycles. The SLA display subtracts this from wall
+-- time. A trigger keeps single, bulk and message-driven changes consistent and unforgeable.
 
 alter table public.tickets
   add column sla_paused_at timestamptz,
@@ -18,9 +13,8 @@ comment on column public.tickets.sla_paused_at is
 comment on column public.tickets.sla_paused_ms is
   'Total milliseconds the SLA clock has been paused across all pending/on_hold spells.';
 
--- The paused set is {pending, on_hold}. BEFORE INSERT/UPDATE, and only when the status
--- actually crosses that set's boundary, so a non-status update never double-counts. No
--- SECURITY DEFINER: it edits only NEW on the row already being written under the caller's RLS.
+-- Paused set is {pending, on_hold}. BEFORE INSERT/UPDATE, firing only when status crosses that
+-- boundary, so a non-status update never double-counts. No SECURITY DEFINER — it edits only NEW.
 create or replace function public.accumulate_sla_pause()
 returns trigger
 language plpgsql

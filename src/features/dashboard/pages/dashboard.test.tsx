@@ -17,13 +17,7 @@ import { screen } from '~/testing/render';
 import { dashboardSearchSchema } from '~/features/dashboard/schemas/dashboard-search-schema';
 import Dashboard from '~/features/dashboard/pages/dashboard';
 
-/**
- * Dashboard integration over MSW, on the real `/_app/` route so `getRouteApi` resolves the
- * `range` param. Recharts SVGs don't lay out in jsdom (zero-size container), so this asserts the
- * data-driven, non-chart surface: KPI labels + values, the range toggle, and the agent table.
- */
 vi.mock('recharts', async (importOriginal) => {
-  // Stub only the responsive wrapper — it needs real layout; the rest render as inert SVG.
   const actual = await importOriginal<typeof Recharts>();
   return {
     ...actual,
@@ -66,12 +60,10 @@ describe('Dashboard', () => {
   it('renders KPI cards, the range toggle, and the agent table from live metrics', async () => {
     await renderDashboard();
 
-    // KPI labels render immediately; their values arrive once the metric resolves.
     expect(await screen.findByText('Open tickets')).toBeInTheDocument();
     expect(screen.getByText('SLA compliance')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Last 30 days', pressed: true })).toBeInTheDocument();
 
-    // The agent-performance card is a real table (accessible), populated from MSW.
     expect(await screen.findByRole('columnheader', { name: 'Agent' })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Ticket volume' })).toBeInTheDocument();
   });

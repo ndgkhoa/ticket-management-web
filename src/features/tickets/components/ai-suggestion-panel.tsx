@@ -15,15 +15,9 @@ type Props = {
   subject: string;
   messages: TicketMessage[];
   authorNameById: Map<string, string | null | undefined>;
-  /** Push the (possibly edited) draft into the reply composer. */
   onUseDraft: (draft: string) => void;
 };
 
-/**
- * AI assistant panel in ticket detail: draft a reply or summarize the thread on demand.
- * The reply draft is editable before it's inserted into the composer (accept/edit), and
- * both actions fall back to a toast on error. Rendered only when AI is enabled.
- */
 export function AiSuggestionPanel({ subject, messages, authorNameById, onUseDraft }: Props) {
   const { t } = useTranslation();
   const suggestReply = useSuggestReply();
@@ -41,7 +35,6 @@ export function AiSuggestionPanel({ subject, messages, authorNameById, onUseDraf
 
   const draftReply = () => {
     suggestReply.mutate(
-      // Feed the approved canned-response library as context so the draft can lean on it.
       {
         subject,
         messages: thread,

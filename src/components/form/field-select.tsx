@@ -20,11 +20,6 @@ type Props = {
   disabled?: boolean;
 };
 
-/**
- * A labelled single-choice select bound to a TanStack Form field — for enum columns like
- * an SLA policy's priority. The Radix trigger gets the field id so the label focuses it,
- * and `aria-invalid` flips on a touched error to match the text fields.
- */
 export function FieldSelect({ field, label, options, placeholder, disabled }: Props) {
   const hasError = field.state.meta.isTouched && field.state.meta.errors.length > 0;
 

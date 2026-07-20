@@ -9,11 +9,6 @@ import {
   type Attachment,
 } from '~/features/tickets/schemas/attachment-schema';
 
-/**
- * Attachments on a ticket. `create` is the two-step upload: push the bytes to storage, then
- * record the row that points at them. The uploader is pinned to the caller (the insert policy
- * re-checks it). Delete removes the row; the object is left to storage lifecycle rules.
- */
 export const attachmentApi = {
   list: async (ticketId: string): Promise<Attachment[]> => {
     const { data } = await supabase

@@ -31,18 +31,10 @@ import type { SavedView } from '~/features/tickets/schemas/saved-view-schema';
 import type { TicketSearch } from '~/features/tickets/schemas/ticket-search-schema';
 
 type Props = {
-  /** The current list search — what "Save current view" snapshots. */
   search: TicketSearch;
-  /** Navigate to a saved view's params (absolute, replaces the current search). */
   onApply: (search: TicketSearch) => void;
 };
 
-/**
- * Saved-views control: apply, save, share, and delete server-backed views. A view is the
- * owner's own or shared with everyone; the menu groups the caller's own views (which they
- * can share/delete) from others' shared views (apply only). State/UI lives here; the data
- * and mutations come from the `saved_views` queries.
- */
 export function SavedViewsMenu({ search, onApply }: Props) {
   const { t } = useTranslation();
   const currentUserId = useAuthStore((state) => state.user?.id);
@@ -78,7 +70,6 @@ export function SavedViewsMenu({ search, onApply }: Props) {
   const renderView = (view: SavedView, owned: boolean) => (
     <DropdownMenuItem
       key={view.id}
-      // Apply from page 1 — the snapshot's page may be past the end if the data shrank.
       onSelect={() => onApply({ ...view.search, page: 1 })}
       className="justify-between gap-2"
     >

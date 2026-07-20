@@ -6,7 +6,6 @@ import { dashboardKeys } from '~/features/dashboard/constants/dashboard-keys';
 const DAY_MS = 24 * 60 * 60 * 1000;
 const STALE_MS = 60 * 1000;
 
-/** The window start for a range in days — derived at fetch time, so the key stays the range. */
 const fromForRange = (days: number) => new Date(Date.now() - days * DAY_MS).toISOString();
 
 export const useDashboardKpis = (range: number) =>

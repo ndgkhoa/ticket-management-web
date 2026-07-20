@@ -17,11 +17,6 @@ const search: TicketSearch = {
   status: ['open'],
 };
 
-/**
- * Saved views CRUD over MSW: the feature api (supabase-js → PostgREST) against the writable
- * `saved_views` handler. The api reads the owner id from the auth store, so the store is
- * seeded with a user for the create path.
- */
 describe('savedViewApi over MSW', () => {
   beforeEach(() => useAuthStore.setState({ user: { id: USER_ID } as User }));
   afterEach(() => useAuthStore.setState({ user: null }));

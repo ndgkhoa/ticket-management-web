@@ -4,7 +4,6 @@ import type { DashboardRange } from '~/features/dashboard/schemas/dashboard-sear
 
 const route = getRouteApi('/_app/');
 
-/** Read + write the dashboard's `range` window param (URL-as-truth, like the list pages). */
 export function useDashboardRange() {
   const { range } = route.useSearch();
   const navigate = route.useNavigate();

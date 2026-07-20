@@ -12,8 +12,6 @@ describe('formatDate', () => {
     expect(formatDate('2024-12-31')).toBe('31/12/2024');
   });
 
-  // A table renders whatever the API sends. Missing and malformed values must show
-  // an empty cell, never the string "Invalid Date".
   it.each([
     ['null', null],
     ['undefined', undefined],
@@ -24,7 +22,6 @@ describe('formatDate', () => {
   });
 
   it('treats the epoch as a real date rather than a missing one', () => {
-    // 0 is falsy, so a naive `if (!value)` guard would blank it out.
     expect(formatDate(0)).toBe('01/01/1970');
   });
 });

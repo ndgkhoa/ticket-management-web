@@ -10,19 +10,10 @@ type Props = {
   isError?: boolean;
   isEmpty?: boolean;
   className?: string;
-  /**
-   * True for a visual chart: the card becomes `role="img"` with the title as its accessible name,
-   * so a screen reader announces the label and skips Recharts' meaningless SVG internals. False
-   * when the body is itself accessible (the agent table) — keep its semantics exposed.
-   */
   asImage?: boolean;
   children: ReactNode;
 };
 
-/**
- * A titled card that hosts a chart, with its own loading (skeleton) and empty states, so each
- * chart's own render code can assume it always has data.
- */
 export function ChartCard({
   title,
   isLoading,

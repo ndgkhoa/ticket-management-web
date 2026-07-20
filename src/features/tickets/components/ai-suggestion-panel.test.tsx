@@ -11,11 +11,6 @@ import { cannedResponseKeys } from '~/features/admin/canned-responses/constants/
 import type { TicketMessage } from '~/features/tickets/schemas/ticket-message-schema';
 import { AiSuggestionPanel } from '~/features/tickets/components/ai-suggestion-panel';
 
-/**
- * The AI draft-reply call should carry the approved canned-response library as context. This
- * captures the edge-function request body and asserts the bodies are forwarded — the wiring the
- * feature exists for, stubbed to run with no Gemini key.
- */
 const message: TicketMessage = {
   id: '00000000-0000-4000-8000-000000000001',
   ticketId: '00000000-0000-4000-8000-0000000000aa',
@@ -53,14 +48,11 @@ describe('AiSuggestionPanel canned-response context', () => {
       />
     );
 
-    // Wait for the canned library to load before drafting — otherwise the click can beat the
-    // async fetch and the draft would go out with an empty context (a CI-load-only flake).
     await vi.waitFor(() =>
       expect(queryClient.getQueryData([...cannedResponseKeys.all, 'library'])).toBeDefined()
     );
     await user.click(await screen.findByRole('button', { name: /Draft reply/i }));
 
-    // The panel drafts with the full library as context (all seeded bodies).
     await vi.waitFor(() => expect(sentBody?.cannedResponses).toBeDefined());
     expect(sentBody?.cannedResponses).toEqual(
       expect.arrayContaining(cannedResponseRows.map((response) => response.body))

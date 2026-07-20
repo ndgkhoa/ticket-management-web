@@ -1,15 +1,3 @@
-/**
- * Subject/body vocabulary for generated tickets, grouped by the category a ticket
- * is filed under.
- *
- * Written by hand, not by `faker.lorem`: keyword search is a feature this data has
- * to prove works, and "Lorem ipsum dolor" cannot demonstrate that searching
- * "refund" finds refund tickets. The words here are the words a help desk actually
- * receives — which also means the FTS + trigram indexes get exercised against
- * realistic term frequencies rather than a uniform random dictionary.
- */
-
-/** Category names, matching `organization.ts`. The tie is asserted at generation time. */
 export type TicketTopic =
   'Billing question' | 'Bug report' | 'Feature request' | 'Account access' | 'How-to';
 

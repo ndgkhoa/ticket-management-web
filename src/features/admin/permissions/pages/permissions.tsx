@@ -7,18 +7,6 @@ import { ErrorPage } from '~/components/errors';
 import { usePermissionList } from '~/features/admin/permissions/api/permission-queries';
 import type { Permission } from '~/features/admin/permissions/schemas/permission-schema';
 
-/**
- * The permission catalogue — read-only by design: codes are fixed by the RLS policies, so
- * editing them from the UI could only desync the two. Assigning permissions to roles is
- * the editable part and lives on the roles screen.
- *
- * Grouped by resource (the `resource` in each `resource.action` code) rather than shown as
- * one flat list: an admin configuring a role thinks "what can be done to tickets?", so the
- * catalogue is organised the same way. Every permission is system-defined, so there is no
- * "system" badge — it would sit on every row and mean nothing.
- */
-
-// Display order of the resource groups; anything not listed falls to the end.
 const RESOURCE_ORDER = [
   'ticket',
   'message',
@@ -41,8 +29,6 @@ function Permissions() {
   const query = usePermissionList();
   const [search, setSearch] = useState('');
 
-  // Localised resource headings. Literal keys keep `t()` type-checked; an unlisted
-  // resource falls back to "other".
   const resourceLabels: Record<string, string> = {
     ticket: t('Permissions.Resources.ticket'),
     message: t('Permissions.Resources.message'),
@@ -78,7 +64,6 @@ function Permissions() {
     }
     for (const list of byResource.values()) list.sort((a, b) => a.code.localeCompare(b.code));
 
-    // Known resources first in the defined order, then any leftover alphabetically.
     const order = (resource: string) => {
       const index = RESOURCE_ORDER.indexOf(resource as (typeof RESOURCE_ORDER)[number]);
       return index === -1 ? RESOURCE_ORDER.length : index;
@@ -91,7 +76,7 @@ function Permissions() {
   return (
     <Container title={t('Common.List', { name: t('Fields.Permission', { count: 2 }) })}>
       <div className="space-y-4">
-        <div className="relative w-full md:max-w-[360px]">
+        <div className="relative w-full md:max-w-90">
           <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
           <Input
             value={search}

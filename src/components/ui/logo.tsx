@@ -1,18 +1,8 @@
 type Props = {
   className?: string;
-  /** Accessible name — the SVG is meaningful content (a link's label), not decorative. */
   label: string;
 };
 
-/**
- * The app wordmark as inline SVG rather than an `<img>`.
- *
- * The text uses `fill="currentColor"` so it follows the surrounding text colour and
- * stays legible in both light and dark themes. An `<img src>` breaks that — `currentColor`
- * there resolves to the SVG's own default (black), so the wordmark vanished on the dark
- * sidebar. Inlining it lets the colour inherit (e.g. `text-sidebar-foreground`). The mark
- * keeps its fixed brand colours.
- */
 export function Logo({ className, label }: Props) {
   return (
     <svg viewBox="0 0 176 40" role="img" aria-label={label} className={className}>

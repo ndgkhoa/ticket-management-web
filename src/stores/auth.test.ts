@@ -3,10 +3,6 @@ import type { Session } from '@supabase/supabase-js';
 
 import { useAuthStore } from '~/stores/auth';
 
-/**
- * The auth store's synchronous core: applying a session flips status + exposes the flattened
- * permission set that `hasPermission` (and the route guards) read.
- */
 describe('auth store', () => {
   afterEach(() =>
     useAuthStore.setState({ session: null, user: null, status: 'loading', permissions: new Set() })

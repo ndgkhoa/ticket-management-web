@@ -4,7 +4,6 @@ import { Button } from '~/components/ui';
 import { useDashboardRange } from '~/features/dashboard/hooks/use-dashboard-search-params';
 import { DASHBOARD_RANGES } from '~/features/dashboard/schemas/dashboard-search-schema';
 
-/** The 7/30/90-day window toggle — writes `?range=` (URL-as-truth). */
 export function DashboardRangeFilter() {
   const { t } = useTranslation();
   const { range, setRange } = useDashboardRange();

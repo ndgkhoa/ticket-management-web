@@ -5,15 +5,9 @@ import type { Assignee } from '~/features/tickets/schemas/assignee-schema';
 
 type Props = {
   events: TicketEvent[];
-  /** id → profile, for the actor name. */
   actors: Map<string, Assignee>;
 };
 
-/**
- * The activity feed — the ticket's `ticket_events`, newest first. Each event renders a short
- * actor + action line; the action text is keyed by `event_type` with a couple of `meta`
- * values (the new status/priority) woven in where the type carries them.
- */
 export function TicketActivity({ events, actors }: Props) {
   const { t } = useTranslation();
 

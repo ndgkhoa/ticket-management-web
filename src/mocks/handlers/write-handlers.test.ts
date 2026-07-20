@@ -3,14 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { categoryApi } from '~/features/admin/categories/api/category-api';
 import { categoryRows } from '~/mocks/fixtures';
 
-/**
- * The MSW write path end to end: the real feature API (supabase-js → PostgREST
- * POST/PATCH/DELETE) hits the mutable table store and the list reflects the change.
- * This is what lets the admin CRUD screens work in `msw` mode with no backend.
- *
- * Each test starts from the seeded fixtures — the test setup re-seeds the stores after
- * every test, so a create here can't leak into the next.
- */
 describe('category CRUD over MSW', () => {
   it('lists the seeded categories', async () => {
     await expect(categoryApi.list()).resolves.toHaveLength(categoryRows.length);

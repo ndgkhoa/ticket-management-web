@@ -1,11 +1,10 @@
--- The audit trail moves from the client to the database. Until now the app wrote its own
--- ticket_events (actor = self), so team/category changes logged nothing, bulk changes logged
--- nothing, and the subject of the trail held the pen. These triggers make every state change
--- emit exactly one authoritative event, and the client loses the ability to write the table.
+-- The audit trail moves from the client to the database. The app wrote its own ticket_events, so
+-- team/category and bulk changes logged nothing and the trail's subject held the pen. These triggers
+-- make every state change emit one authoritative event, and the client loses write access to the table.
 
--- One event per changed field on UPDATE; `created` (plus the initial assignment) on INSERT.
--- The actor is the caller (auth.uid()); for a system or seed write with no auth context it
--- falls back to the ticket's own participants so the trail is never left unattributed.
+-- One event per changed field on UPDATE; `created` (plus the initial assignment) on INSERT. Actor is
+-- the caller (auth.uid()), falling back to the ticket's participants for system/seed writes with no
+-- auth context, so the trail is never unattributed.
 create or replace function public.emit_ticket_change_events()
 returns trigger
 language plpgsql
@@ -60,8 +59,7 @@ create trigger tickets_emit_change_events
 after insert or update on public.tickets
 for each row execute function public.emit_ticket_change_events();
 
--- A reply or internal note logs a `commented` event, attributed to its author (which RLS
--- already pins to the caller on the message insert).
+-- A reply or internal note logs a `commented` event, attributed to its author (RLS pins it to the caller).
 create or replace function public.emit_comment_event()
 returns trigger
 language plpgsql
@@ -80,8 +78,7 @@ create trigger ticket_messages_emit_comment
 after insert on public.ticket_messages
 for each row execute function public.emit_comment_event();
 
--- Adding or removing a tag logs a `tagged` event. The junction carries no actor, so the
--- acting user comes from auth.uid().
+-- Adding or removing a tag logs a `tagged` event; the junction carries no actor, so it comes from auth.uid().
 create or replace function public.emit_tag_event()
 returns trigger
 language plpgsql
@@ -106,7 +103,6 @@ create trigger ticket_tags_emit_event
 after insert or delete on public.ticket_tags
 for each row execute function public.emit_tag_event();
 
--- Close the client's write door. Every event now originates in the triggers above (which run
--- security definer, so they don't need the grant); the client only reads the trail.
+-- Close the client's write door: every event now originates in the security-definer triggers above; the client only reads.
 drop policy if exists ticket_events_insert on public.ticket_events;
 revoke insert on public.ticket_events from authenticated;

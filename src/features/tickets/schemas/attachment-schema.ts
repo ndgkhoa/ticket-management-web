@@ -2,11 +2,6 @@ import { z } from 'zod';
 
 import type { Tables } from '~/lib/database.types';
 
-/**
- * Attachment: an `attachments` row as a domain model — a file uploaded against a ticket (or a
- * specific message, when `messageId` is set). `fileUrl` is a directly-usable URL (a live public
- * URL, or a session object URL in the mock).
- */
 const attachmentRowSchema = z.object({
   id: z.uuid(),
   ticket_id: z.uuid(),

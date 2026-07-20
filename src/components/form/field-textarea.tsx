@@ -10,11 +10,6 @@ type Props = {
   label: string;
 } & Omit<ComponentProps<typeof Textarea>, 'value' | 'onChange' | 'onBlur' | 'name' | 'id'>;
 
-/**
- * A labelled multi-line input bound to a TanStack Form field — the textarea twin of
- * `FieldText`, for descriptions and bodies. Same label-by-id association and
- * `aria-invalid` wiring, so it reads and validates identically.
- */
 export function FieldTextarea({ field, label, className, ...textareaProps }: Props) {
   const hasError = field.state.meta.isTouched && field.state.meta.errors.length > 0;
 

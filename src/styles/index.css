@@ -3,13 +3,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* Dark mode is class-driven — the `.dark` variant matches when any ancestor carries
-   the class, which the theme store toggles on <html>. Not media-query-driven, so a
-   user's explicit choice overrides their OS setting. */
 @custom-variant dark (&:is(.dark *));
 
-/* `.light` mirrors `:root` so a subtree can force the light palette even under `.dark`
-   (the auth screens are a fixed light design and opt in with a `light` class). */
 :root,
 .light {
   --radius: 0.625rem;
@@ -19,7 +14,7 @@
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  /* Brand blue (#0958d9 — antd blue-7, AA-safe 6.16:1 on white; also the logo colour). */
+
   --primary: oklch(0.505 0.209 261);
   --primary-foreground: oklch(0.984 0.003 247.858);
   --secondary: oklch(0.968 0.007 247.896);
@@ -55,8 +50,7 @@
   --card-foreground: oklch(0.984 0.003 247.858);
   --popover: oklch(0.208 0.042 265.755);
   --popover-foreground: oklch(0.984 0.003 247.858);
-  /* Lighter brand blue in dark mode so `text-primary` (links, spinners) clears AA on the
-     dark surface; dark foreground for text sitting on the button. */
+
   --primary: oklch(0.707 0.152 254);
   --primary-foreground: oklch(0.208 0.042 265.755);
   --secondary: oklch(0.279 0.041 260.031);
@@ -134,7 +128,6 @@
     @apply bg-background text-foreground font-sans;
   }
 
-  /* Customize scroll bar */
   * ::-webkit-scrollbar {
     @apply w-4;
   }
@@ -146,9 +139,6 @@
   }
 }
 
-/* Rich text — the Tiptap composer and rendered message bodies. The base reset zeroes all
-   margins, so block spacing and list markers are restored here rather than pulling in a
-   typography plugin for a handful of tags. */
 .rich-text {
   @apply text-sm leading-relaxed break-words;
 }

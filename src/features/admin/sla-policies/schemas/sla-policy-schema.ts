@@ -3,10 +3,6 @@ import { z } from 'zod';
 import type { Tables } from '~/lib/database.types';
 import { ticketPrioritySchema } from '~/features/tickets/schemas/ticket-enums';
 
-/**
- * SlaPolicy: the `sla_policies` row as a domain model. One policy per priority level,
- * expressing the first-response and resolution targets in minutes.
- */
 const slaPolicyRowSchema = z.object({
   id: z.uuid(),
   name: z.string(),

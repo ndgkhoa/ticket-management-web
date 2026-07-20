@@ -4,17 +4,6 @@ import { createJunctionStore } from '~/mocks/lib/table-store';
 import { parsePostgrestRequest, type PostgrestQuery } from '~/mocks/lib/postgrest-request';
 import { collectionResponse, objectResponse } from '~/mocks/lib/postgrest-response';
 
-/**
- * A composite-key junction table endpoint (`role_permissions`, `user_roles`) over a
- * mutable store — the membership tables the admin role/permission editors write to. These
- * rows have no `id`, so `makeTableHandler` (which addresses rows by id) doesn't fit: reads
- * filter by the foreign-key `eq` columns and a delete matches on them too.
- *
- * Only the operations the app issues are handled: a filtered read, an insert, and a
- * delete addressed by the key columns.
- */
-
-/** The `col=eq.value` filters as a plain map — what a delete is addressed by. */
 function eqFilters(query: PostgrestQuery): Record<string, string> {
   return Object.fromEntries(
     Object.entries(query.filters)
@@ -23,7 +12,6 @@ function eqFilters(query: PostgrestQuery): Record<string, string> {
   );
 }
 
-/** Parse a PostgREST `in.(a,b,c)` list value into its members. */
 function parseInList(value: string): string[] {
   return value
     .replace(/^\(|\)$/g, '')
@@ -31,11 +19,6 @@ function parseInList(value: string): string[] {
     .map((entry) => entry.trim().replace(/^"|"$/g, ''));
 }
 
-/**
- * Does a row satisfy every eq/in filter on the query? Reads honour `in` (a tag filter
- * reads `ticket_tags?tag_id=in.(…)`) as well as `eq`; an `eq`-only read is the common
- * membership lookup. Deletes stay eq-only (a junction row is addressed by its exact key).
- */
 function matchesRead<Row extends Record<string, unknown>>(
   row: Row,
   query: PostgrestQuery
@@ -51,11 +34,6 @@ function matchesRead<Row extends Record<string, unknown>>(
 export function makeJunctionHandler<Row extends Record<string, unknown>>(config: {
   table: string;
   rows: readonly Row[];
-  /**
-   * MSW parity for triggers on the junction (which don't run under MSW). `afterInsert` /
-   * `afterDelete` run a side effect per affected row — e.g. emit a `tagged` ticket_event when
-   * a ticket↔tag link is added or removed. Mirrors a specific trigger; keep them tiny.
-   */
   afterInsert?: (row: Row) => void;
   afterDelete?: (row: Row) => void;
 }): HttpHandler[] {
@@ -76,9 +54,6 @@ export function makeJunctionHandler<Row extends Record<string, unknown>>(config:
     const query = parsePostgrestRequest(request);
     const body = (await request.json().catch(() => ({}))) as Row | Row[];
     const inserted = (Array.isArray(body) ? body : [body]).map((row) => {
-      // Fire the side effect only when the row was actually added — `insert` returns the
-      // existing row on a duplicate composite key (the real table would 409), and a no-op add
-      // must not emit an event.
       const before = store.all().length;
       const saved = store.insert(row);
       if (store.all().length > before) config.afterInsert?.(saved);

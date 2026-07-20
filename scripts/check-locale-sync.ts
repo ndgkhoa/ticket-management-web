@@ -3,36 +3,14 @@ import path from 'path';
 
 import yaml from 'js-yaml';
 
-/**
- * Fails when the locale YAML files drift apart.
- *
- * This repo shipped with `vi.Common.E` where `en` had `Common.En`, and with
- * `Fields.Email` defined only in `vi` — both invisible until a user hit the exact
- * screen and saw a raw key. Type-safe `t()` keys catch a *call site* referencing a
- * key the reference locale lacks; this catches the other half, where a translation
- * file quietly falls behind.
- *
- * Plural keys are compared per language: `en` needs `_one`/`_other`, while `vi` has
- * a single `other` category, so their key sets are intentionally NOT identical.
- * Comparing raw key strings would produce false failures, so plural keys are
- * normalised to their base name and their suffixes validated against Intl.
- */
-
 const REFERENCE_LOCALE = 'en';
 const LOCALES = ['en', 'vi'] as const;
 const PLURAL_SUFFIXES = ['zero', 'one', 'two', 'few', 'many', 'other'] as const;
 
-/**
- * The plural categories `Intl.PluralRules` can return. Naming the type — rather than
- * carrying `string` around — is what lets `required.has(category)` typecheck against
- * `Set<LDMLPluralRule>` without a cast.
- */
 type PluralCategory = (typeof PLURAL_SUFFIXES)[number];
 
 type KeyInfo = {
-  /** Key path with any plural suffix stripped, e.g. `Fields.Role`. */
   base: string;
-  /** Plural category, when the key carried one. */
   category?: PluralCategory;
 };
 
@@ -46,7 +24,6 @@ const flatten = (node: unknown, prefix = ''): string[] => {
   );
 };
 
-/** Narrows a raw key suffix to a plural category, so callers keep the precise type. */
 const isPluralCategory = (value: string): value is PluralCategory =>
   (PLURAL_SUFFIXES as readonly string[]).includes(value);
 
@@ -91,7 +68,6 @@ for (const locale of LOCALES) {
     }
   }
 
-  // Every plural key must supply exactly the categories the language actually uses.
   const required = new Set(new Intl.PluralRules(locale).resolvedOptions().pluralCategories);
   const pluralBases = new Set(keys.filter((k) => k.category).map((k) => k.base));
 

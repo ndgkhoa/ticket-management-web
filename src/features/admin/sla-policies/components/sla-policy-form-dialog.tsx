@@ -19,8 +19,6 @@ import {
 } from '~/features/admin/sla-policies/api/sla-policy-queries';
 import type { SlaPolicy } from '~/features/admin/sla-policies/schemas/sla-policy-schema';
 
-/** Priority options for the select, derived from the generated enum so a new priority
- *  value added in Postgres shows up here without a hand-maintained list. */
 const PRIORITY_OPTIONS = Constants.public.Enums.ticket_priority.map((priority) => ({
   value: priority,
   label: priority.charAt(0).toUpperCase() + priority.slice(1),
@@ -29,27 +27,15 @@ const PRIORITY_OPTIONS = Constants.public.Enums.ticket_priority.map((priority) =
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The row being edited, or null/undefined to create a new one. */
   policy?: SlaPolicy | null;
 };
 
-/**
- * Create/edit dialog for an SLA policy. One form serves both: an absent `policy` is a
- * create, a present one pre-fills for an edit. Mount it with a `key` tied to the target
- * id so the defaults reset when the edited row changes (TanStack Form reads them once).
- *
- * The two minute fields are kept as strings in form state — native number inputs hand
- * back strings, and coercing to number happens once at validation/submit rather than
- * on every keystroke.
- */
 export function SlaPolicyFormDialog({ open, onOpenChange, policy }: Props) {
   const { t } = useTranslation();
   const create = useSlaPolicyCreate();
   const update = useSlaPolicyUpdate();
   const pending = create.isPending || update.isPending;
 
-  // Native number inputs hand back strings — parse and range-check here rather than on
-  // every keystroke, keeping the field itself a plain string until submit.
   const positiveMinsSchema = z
     .string()
     .min(1, t('Validation.Required'))

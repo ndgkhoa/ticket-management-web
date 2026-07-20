@@ -18,15 +18,9 @@ import type { Role } from '~/features/admin/roles/schemas/role-schema';
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The role being edited, or null/undefined to create a new one. */
   role?: Role | null;
 };
 
-/**
- * Create/edit dialog for a role's name + description. The permission set is edited
- * separately in the matrix dialog — a role and its granted permissions are two different
- * writes (the `roles` row vs the `role_permissions` junction).
- */
 export function RoleFormDialog({ open, onOpenChange, role }: Props) {
   const { t } = useTranslation();
   const create = useRoleCreate();

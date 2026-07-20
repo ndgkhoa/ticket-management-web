@@ -3,10 +3,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { useAuthStore } from '~/stores/auth';
 import { redirectIfAuthenticated, requireAuth, requirePermission } from '~/lib/route-guards';
 
-/**
- * The `beforeLoad` guards read the auth store non-reactively and throw a router redirect when
- * access is denied. RLS is the real boundary; these are the early, friendly redirects.
- */
 describe('route guards', () => {
   afterEach(() => useAuthStore.setState({ status: 'unauthenticated', permissions: new Set() }));
 

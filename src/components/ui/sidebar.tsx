@@ -60,7 +60,6 @@ function NavLink({
     </Link>
   );
 
-  // Collapsed: the label lives in a tooltip since it's hidden from the rail.
   if (!collapsed) return link;
   return (
     <Tooltip>
@@ -73,8 +72,6 @@ function NavLink({
 export const Sidebar = memo(function Sidebar() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  // Role-aware nav: hide the admin group unless the user can manage it. This mirrors
-  // the `/admin` route guard (`user.manage`) — RLS is the real enforcement.
   const canManageAdmin = useAuthStore((state) => state.hasPermission('user.manage'));
   const collapsed = usePreferencesStore((state) => state.sidebarCollapsed);
 
@@ -83,8 +80,6 @@ export const Sidebar = memo(function Sidebar() {
     { to: '/tickets', icon: Inbox, label: t('Fields.Tickets') },
   ];
 
-  // Access control first (users → their roles → the permissions those roles grant), then
-  // the help-desk configuration tables. Permissions is read-only, so it trails the trio.
   const admin: NavItem[] = [
     { to: '/admin/users', icon: Users, label: t('Fields.Users') },
     { to: '/admin/roles', icon: UserCog, label: t('Fields.Roles') },
@@ -108,8 +103,7 @@ export const Sidebar = memo(function Sidebar() {
           collapsed ? 'w-16' : 'w-64'
         )}
       >
-        {/* Logo is the link's only content, so its label is the "go home" name. Inline
-            SVG wordmark expanded; just the mark when collapsed to fit the rail. */}
+        {}
         <Link to="/" className="flex h-16 items-center justify-center border-b">
           {collapsed ? (
             <img src={logoMark} alt={t('App.Name')} className="h-8" />

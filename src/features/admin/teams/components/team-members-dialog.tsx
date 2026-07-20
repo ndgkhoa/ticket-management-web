@@ -28,12 +28,6 @@ type Props = {
   team: Team;
 };
 
-/**
- * Manage a team's members. The addable roster is the assignable agents (holders of
- * `ticket.update`) — a customer is never a team member. Each agent row toggles in/out of
- * the team; writes are gated by `team.manage` in RLS. This is the surface that was missing,
- * without which team-based routing and visibility are inert on a fresh deploy.
- */
 export function TeamMembersDialog({ open, onOpenChange, team }: Props) {
   const { t } = useTranslation();
   const membersQuery = useTeamMembers(team.id);

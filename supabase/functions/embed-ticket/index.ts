@@ -1,14 +1,3 @@
-// embed-ticket — generate the semantic-search embedding for a ticket and store it in
-// `tickets.embedding`. Called (fire-and-forget) after a ticket is created or its
-// subject/description changes. Model: gemini-embedding-001 @ 1536 dims,
-// taskType RETRIEVAL_DOCUMENT.
-//
-// The subject/description are read from the database with the service-role key rather
-// than trusted from the request body: the caller may not hold `ticket.update` (a
-// customer creating their own ticket does not), so the write cannot run as the caller,
-// and the text it embeds must be the row's real content. The request carries only the
-// ticket id.
-
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { embedContent, GeminiError } from '../_shared/gemini.ts';
@@ -46,8 +35,6 @@ Deno.serve(async (req) => {
 
     const { error: updateError } = await admin
       .from('tickets')
-      // pgvector's input parser wants the `[1,2,3]` text literal; a raw JS array serializes
-      // to `{1,2,3}` over PostgREST and fails. Same serialization the search RPC uses.
       .update({ embedding: JSON.stringify(embedding) })
       .eq('id', ticketId);
 

@@ -4,11 +4,6 @@ import { userApi } from '~/features/admin/users/api/user-api';
 import { userRoleApi } from '~/features/admin/users/api/user-role-api';
 import { demoUserByRole, roleIdByName, userRows } from '~/mocks/fixtures';
 
-/**
- * The server-side paginated users list, and the `user_roles` role-assignment editor,
- * over the mock backend — mirrors `role-crud.test.ts`. Stores re-seed between tests,
- * so writes here don't leak.
- */
 describe('user list over MSW', () => {
   it('paginates every profile', async () => {
     const { rows, totalCount } = await userApi.list({
@@ -23,7 +18,7 @@ describe('user list over MSW', () => {
 
   it('narrows results by a keyword search on email', async () => {
     const target = demoUserByRole.get('agent')!;
-    const needle = target.email.split('@')[0]; // the local part, e.g. "agent"
+    const needle = target.email.split('@')[0];
 
     const { rows, totalCount } = await userApi.list({
       page: 1,

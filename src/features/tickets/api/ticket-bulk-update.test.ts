@@ -3,11 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { agentUsers, ticketRows } from '~/mocks/fixtures';
 import { ticketApi } from '~/features/tickets/api/ticket-api';
 
-/**
- * Bulk update over MSW — the feature api (supabase.rpc) hitting the mocked
- * `bulk_update_tickets` handler, which mutates the shared ticket store the list reads.
- * Asserts the two selection modes (page-scoped ids, filter-scoped) and the no-op guard.
- */
 describe('ticketApi.bulkUpdate over MSW', () => {
   const agentId = agentUsers[0].id;
 
@@ -29,7 +24,6 @@ describe('ticketApi.bulkUpdate over MSW', () => {
     const count = await ticketApi.bulkUpdate({ status: ['open'] }, { assigneeId: agentId });
 
     expect(count).toBe(openCount);
-    // A ticket that was open is now assigned to the chosen agent.
     const sample = ticketRows.find((row) => row.status === 'open')!;
     const ticket = await ticketApi.detail(sample.id);
     expect(ticket.assigneeId).toBe(agentId);
@@ -56,16 +50,13 @@ describe('ticketApi.bulkUpdate over MSW', () => {
   });
 
   it('scopes a triage bulk update to unassigned + unteamed tickets only', async () => {
-    // The exact set the triage view shows — the bulk must touch this and nothing else.
     const triageCount = ticketRows.filter(
       (row) => row.assignee_id === null && row.team_id === null
     ).length;
     const owned = ticketRows.find((row) => row.assignee_id !== null || row.team_id !== null)!;
 
-    // "select all matching" in triage mode sends `{ triage: 'true' }` as the filter.
     const count = await ticketApi.bulkUpdate({ triage: 'true' }, { status: 'closed' });
 
-    // Before the fix this closed every accessible ticket; now it's exactly the triage set.
     expect(count).toBe(triageCount);
     const untouched = await ticketApi.detail(owned.id);
     expect(untouched.status).toBe(owned.status);

@@ -14,11 +14,6 @@ const CUSTOMER_ID = customerUsers[0].id;
 
 const asUser = (id: string) => useAuthStore.setState({ user: { id } as User });
 
-/**
- * Ticket write paths over MSW: create, single-field update, the conversation, and the audit
- * trail. Events are no longer written by the client — the tickets/messages/tags write handlers
- * emit them (the mock twin of the database triggers), and the events handler is read-only.
- */
 describe('ticket workflow over MSW', () => {
   beforeEach(() => useAuthStore.setState({ user: { id: USER_ID } as User }));
   afterEach(() => useAuthStore.setState({ user: null }));
@@ -70,7 +65,6 @@ describe('ticket workflow over MSW', () => {
     const types = events.map((event) => event.eventType);
     expect(types).toContain('status_changed');
     expect(types).toContain('priority_changed');
-    // Newest-first: the change we just made leads the feed and carries the acting user.
     expect(events[0]?.actorId).toBe(USER_ID);
   });
 
@@ -109,8 +103,6 @@ describe('ticket workflow over MSW', () => {
     });
     await ticketApi.update(ticket.id, { status: 'solved' });
 
-    // The requester replies — the message reopens the ticket (Phase 03) and, live, the reopen's
-    // status update fires the audit trigger. The mock must produce the same pair.
     await ticketMessageApi.create({
       ticketId: ticket.id,
       type: 'public_reply',
@@ -137,10 +129,6 @@ describe('ticket workflow over MSW', () => {
   });
 });
 
-/**
- * SLA stamping — the MSW mirror of the database triggers. A ticket's SLA columns are set by
- * the event that causes them (create, first agent reply, solve), never by the client.
- */
 describe('SLA timestamp stamping over MSW', () => {
   afterEach(() => useAuthStore.setState({ user: null }));
 
@@ -178,7 +166,6 @@ describe('SLA timestamp stamping over MSW', () => {
     const afterFirst = await ticketApi.detail(ticket.id);
     expect(afterFirst.firstResponseAt).not.toBeNull();
 
-    // A later reply must not move the first-response stamp.
     await ticketMessageApi.create({
       ticketId: ticket.id,
       type: 'public_reply',

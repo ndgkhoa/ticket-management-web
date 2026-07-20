@@ -10,11 +10,6 @@ type Props<TData, TValue> = {
   className?: string;
 };
 
-/**
- * Sortable column header. A real `<button>` (keyboard + focus ring) that toggles the
- * column's sort, and `aria-sort` on the header cell announces the current direction to
- * a screen reader. Non-sortable columns render as plain text.
- */
 export function DataTableColumnHeader<TData, TValue>({
   column,
   title,

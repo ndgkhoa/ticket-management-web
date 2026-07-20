@@ -1,11 +1,8 @@
--- RPCs backing the ticket list: the assignee filter's option source, and the
--- filter-scoped bulk update. Both run as the caller (security invoker) so row-level
--- security decides what each user may see and change — the function never widens access.
+-- RPCs backing the ticket list: the assignee filter's options and the filter-scoped bulk update.
+-- Both are security invoker, so RLS decides what each user may see and change — never widened.
 
--- Agents a ticket may be assigned to: profiles holding `ticket.update`. The assignee
--- filter reads this rather than the whole profiles table, so a customer never appears as
--- an assignment target. Security invoker: profiles RLS still applies, but the set is the
--- staff roster, which every agent may already see.
+-- Assignable agents: profiles holding `ticket.update`, so a customer never appears as an assignment
+-- target. Security invoker: profiles RLS still applies, but this is the staff roster agents already see.
 create or replace function public.assignable_agents()
 returns setof public.profiles
 language sql
@@ -21,16 +18,11 @@ $$;
 
 grant execute on function public.assignable_agents() to authenticated;
 
--- Filter-scoped bulk status/assignee change. The caller hands the ticket list's own
--- filter object (page-scoped selection sends `{ "id": [...] }`; select-all-matching sends
--- the active structural filters), so the server mutates exactly the set the list shows —
--- one small request, never a payload of thousands of ids.
---
--- Security invoker is the whole safety model: the UPDATE runs as the caller, so the
--- `tickets_update` policy (holds `ticket.update` AND can_access_ticket) decides every row.
--- A customer, or an agent reaching for tickets they can't see, updates nothing — the
--- function never widens what RLS already allows, and the returned count is the real
--- number of rows RLS let through.
+-- Filter-scoped bulk status/assignee change. The caller passes the list's own filter object (page
+-- selection sends `{ "id": [...] }`; select-all-matching sends the active filters), so the server
+-- mutates exactly the visible set — never a payload of thousands of ids.
+-- Security invoker is the safety model: the UPDATE runs as the caller, so `tickets_update`
+-- (ticket.update AND can_access_ticket) decides every row, and the returned count is what RLS let through.
 create or replace function public.bulk_update_tickets(p_filters jsonb, p_patch jsonb)
 returns integer
 language plpgsql
@@ -40,8 +32,7 @@ as $$
 declare
   v_count integer;
 begin
-  -- A patch that sets neither field changes nothing — return early rather than bump
-  -- updated_at on every matched row (which, with empty filters, is the whole visible set).
+  -- A patch setting neither field would still bump updated_at on every matched row; return early.
   if not (p_patch ? 'status' or p_patch ? 'assignee_id') then
     return 0;
   end if;

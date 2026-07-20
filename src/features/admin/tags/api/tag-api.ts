@@ -3,14 +3,8 @@ import { z } from 'zod';
 import { supabase } from '~/lib/supabase';
 import { TAG_COLUMNS, tagSchema, type Tag } from '~/features/admin/tags/schemas/tag-schema';
 
-/** What the create/edit form submits — the writable columns, nothing generated. */
 export type TagInput = { name: string; color: string };
 
-/**
- * Data access for tags: a bounded lookup table, so the list is a plain fetch-all
- * ordered read (client-side paged in the table). Writes go straight through the SDK
- * and re-validate the returned row into the domain model.
- */
 export const tagApi = {
   list: async (): Promise<Tag[]> => {
     const { data } = await supabase.from('tags').select(TAG_COLUMNS).order('name').throwOnError();

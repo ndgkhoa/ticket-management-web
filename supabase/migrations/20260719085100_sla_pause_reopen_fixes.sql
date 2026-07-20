@@ -1,11 +1,9 @@
--- Fixes found reviewing Phase 04:
---  1. accumulate_sla_pause on INSERT started the pause from the client-supplied created_at,
---     which stamp_ticket_sla clamps to now() a moment later (accumulate fires first). A forged
---     future created_at left sla_paused_at in the future → negative paused time on resume. Clamp
---     it here too, matching the created_at clamp.
---  2. A reopen grants a fresh resolution window (due_at = now + resolution) but left the banked
---     sla_paused_ms from before the solve, leaking extra grace into the new window. Reset the
---     pause budget to 0 on reopen so the fresh window starts with a fresh clock.
+-- Two SLA-pause fixes:
+--  1. accumulate_sla_pause on INSERT started the pause from the client-supplied created_at (it fires
+--     before stamp_ticket_sla clamps it), so a forged future value left sla_paused_at in the future →
+--     negative paused time on resume. Clamp to now() here too.
+--  2. A reopen grants a fresh resolution window but kept the banked sla_paused_ms from before the
+--     solve, leaking grace into the new window. Reset the pause budget to 0 on reopen.
 
 create or replace function public.accumulate_sla_pause()
 returns trigger
@@ -14,8 +12,7 @@ set search_path = ''
 as $$
 begin
   if tg_op = 'INSERT' then
-    -- Created paused starts the clock — clamped to now() to match stamp_ticket_sla's created_at
-    -- clamp (this trigger fires first, before that clamp lands).
+    -- Created paused starts the clock, clamped to now() (this trigger fires before stamp_ticket_sla's clamp).
     if new.status in ('pending', 'on_hold') then
       new.sla_paused_at := least(new.created_at, now());
     end if;
@@ -68,9 +65,8 @@ begin
     new.resolved_at := now();
   end if;
 
-  -- Reopen restarts the resolution clock with a fresh window AND a fresh pause budget — banked
-  -- pause from before the solve does not carry into the new window. (sla_paused_at is left to
-  -- accumulate_sla_pause, which fires first and may have started a pause for solved→pending.)
+  -- Reopen restarts the clock with a fresh window and a fresh pause budget (pre-solve banked pause
+  -- doesn't carry over). sla_paused_at is left to accumulate_sla_pause, which fires first.
   if tg_op = 'UPDATE'
      and old.status = 'solved'
      and new.status in ('open', 'pending', 'on_hold')

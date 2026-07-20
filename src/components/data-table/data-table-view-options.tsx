@@ -15,11 +15,6 @@ type Props<TData> = {
   table: Table<TData>;
 };
 
-/**
- * Column visibility toggle. Lists the hideable columns (those with an accessor and
- * `enableHiding`) as checkboxes. Visibility is UI-only state — it lives in the table,
- * not the URL, since it is a per-user view preference, not shareable list state.
- */
 export function DataTableViewOptions<TData>({ table }: Props<TData>) {
   const columns = table
     .getAllColumns()

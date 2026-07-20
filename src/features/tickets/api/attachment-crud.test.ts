@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from '@supabase/supabase-js';
 
-// The upload half is the storage facade (object URL / bucket); mock it so the test exercises the
-// row CRUD over MSW without depending on a real blob URL.
 vi.mock('~/lib/storage', () => ({
   uploadAttachment: vi.fn(async (ticketId: string, file: File) => ({
     path: `${ticketId}/x`,

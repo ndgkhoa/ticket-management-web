@@ -5,7 +5,6 @@ import { Button } from '~/components/ui';
 import { ErrorState } from '~/components/errors/error-state';
 
 type Props = {
-  /** Overrides the default description — e.g. a query's error message. */
   subTitle?: string;
 };
 

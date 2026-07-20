@@ -20,7 +20,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Every status colour, derived from the enum — toggle the Theme toolbar to check dark mode. */
 export const Status: Story = {
   render: () => (
     <div className="flex flex-wrap gap-2">
@@ -31,7 +30,6 @@ export const Status: Story = {
   ),
 };
 
-/** Every priority colour, escalating slate → blue → orange → red. */
 export const Priority: Story = {
   render: () => (
     <div className="flex flex-wrap gap-2">

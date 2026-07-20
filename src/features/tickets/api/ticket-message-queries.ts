@@ -17,11 +17,6 @@ export const ticketMessageQueries = {
 export const useTicketMessages = (ticketId: string) =>
   useQuery(ticketMessageQueries.list(ticketId));
 
-/**
- * Post a reply or internal note. The `commented` event is emitted by a database trigger on the
- * message insert, not written here. Invalidates the ticket's messages and events so the
- * timeline and activity feed both refresh.
- */
 export const useCreateMessage = (ticketId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -29,8 +24,6 @@ export const useCreateMessage = (ticketId: string) => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ticketKeys.messages(ticketId) });
       void queryClient.invalidateQueries({ queryKey: ticketKeys.events(ticketId) });
-      // A first agent public reply stamps the ticket's first_response_at (Phase 01 trigger),
-      // so refetch the ticket itself — otherwise the SLA card only updates on a reload.
       void queryClient.invalidateQueries({ queryKey: ticketKeys.detail(ticketId), exact: true });
     },
   });

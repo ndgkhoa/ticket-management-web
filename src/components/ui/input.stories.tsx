@@ -24,7 +24,6 @@ export const Default: Story = {};
 
 export const Disabled: Story = { args: { disabled: true } };
 
-/** `aria-invalid` drives the destructive ring — the state a failed form field shows. */
 export const Invalid: Story = {
   args: { 'aria-invalid': true, defaultValue: 'not-an-email' },
 };

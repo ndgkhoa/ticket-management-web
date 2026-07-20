@@ -14,12 +14,6 @@ export type CreateMessageInput = {
   body: string;
 };
 
-/**
- * The ticket conversation. Reads are ordered oldest-first (a timeline reads top to bottom);
- * RLS drops internal notes for customers, so this never has to filter by role itself. The
- * author is pinned to the caller — the insert policy re-checks it, so a reply can't be
- * forged in another name.
- */
 export const ticketMessageApi = {
   list: async (ticketId: string) => {
     const { data } = await supabase

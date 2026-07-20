@@ -1,19 +1,3 @@
-/**
- * Row shapes for the fixture data.
- *
- * Fixtures are **rows**, not domain models — snake_case, exactly as Postgres
- * stores them. That is the whole point: the same fixture feeds `supabase/seed.sql`
- * and the MSW handlers, and MSW then runs it through the *same* row→domain Zod
- * transform the Supabase client uses. A parity bug therefore cannot hide in a
- * hand-written mock shape, because there is no hand-written mock shape.
- *
- * These interfaces are a placeholder for `Database['public']['Tables'][T]['Insert']`
- * from the generated `src/lib/database.types.ts`, which does not exist until the
- * schema has been applied once. They get replaced by the generated types, at which
- * point a schema change that these fixtures don't match becomes a typecheck
- * failure instead of a runtime surprise in a seed run.
- */
-
 export type TicketStatus = 'open' | 'pending' | 'on_hold' | 'solved' | 'closed';
 export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
 export type TicketChannel = 'web' | 'email' | 'chat';
@@ -28,11 +12,9 @@ export type TicketEventType =
   | 'commented'
   | 'tagged';
 
-/** An auth.users row plus its profile — seeded together, since the trigger links them. */
 export type UserRow = {
   id: string;
   email: string;
-  /** Plain text here; the seed hashes it with bcrypt on the way into auth.users. */
   password: string;
   full_name: string;
   avatar_url: string | null;
@@ -116,7 +98,6 @@ export type TicketMessageRow = {
 export type TicketEventRow = {
   id: string;
   ticket_id: string;
-  /** Null for a system write with no acting user (mirrors the DB's nullable actor_id). */
   actor_id: string | null;
   event_type: TicketEventType;
   meta: Record<string, unknown>;
@@ -127,7 +108,6 @@ export type SavedViewRow = {
   id: string;
   user_id: string;
   name: string;
-  /** The TicketSearch object, stored as jsonb. */
   search: Record<string, unknown>;
   is_shared: boolean;
   created_at: string;

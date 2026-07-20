@@ -9,7 +9,6 @@ import {
 } from '~/components/ui';
 import type { DistributionSlice } from '~/features/dashboard/schemas/dashboard-schema';
 
-/** Ticket count per priority. */
 export function PriorityBar({ data }: { data: DistributionSlice[] }) {
   return (
     <ChartContainer>

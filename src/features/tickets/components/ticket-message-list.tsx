@@ -9,15 +9,9 @@ import type { Assignee } from '~/features/tickets/schemas/assignee-schema';
 
 type Props = {
   messages: TicketMessage[];
-  /** id → profile, for author name/avatar. */
   authors: Map<string, Assignee>;
 };
 
-/**
- * The ticket conversation, oldest-first. An internal note is tinted and badged so an agent
- * never mistakes it for a customer-visible reply; RLS already keeps notes out of a customer's
- * response entirely, so anything rendered here is theirs to see.
- */
 export function TicketMessageList({ messages, authors }: Props) {
   const { t } = useTranslation();
 

@@ -22,7 +22,6 @@ describe('ticketSearchSchema', () => {
     expect(ticketSearchSchema.parse({}).smart).toBe(false);
     expect(ticketSearchSchema.parse({ smart: true }).smart).toBe(true);
     expect(ticketSearchSchema.parse({ smart: 'true' }).smart).toBe(true);
-    // The bug a plain `z.coerce.boolean()` would introduce: the string 'false' → true.
     expect(ticketSearchSchema.parse({ smart: 'false' }).smart).toBe(false);
   });
 
@@ -44,8 +43,6 @@ describe('ticketSearchSchema', () => {
       'open',
       'pending',
     ]);
-    // Any invalid member drops the WHOLE filter to undefined (all-or-nothing) — it
-    // never reaches the data layer, where it would raise a Postgres 22P02.
     expect(ticketSearchSchema.parse({ status: ['garbage'] }).status).toBeUndefined();
     expect(ticketSearchSchema.parse({ status: ['open', 'garbage'] }).status).toBeUndefined();
   });

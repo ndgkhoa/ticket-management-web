@@ -2,11 +2,6 @@ import { z } from 'zod';
 
 import { ticketEventTypeSchema } from '~/features/tickets/schemas/ticket-enums';
 
-/**
- * TicketEvent: a `ticket_events` row as a domain model — one entry in the append-only
- * audit trail that feeds the activity timeline. `meta` is jsonb (e.g. `{ from, to }` on a
- * status change), kept loose here since the timeline renders per event type.
- */
 const ticketEventRowSchema = z.object({
   id: z.uuid(),
   ticket_id: z.uuid(),

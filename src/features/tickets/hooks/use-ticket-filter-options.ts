@@ -7,19 +7,6 @@ import { useCategoryList } from '~/features/admin/categories/api/category-querie
 import { useTagList } from '~/features/admin/tags/api/tag-queries';
 import type { Assignee } from '~/features/tickets/schemas/assignee-schema';
 
-/**
- * The ticket list's relationship data, fetched once and shaped for two consumers: the
- * faceted filters (`{ label, value }` options) and the relation columns (id → name/agent
- * lookups). Both read the same queries, so a team fetched for the filter is the same team
- * the Team column renders — no extra request for the columns.
- *
- * Teams/categories/tags are the bounded admin lookups (fetch-all); assignees the agent
- * roster from the `assignable_agents` RPC.
- *
- * `enabled` (default on) lets a caller skip every fetch when the options won't be shown — the
- * read-only customer ticket view hides the whole workflow sidebar, so it shouldn't pull the
- * agent roster/taxonomy into the client at all.
- */
 export type TicketFilterOptions = {
   assigneeOptions: FacetOption[];
   teamOptions: FacetOption[];

@@ -24,28 +24,18 @@ import type { CannedResponseSearch } from '~/features/admin/canned-responses/sch
 import { CannedResponseFormDialog } from '~/features/admin/canned-responses/components/canned-response-form-dialog';
 import type { CannedResponse } from '~/features/admin/canned-responses/schemas/canned-response-schema';
 
-/**
- * The server-side paginated canned-responses list — mirrors `users.tsx` for the list
- * half, and the `AdminCrudPage` shell's create/edit/delete affordances for the CRUD
- * half. Kept as a bespoke page rather than routed through that shell: it takes only a
- * client-side `T[]` list, and this resource is server-side paginated.
- */
 function CannedResponses() {
   const { t } = useTranslation();
   const { search, setSearch } = useCannedResponseSearchParams();
   const cannedResponseQuery = useCannedResponseList(toCannedResponseListParams(search));
   const remove = useCannedResponseRemove();
 
-  // The row being created/edited (null entity = create) and the row pending delete
-  // confirmation — both local state, never shareable via link.
   const [formTarget, setFormTarget] = useState<{ open: boolean; entity: CannedResponse | null }>({
     open: false,
     entity: null,
   });
   const [deleteTarget, setDeleteTarget] = useState<CannedResponse | null>(null);
 
-  // Continuous row number across pages: the server pages the data, so the display
-  // index is the page offset plus the row's position on the current page.
   const pageOffset = (search.page - 1) * search.pageSize;
 
   const name = t('Fields.CannedResponse', { count: 1 });
@@ -108,8 +98,6 @@ function CannedResponses() {
     },
   ];
 
-  // URL → table: pagination is 0-based here, 1-based in the URL. A page-size change
-  // routes through the hook's reset-to-page-1 rule; a page move only changes the page.
   const pagination: PaginationState = { pageIndex: search.page - 1, pageSize: search.pageSize };
   const sorting: SortingState = [{ id: search.sort, desc: search.dir === 'desc' }];
 
@@ -181,8 +169,7 @@ function CannedResponses() {
         }
       />
 
-      {/* Mount only while open so it remounts fresh each time — TanStack Form reads its
-          defaultValues once at mount, so a reused instance would keep the previous values. */}
+      {}
       {formTarget.open && (
         <CannedResponseFormDialog
           open

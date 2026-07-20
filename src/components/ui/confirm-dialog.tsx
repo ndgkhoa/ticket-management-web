@@ -16,17 +16,10 @@ type Props = {
   confirmLabel: string;
   cancelLabel: string;
   onConfirm: () => void;
-  /** Disable the confirm button while the action is in flight. */
   loading?: boolean;
-  /** Style the confirm button as destructive (delete) vs a neutral action. */
   destructive?: boolean;
 };
 
-/**
- * A controlled confirmation dialog — the guardrail before a destructive action like a
- * delete. Open state is owned by the caller (it knows which row is pending), and the
- * confirm button locks while the mutation runs so a double-click can't fire it twice.
- */
 export function ConfirmDialog({
   open,
   onOpenChange,

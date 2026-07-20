@@ -1,7 +1,3 @@
-/**
- * Query-key factory for the dashboard metrics. Keyed by the range (7/30/90 days) so each window
- * is its own cache entry; the `p_from` timestamp is derived at fetch time, not part of the key.
- */
 export const dashboardKeys = {
   all: ['dashboard'] as const,
   kpis: (range: number) => [...dashboardKeys.all, 'kpis', range] as const,
