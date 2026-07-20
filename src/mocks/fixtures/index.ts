@@ -11,7 +11,7 @@
  * and a demo that breaks against the database.
  */
 
-export * from './fixture-uuid';
+export * from './uuid';
 export * from './organization';
 export * from './people';
 export * from './rbac';

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 /**
  * The role permission matrix end to end against the mock backend: sign in as owner, open

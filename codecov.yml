@@ -17,6 +17,20 @@ coverage:
       default:
         informational: true
 
+# Two coverage sources, uploaded under separate flags and combined by Codecov: `unit` from
+# Vitest (logic) and `e2e` from Playwright (the UI/flows Vitest's V8 can't see). Together they
+# reflect the app's real coverage. `carryforward` keeps a flag's last value on commits that did
+# not upload it — e.g. a docs-only PR that skips the e2e job.
+flags:
+  unit:
+    paths:
+      - src/
+    carryforward: true
+  e2e:
+    paths:
+      - src/
+    carryforward: true
+
 comment:
   # Only comment when a PR actually moves coverage; otherwise it is noise on every PR.
   require_changes: true

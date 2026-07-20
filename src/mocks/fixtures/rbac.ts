@@ -13,7 +13,7 @@
  * trigger comparing `old.assignee_id`, not a policy.
  */
 
-import { fixtureUuid } from './fixture-uuid';
+import { uuid } from './uuid';
 import type { PermissionRow, RolePermissionRow, RoleRow } from './row-types';
 
 const PERMISSION_DEFINITIONS = [
@@ -40,7 +40,7 @@ export type PermissionCode = (typeof PERMISSION_DEFINITIONS)[number][0];
 
 export const permissionRows: PermissionRow[] = PERMISSION_DEFINITIONS.map(
   ([code, description], index) => ({
-    id: fixtureUuid('permission', index + 1),
+    id: uuid('permission', index + 1),
     code,
     description,
   })
@@ -102,7 +102,7 @@ const ROLE_DEFINITIONS = [
 export type RoleName = (typeof ROLE_DEFINITIONS)[number]['name'];
 
 export const roleRows: RoleRow[] = ROLE_DEFINITIONS.map((role, index) => ({
-  id: fixtureUuid('role', index + 1),
+  id: uuid('role', index + 1),
   name: role.name,
   description: role.description,
   // Seeded roles are load-bearing for RLS; the admin UI must refuse to delete them.

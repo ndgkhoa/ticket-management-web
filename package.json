@@ -103,6 +103,7 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "lint-staged": "^17.0.8",
+    "monocart-coverage-reports": "^2.12.12",
     "msw": "^2.15.0",
     "playwright": "^1.61.1",
     "prettier": "^3.5.3",

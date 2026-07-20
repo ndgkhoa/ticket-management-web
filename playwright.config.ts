@@ -6,6 +6,8 @@ const isCI = !!process.env.CI;
 
 export default defineConfig({
   testDir: './e2e',
+  // Merges each test's cached V8 coverage into an lcov report — a no-op unless COVERAGE=true.
+  globalTeardown: './e2e/fixtures.ts',
   // Every assertion in e2e waits on a real browser; the default 5s is generous
   // locally and tight on a cold CI runner.
   expect: { timeout: 10_000 },
@@ -49,6 +51,7 @@ export default defineConfig({
     url: baseURL,
     reuseExistingServer: !isCI,
     timeout: 120_000,
-    env: { VITE_API_MODE: 'msw' },
+    // Pass COVERAGE through so the build emits source maps (see vite.config.ts) when collecting.
+    env: { VITE_API_MODE: 'msw', COVERAGE: process.env.COVERAGE ?? '' },
   },
 });

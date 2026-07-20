@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 /**
  * Canned-responses admin end to end against the mock backend: sign in as the owner,

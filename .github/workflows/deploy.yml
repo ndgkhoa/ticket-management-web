@@ -53,6 +53,11 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_AI_ENABLED: 'true'
+          # Turnstile captcha site key (public). The client renders the captcha widget only when
+          # this is set, so it must be forwarded for hosted captcha to work — and the Supabase
+          # project's [auth.captcha] must be enabled to match. Unset stays safe: it coerces to
+          # undefined (see env.ts), so the widget is off and sign-in doesn't expect a token.
+          VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY }}
           # Observability (all optional) — Vite inlines VITE_* at build time, so they must be
           # forwarded here or the deployed bundle bakes `undefined` and nothing sends. Blank
           # secrets disable the respective SDK cleanly (no red build).
