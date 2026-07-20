@@ -17,14 +17,9 @@ export function LoginForm() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const { mutate: signIn, isPending } = useSignIn();
-  // Where the guard sent them from, already validated to an internal path by the
-  // sign-in route schema. `strict: false` reads it without pinning this component to
-  // that one route, so it also renders in isolation (tests) where there is no match.
   const { redirect } = useSearch({ strict: false }) as { redirect?: string };
 
   const loginSchema = z.object({
-    // min(1) first so an empty field reads "required"; a non-empty but malformed value
-    // then falls through to the email-format message.
     email: z
       .string()
       .min(1, t('Validation.Required'))
@@ -39,9 +34,6 @@ export function LoginForm() {
       signIn(
         { ...value, captchaToken: captchaToken ?? undefined },
         {
-          // Success sets no state here: the SDK emits SIGNED_IN and the auth store reacts
-          // through onAuthStateChange. This component only navigates — back to where the
-          // user was headed, or home.
           onSuccess: () => navigate({ to: redirect ?? '/' }),
           onError: () => toast.error(t('Validation.Mismatch')),
         }

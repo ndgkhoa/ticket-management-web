@@ -1,19 +1,3 @@
-/**
- * Renders the fixture source into `supabase/seed.sql`.
- *
- * The seed is generated, not written, because the same rows also back the MSW
- * handlers. Two hand-maintained copies of "the demo data" drift within a week, and
- * the drift shows up as tests that pass against mocks while the live demo is
- * broken — precisely the failure the phase's parity requirement exists to prevent.
- *
- * The output is committed: `supabase db reset` needs a plain .sql file, and a
- * reviewer cloning the repo should not have to run a script to get a database.
- * `bun run seed:check` re-renders and diffs, so a fixture edit that skips the
- * regeneration fails CI instead of silently shipping a stale seed.
- *
- * Usage: bun run seed:gen
- */
-
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
@@ -39,12 +23,7 @@ import {
 
 type SqlValue = string | number | boolean | null | undefined | Record<string, unknown>;
 
-/** Escape a value into a SQL literal. Single quotes double up; nulls stay unquoted. */
 function sql(value: SqlValue): string {
-  // `undefined` means a column name that does not exist on the row — a typo in the
-  // column list, or a fixture that drifted from the schema. Left alone it renders as
-  // the *string* 'undefined' and inserts cleanly, so the corruption is only found
-  // later, in the data. `null` is a legitimate value and stays distinct from this.
   if (value === undefined) {
     throw new Error(
       'Refusing to render `undefined` as SQL — a column in the insert list is missing from the row.'
@@ -59,11 +38,6 @@ function sql(value: SqlValue): string {
   return `'${value.replace(/'/g, "''")}'`;
 }
 
-/**
- * One multi-row INSERT per table rather than one statement per row: ~3,000 rows as
- * individual statements is ~3,000 round trips of planning overhead, and turns a
- * `db reset` from seconds into a coffee break.
- */
 function insertInto<T extends object>(
   table: string,
   columns: readonly (keyof T & string)[],
@@ -95,15 +69,6 @@ const HEADER = `-- GENERATED FILE — DO NOT EDIT.
 -- answer identically for identical params.
 `;
 
-/**
- * Wipe before seeding so the script is re-runnable against an already-populated
- * database (a linked hosted project, where \`db reset\` is not an option anyone
- * sane takes).
- *
- * Order matters: \`tickets.requester_id\` is ON DELETE RESTRICT, so profiles cannot
- * go before the tickets referencing them. Truncating public first, then deleting
- * auth.users — which cascades to profiles — is the only order that works.
- */
 const TRUNCATE = `truncate table
   public.saved_views,
   public.ticket_events,
@@ -126,12 +91,6 @@ const TRUNCATE = `truncate table
 delete from auth.users;
 `;
 
-/**
- * Password hashing happens in the database, not here: a bcrypt hash baked into a
- * committed file is a hash someone eventually reuses somewhere that matters.
- * \`gen_salt\` also keeps the file stable — a hash embedded at generation time would
- * change on every run and make the diff meaningless.
- */
 const authUsers = insertInto(
   'auth.users',
   [
@@ -158,15 +117,11 @@ const authUsers = insertInto(
     role: 'authenticated',
     email: user.email,
     encrypted_password: user.password,
-    // Pre-confirmed: nobody can click a confirmation link in a seeded demo.
     email_confirmed_at: user.created_at,
     raw_app_meta_data: { provider: 'email', providers: ['email'] },
-    // The `on_auth_user_created` trigger reads these to build the profile — the same
-    // path a real OAuth sign-up takes, so the trigger is exercised by the seed too.
     raw_user_meta_data: { full_name: user.full_name, avatar_url: user.avatar_url },
     created_at: user.created_at,
     updated_at: user.created_at,
-    // NOT NULL without defaults in GoTrue's schema. Empty string, not null.
     confirmation_token: '',
     email_change: '',
     email_change_token_new: '',
@@ -180,7 +135,6 @@ const authUsers = insertInto(
   }
 );
 
-/** GoTrue refuses email/password sign-in without a matching identity row. */
 const authIdentities = insertInto(
   'auth.identities',
   [
@@ -205,11 +159,6 @@ const authIdentities = insertInto(
   }))
 );
 
-/**
- * The trigger already created these from the auth metadata; this pins `created_at`
- * and re-asserts the values, so the seed does not depend on trigger internals to be
- * correct.
- */
 const profiles = insertInto(
   'public.profiles',
   ['id', 'email', 'full_name', 'avatar_url', 'created_at'] as never[],
@@ -253,11 +202,6 @@ const sections = [
     cannedResponseRows
   ),
   '-- Tickets ------------------------------------------------------------------',
-  // The audit triggers emit ticket_events on every insert/update. The seed carries its own
-  // hand-authored event history (with real actors, not the seed's null auth context), so the
-  // triggers are held off across the load to avoid a second, duplicate set of events. Runtime
-  // writes still fire them. The whole span is one transaction: if any load statement fails, the
-  // disable rolls back with it, so the triggers are never left disabled on the live table.
   'begin;',
   'alter table public.tickets disable trigger tickets_emit_change_events;',
   'alter table public.ticket_messages disable trigger ticket_messages_emit_comment;',

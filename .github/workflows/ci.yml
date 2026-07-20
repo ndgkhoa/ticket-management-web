@@ -5,23 +5,16 @@ on:
     branches: [main, develop]
   pull_request:
 
-# A new push to the same branch makes the previous run's answer irrelevant. Cancel it
-# rather than pay for it — on a free tier, minutes spent on a superseded commit are
-# minutes unavailable to the one that matters.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  # lint / typecheck / test / build run on every push AND every PR: they are fast and
-  # cost nothing worth rationing.
   quality:
     name: lint · typecheck · test · build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      # `secrets` cannot be read from a step-level `if`, so the check is lifted to the
-      # job's env where it can.
       HAS_CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v7
@@ -31,9 +24,6 @@ jobs:
           bun-version: latest
 
       - name: Install
-        # --frozen-lockfile is the reason bun.lock is committed: it fails when the
-        # lockfile and package.json disagree, so a forgotten lockfile update cannot
-        # reach main disguised as a green build.
         run: bun install --frozen-lockfile
 
       - name: Lint
@@ -43,16 +33,12 @@ jobs:
         run: bunx tsc -b
 
       - name: Locale parity
-        # Type-safe keys catch a call site pointing at a missing key; this catches the
-        # other half — a translation file quietly falling behind.
         run: bun run lang:check
 
       - name: Unit tests + coverage
         run: bun run test:cov
 
       - name: Upload coverage
-        # Skipped rather than failed when the secret is absent, so a fork's PR does not
-        # go red over a token it cannot have.
         if: ${{ !cancelled() && env.HAS_CODECOV_TOKEN == 'true' }}
         uses: codecov/codecov-action@v7
         with:
@@ -62,14 +48,8 @@ jobs:
           fail_ci_if_error: false
 
       - name: Build
-        # After the tests: a red build says less than a red test, so surface the more
-        # informative failure first.
         run: bun run build
 
-  # Which parts of the repo a PR actually touched. This runs as its own job rather
-  # than as `paths-ignore` on the trigger: `paths-ignore` skips the *whole workflow*,
-  # and a required check that never runs leaves the PR unmergeable forever — the
-  # classic trap. Skipping one job keeps the rest reporting.
   changes:
     name: detect changes
     if: github.event_name == 'pull_request'
@@ -82,11 +62,6 @@ jobs:
       - uses: dorny/paths-filter@v4
         id: filter
         with:
-          # 'every' is load-bearing. The default ('some') marks a file as matching if
-          # it hits ANY pattern, so these three negations would be OR'd and a
-          # docs-only change would still look like an app change. With 'every', a file
-          # counts only if it is not docs, not plans, and not markdown — so the filter
-          # is true exactly when something e2e could care about actually changed.
           predicate-quantifier: 'every'
           filters: |
             app:
@@ -94,15 +69,9 @@ jobs:
               - '!plans/**'
               - '!**/*.md'
 
-  # e2e is the slowest job and needs a browser download, so it is PR-only: a branch
-  # push gets fast feedback, the merge gate gets the real thing.
   e2e:
     name: e2e (Playwright)
     needs: changes
-    # PRs that touch the app, plus every push to main. Main must run it so its Codecov `e2e`
-    # flag stays fresh — that's what keeps the coverage badge (default branch) reflecting real
-    # unit + e2e coverage, not unit alone. `always()` lets it evaluate when `changes` is skipped
-    # (on push, that job is PR-only).
     if: >-
       always() &&
       (
@@ -122,9 +91,6 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Resolve Playwright version
-        # The cache key must be the exact Playwright version: browsers are pinned to
-        # it, and a stale cache gives a browser/driver mismatch that reads as a random
-        # test failure rather than a cache problem.
         id: pw
         run: echo "version=$(bunx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
 
@@ -136,28 +102,19 @@ jobs:
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
 
       - name: Install browsers
-        # chromium only: playwright.config.ts declares a single project, so pulling
-        # firefox and webkit would be minutes spent downloading what nothing runs.
         if: steps.pw-cache.outputs.cache-hit != 'true'
         run: bunx playwright install chromium --with-deps
 
       - name: Install system deps
-        # The cache restores browser binaries but not the apt packages they link
-        # against, so this still has to run on a cache hit.
         if: steps.pw-cache.outputs.cache-hit == 'true'
         run: bunx playwright install-deps chromium
 
       - name: Run e2e
-        # playwright.config.ts builds the app and serves the production bundle itself.
-        # Rolldown breakage can be production-only, so testing a dev server would miss
-        # exactly what the bundler swap is able to break. COVERAGE=true instruments the
-        # build with source maps and collects V8 coverage for the Codecov `e2e` flag.
         run: bun run e2e
         env:
           COVERAGE: 'true'
 
       - name: Upload e2e coverage
-        # Coverage from the tests that ran is useful even if some failed; never fail CI over it.
         if: ${{ !cancelled() }}
         uses: codecov/codecov-action@v7
         with:

@@ -1,33 +1,14 @@
 name: Release
 
-# Automated versioning from Conventional Commits via semantic-release. On every push to main
-# (i.e. when a PR merges) it analyzes the commits since the last tag and, IF any of them is
-# releasable (fix→patch, feat→minor, feat!/BREAKING→major), it does the whole release in this
-# one run — NO release PR:
-#   1. bumps package.json version, 2. regenerates CHANGELOG.md,
-#   3. commits both back to main as `chore(release): x.y.z [skip ci]`,
-#   4. tags `vX.Y.Z`, 5. publishes a GitHub Release with the notes.
-# A push whose commits are only chore/docs/test/ci/style produces NO release — by design.
-#
-# Orthogonal to deploy.yml: deploy ships every push to main; this marks a named, changelog'd
-# version on top of what shipped. npm publish is off (npmPublish:false) — this app isn't a package.
-#
-# NOTE: @semantic-release/git pushes the release commit straight to main. If you later enable
-# branch protection requiring PRs on main, allow this workflow's token to bypass it (or drop the
-# git plugin and keep tags + GitHub Releases only).
 on:
   push:
     branches: [main]
 
-# semantic-release + its git plugin need write on contents (commit/tag/release); github plugin
-# also touches issues/PRs to comment on released items.
 permissions:
   contents: write
   issues: write
   pull-requests: write
 
-# Never cancel a release mid-flight — a partial release (tag without GitHub Release) is worse
-# than a queued one.
 concurrency:
   group: release
   cancel-in-progress: false
@@ -37,16 +18,12 @@ jobs:
     name: semantic-release
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # HUSKY=0 disables the local git hooks in CI so commitlint's commit-msg hook cannot reject
-    # semantic-release's own release commit.
     env:
       HUSKY: '0'
     steps:
       - uses: actions/checkout@v7
         with:
-          # semantic-release reads the full history + all tags to find the last release.
           fetch-depth: 0
-          # Let semantic-release drive auth via GITHUB_TOKEN instead of the checkout credentials.
           persist-credentials: false
 
       - uses: oven-sh/setup-bun@v2

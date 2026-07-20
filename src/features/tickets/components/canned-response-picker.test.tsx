@@ -7,10 +7,6 @@ import { useAuthStore } from '~/stores/auth';
 import { cannedResponseRows } from '~/mocks/fixtures';
 import { CannedResponsePicker } from '~/features/tickets/components/canned-response-picker';
 
-/**
- * The composer's canned-response picker: it lists the library by title and hands the chosen
- * body back for insertion. Fetching is gated on `canned.read`, so the test signs in as a holder.
- */
 describe('CannedResponsePicker', () => {
   beforeEach(() => {
     useAuthStore.setState({
@@ -26,7 +22,6 @@ describe('CannedResponsePicker', () => {
     const { user } = await render(<CannedResponsePicker onInsert={onInsert} />);
     const first = cannedResponseRows[0];
 
-    // The trigger appears once the library has loaded (it renders nothing while empty).
     const trigger = await screen.findByRole('button', { name: 'Canned responses' });
     await user.click(trigger);
 

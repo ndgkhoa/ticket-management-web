@@ -1,13 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-/**
- * Dark mode per the shadcn Vite guide (https://ui.shadcn.com/docs/dark-mode/vite):
- * a Context provider that owns the theme choice, persists it under `storageKey`, and
- * sets the `light`/`dark` class on <html>. `system` follows the OS.
- *
- * The class is also set before React paints by the inline script in index.html
- * (reading the same `vite-ui-theme` key), so a hard refresh never flashes.
- */
 export type Theme = 'dark' | 'light' | 'system';
 
 type ThemeProviderProps = {

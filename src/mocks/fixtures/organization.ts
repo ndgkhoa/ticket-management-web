@@ -1,12 +1,3 @@
-/**
- * Teams, categories, tags, SLA policies and canned responses.
- *
- * All hand-written rather than generated: these are the labels a reviewer reads on
- * every screen, and `faker.company.buzzPhrase()` produces the kind of nonsense that
- * makes a demo look unfinished. Volume lives in the tickets fixture; this is the
- * vocabulary it draws from.
- */
-
 import { uuid } from './uuid';
 import { agentUsers, demoUserByRole } from './people';
 import type {
@@ -30,14 +21,6 @@ export const teamRows: TeamRow[] = TEAM_DEFINITIONS.map(([name, description], in
   description,
 }));
 
-/**
- * Round-robin the agents across teams, with the demo agent pinned to Billing.
- *
- * Pinned deliberately: the whole point of the demo agent is showing that an agent
- * sees their team's tickets and not the rest, so which team they are in cannot be
- * an accident of list order. Every third agent joins a second team — an agent in
- * exactly one team would leave the multi-team branch of the RLS policy untested.
- */
 export const teamMemberRows: TeamMemberRow[] = agentUsers.flatMap((user, index) => {
   const primaryTeam = teamRows[index % teamRows.length];
   const memberships: TeamMemberRow[] = [{ team_id: primaryTeam.id, user_id: user.id }];
@@ -57,9 +40,6 @@ if (!teamMemberRows.some((row) => row.user_id === demoAgentId && row.team_id ===
   teamMemberRows.push({ team_id: billingTeamId, user_id: demoAgentId });
 }
 
-// [name, description, default team name] — the default team is what a ticket in this
-// category auto-routes to on create (Phase 02 routing), mirrored from the topic→team map
-// the ticket corpus already uses.
 const CATEGORY_DEFINITIONS = [
   ['Billing question', 'Anything about an invoice, charge or refund', 'Billing'],
   ['Bug report', 'Something is broken or behaving incorrectly', 'Technical'],
@@ -96,10 +76,6 @@ export const tagRows: TagRow[] = TAG_DEFINITIONS.map(([name, color], index) => (
   color,
 }));
 
-/**
- * One policy per priority — matching the unique constraint on `sla_policies.priority`,
- * which is what lets a ticket resolve its policy from its priority alone.
- */
 export const slaPolicyRows: SlaPolicyRow[] = [
   {
     id: uuid('slaPolicy', 1),

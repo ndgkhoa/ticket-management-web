@@ -20,21 +20,12 @@ import type { UserSearch } from '~/features/admin/users/schemas/user-search-sche
 import { UserRolesDialog } from '~/features/admin/users/components/user-roles-dialog';
 import type { User } from '~/features/admin/users/schemas/user-schema';
 
-/**
- * The server-side paginated user list — mirrors `tickets.tsx`, minus faceted filters
- * (profiles have no status/priority-like column to filter by). Role assignment opens
- * per-row through `UserRolesDialog`, kept as local state rather than URL state since
- * it never needs to be shareable via link.
- */
 function Users() {
   const { t } = useTranslation();
   const { search, setSearch } = useUserSearchParams();
   const userQuery = useUserList(toUserListParams(search));
-  // The user whose role dialog is open (null = closed).
   const [roleTarget, setRoleTarget] = useState<User | null>(null);
 
-  // Continuous row number across pages: the server pages the data, so the display
-  // index is the page offset plus the row's position on the current page.
   const pageOffset = (search.page - 1) * search.pageSize;
 
   const columns: ColumnDef<User>[] = [
@@ -101,8 +92,6 @@ function Users() {
     },
   ];
 
-  // URL → table: pagination is 0-based here, 1-based in the URL. A page-size change
-  // routes through the hook's reset-to-page-1 rule; a page move only changes the page.
   const pagination: PaginationState = { pageIndex: search.page - 1, pageSize: search.pageSize };
   const sorting: SortingState = [{ id: search.sort, desc: search.dir === 'desc' }];
 

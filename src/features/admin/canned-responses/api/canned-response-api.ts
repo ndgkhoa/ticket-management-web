@@ -9,14 +9,8 @@ import {
   cannedResponseSchema,
 } from '~/features/admin/canned-responses/schemas/canned-response-schema';
 
-/** What the create/edit form submits — the writable columns, nothing generated. */
 export type CannedResponseInput = { title: string; body: string };
 
-/**
- * List-query configuration for canned responses — mirrors `user-api.ts`. No tsvector
- * column, so there is no `searchColumn`; `q` always runs through the trigram `ilike`
- * fallback on `title`.
- */
 const cannedResponseListConfig: ListQueryConfig = {
   fallbackColumn: 'title',
   sortableFields: ['created_at', 'title'],
@@ -40,9 +34,6 @@ export const cannedResponseApi = {
   },
 
   create: async (input: CannedResponseInput) => {
-    // The mock insert handler only fills `id`, not `created_at` — supply both
-    // server-defaulted columns here so the returned row round-trips the schema
-    // against MSW and Supabase alike.
     const { data } = await supabase
       .from('canned_responses')
       .insert({

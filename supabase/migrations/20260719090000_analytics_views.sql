@@ -1,12 +1,10 @@
--- Dashboard analytics, computed in Postgres (not the client). Every function is SECURITY
--- INVOKER and reads `public.tickets` directly, so the `tickets_select` RLS policy
--- (can_access_ticket) scopes each aggregation to what the caller may see: an agent's own +
--- team tickets, an admin's everything. No separate role logic here — RLS is the scope.
---
--- All are range-windowed by `p_from` (the dashboard's 7/30/90-day filter start).
+-- Dashboard analytics, computed in Postgres. Every function is SECURITY INVOKER and reads
+-- `public.tickets` directly, so the `tickets_select` RLS policy scopes each aggregation to what the
+-- caller may see (agent's own + team, admin's everything) — no separate role logic. All are
+-- range-windowed by `p_from` (the dashboard's 7/30/90-day filter start).
 
--- KPI headline numbers: currently-open count, average first-response + resolution minutes,
--- and resolution-SLA compliance (% of resolved tickets that met their due_at).
+-- KPI headline numbers: open count, avg first-response + resolution minutes, resolution-SLA
+-- compliance (% of resolved tickets that met their due_at).
 create or replace function public.dashboard_kpis(p_from timestamptz)
 returns table (
   open_count bigint,
@@ -20,16 +18,15 @@ security invoker
 set search_path = ''
 as $$
   select
-    -- Current open backlog — deliberately NOT window-scoped: "open tickets" is a right-now
-    -- number, so a ticket opened before the window but still open must count.
+    -- Open backlog, deliberately not window-scoped: "open tickets" is a right-now number, so one
+    -- opened before the window but still open must count.
     (select count(*) from public.tickets where status in ('open', 'pending', 'on_hold')),
     round(avg(extract(epoch from (t.first_response_at - t.created_at)) / 60)
       filter (where t.first_response_at is not null))::numeric,
     round(avg(extract(epoch from (t.resolved_at - t.created_at)) / 60)
       filter (where t.resolved_at is not null))::numeric,
-    -- Compliance is over tickets that actually had a resolution target: a resolved ticket with
-    -- no due_at (a priority without a resolution SLA) is excluded from the denominator, not
-    -- counted as an automatic breach.
+    -- Compliance is over resolved tickets that had a due_at; one without (a priority with no
+    -- resolution SLA) is excluded from the denominator, not counted as a breach.
     round(
       100.0 * count(*) filter (where t.resolved_at is not null and t.resolved_at <= t.due_at)
         / nullif(count(*) filter (where t.resolved_at is not null and t.due_at is not null), 0),
@@ -39,9 +36,8 @@ as $$
   where t.created_at >= p_from;
 $$;
 
--- Daily created vs resolved counts across the window, gap-filled so every day has a point.
--- Day buckets use the session timezone (Supabase runs UTC); the MSW mirror buckets in UTC to
--- match. A non-UTC session would shift bucket boundaries — keep the deployment UTC.
+-- Daily created vs resolved counts, gap-filled so every day has a point. Day buckets use the session
+-- timezone (Supabase runs UTC; the MSW mirror matches) — a non-UTC session would shift boundaries.
 create or replace function public.dashboard_volume(p_from timestamptz)
 returns table (day date, created_count bigint, resolved_count bigint)
 language sql

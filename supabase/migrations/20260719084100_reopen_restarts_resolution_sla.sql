@@ -1,14 +1,8 @@
--- Reopening a ticket restarts its resolution SLA.
---
--- Phase 03 reopen clears resolved_at, but due_at stayed frozen at the original
--- (created_at + resolution) — so a ticket solved within SLA and reopened weeks later read as
--- breached the instant it reopened. A reopen should grant a fresh resolution window.
---
--- Handled here in stamp_ticket_sla (the one owner of the SLA columns) rather than in the
--- reopen trigger, so EVERY path that moves a ticket out of `solved` back into an active state
--- gets the fresh window — the customer-reply reopen and an agent manually reopening alike.
--- solved→closed is terminal and does not restart. Recreated in full (create or replace) with
--- the new branch appended.
+-- Reopening a ticket restarts its resolution SLA. Reopen clears resolved_at, but due_at stayed
+-- frozen at the original (created_at + resolution), so a ticket reopened weeks later read as breached
+-- the instant it reopened. Handled here in stamp_ticket_sla (the sole owner of the SLA columns), so
+-- every path out of `solved` into an active state gets the fresh window (customer-reply and manual
+-- reopen alike); solved→closed is terminal and does not restart.
 create or replace function public.stamp_ticket_sla()
 returns trigger
 language plpgsql
@@ -18,8 +12,7 @@ as $$
 declare
   v_policy public.sla_policies;
 begin
-  -- created_at is server-authoritative up to now(): a forged future value can't push the
-  -- deadline out, while the seed's historical dates are preserved.
+  -- created_at server-authoritative: a forged future value can't push the deadline out; past dates preserved.
   if tg_op = 'INSERT' then
     new.created_at := least(new.created_at, now());
   end if;
@@ -45,8 +38,7 @@ begin
     new.resolved_at := now();
   end if;
 
-  -- Reopen restarts the resolution clock: leaving `solved` for an active status grants a
-  -- fresh window from now. `closed` is terminal, so it is excluded.
+  -- Reopen: leaving `solved` for an active status grants a fresh window from now; `closed` excluded (terminal).
   if tg_op = 'UPDATE'
      and old.status = 'solved'
      and new.status in ('open', 'pending', 'on_hold')

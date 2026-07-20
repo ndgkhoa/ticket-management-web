@@ -11,25 +11,15 @@ import { createJunctionStore } from '~/mocks/lib/table-store';
 import { parsePostgrestRequest } from '~/mocks/lib/postgrest-request';
 import { collectionResponse, objectResponse } from '~/mocks/lib/postgrest-response';
 
-/**
- * The `user_roles` junction — shared by two readers, so it owns one mutable store rather
- * than reading the fixture twice. The auth store reads it nested (which permission codes
- * a user's roles grant); the admin user editor reads it flat (which role ids a user has)
- * and writes it. A role assigned in the editor therefore shows up in the user's
- * permissions on the next resolve, because both go through this same store.
- */
 export const userRolesStore = createJunctionStore(userRoleRows);
 
 const permissionCodeById = new Map(permissionRows.map((row) => [row.id, row.code]));
 
-/** The nested `roles(role_permissions(permissions(code)))` shape the auth store reads. */
 function nestedPermissionRead(userId: string | undefined) {
   const roleIds = userRolesStore
     .all()
     .filter((userRole) => userRole.user_id === userId)
     .map((userRole) => userRole.role_id);
-  // A user with no rows (a fresh sign-up) resolves to the customer role, so a
-  // just-registered account still gets its baseline permissions.
   const effectiveRoleIds = roleIds.length > 0 ? roleIds : [roleIdByName.get('customer')!];
 
   return effectiveRoleIds.map((roleId) => ({
@@ -45,7 +35,6 @@ function nestedPermissionRead(userId: string | undefined) {
   }));
 }
 
-/** eq filters as a plain map — the only shape a junction query carries. */
 function eqFilters(request: Request): Record<string, string> {
   const { filters } = parsePostgrestRequest(request);
   return Object.fromEntries(
@@ -59,7 +48,6 @@ const read = http.get('*/rest/v1/user_roles', ({ request }) => {
   const select = new URL(request.url).searchParams.get('select') ?? '';
   const match = eqFilters(request);
 
-  // The permission query embeds `roles(...)`; the admin editor selects flat columns.
   if (select.includes('roles(')) {
     return collectionResponse(nestedPermissionRead(match.user_id));
   }

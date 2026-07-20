@@ -31,7 +31,7 @@ Dev: MSW (local)              Deployed: Supabase (live)
                               └─────────────────────┘
 ```
 
-**Key difference:** Dev uses MSW (offline); Production uses live Supabase. Every Postgres trigger has a MSW mirror so dev/test behavior matches production.
+**Key difference:** Dev uses MSW (offline); Production uses live Supabase. Every Postgres trigger has a MSW mirror so dev/test behavior matches production. The `bun run test:parity` integration test verifies MSW-vs-Supabase LIST-QUERY parity for filter/search/sort (rows, totalCount, pageCount) — this prevents dev/prod divergence.
 
 ## Layers
 
@@ -67,6 +67,8 @@ and element text dropped); replay masks all inputs/text.
 
 **Schema:** profiles, roles, permissions, role_permissions, user_roles, teams, team_members, categories, tags, tickets, ticket_messages, ticket_events, ticket_tags, attachments, sla_policies, canned_responses, saved_views
 
+**Analytics views:** Dashboard charts (daily volume, status/priority breakdown, team workload) backed by materialized views from migration 20260719090000_analytics_views.sql.
+
 **RLS policies:** Row-level security scoped to organization + role. Every query runs under the caller's own RLS, so data leaks are prevented at the DB layer.
 
 **Triggers:** Enforce domain invariants
@@ -74,7 +76,7 @@ and element text dropped); replay masks all inputs/text.
 - SLA stamping: ticket create → set `due_at` from policy
 - Triage visibility: new ticket → auto-assign to triage queue + trigger visibility event
 - Status lifecycle: reopen on customer reply (if solved), auto-close after 7 days (if solved)
-- SLA clock pause: when status = pending or on_hold, `sla_paused_at` stops the clock
+- SLA clock pause: when status = pending or on_hold, `sla_paused_at` stops the clock; `sla_paused_ms` tracks total paused time across all pauses
 - Audit trail: every write (create/update/delete on ticket, activity, assignee, team, category) logged to `ticket_events`
 
 **Realtime:** Realtime on `tickets` + `ticket_messages`, plus presence channels for subscription-based updates.
@@ -120,7 +122,7 @@ Generates:
 
 **MSW sync:** MSW handlers read same fixtures → static demo and tests stay in sync with DB seed by construction.
 
-**Parity test:** `npm run test:parity` verifies every DB trigger has a MSW mirror.
+**Parity test:** `bun run test:parity` (via Vitest) runs `src/mocks/lib/apply-list-query.integration.test.ts` to verify MSW-vs-Supabase LIST-QUERY parity: {rows, totalCount, pageCount} for filter/search/sort scenarios.
 
 ## Feature Breakdown
 
@@ -148,13 +150,14 @@ Generates:
 
 - `due_at`: set on create (policy by priority)
 - `sla_paused_at`: when status in (pending, on_hold), clock pauses
+- `sla_paused_ms`: total milliseconds paused across all pause cycles
 - `breached`: boolean, computed on query; alerts in badge + list
 
 **Team assignment:** By category → default_team routing (admin-defined), or manual assignment.
 
-### Activities (Messages)
+### Messages
 
-Every message on a ticket is an `activity` row with:
+Every message on a ticket is a `ticket_messages` row with:
 
 - `type`: "message" (public) or "note" (internal)
 - `body`: rich text (Tiptap → HTML)
@@ -163,13 +166,13 @@ Every message on a ticket is an `activity` row with:
 
 ### Audit Trail
 
-`ticket_events` table (auto-written by trigger) logs:
+`ticket_events` table (auto-written by trigger) logs all state changes:
 
 - Every ticket status/priority/team/category change
 - Every user bulk action
 - Timestamp, actor, entity_id, action, delta (JSON)
 
-Queryable by admin; read-only customer view omits internal notes + admin actions.
+Queryable by admin; read-only customer view omits internal notes + admin events.
 
 ### Canned Responses
 

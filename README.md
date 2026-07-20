@@ -1,7 +1,15 @@
 # ticket-management-web
 
 [![CI](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml/badge.svg)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml)
+[![Deploy](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/deploy.yml/badge.svg)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/deploy.yml)
 [![codecov](https://codecov.io/gh/ndgkhoa/ticket-management-web/graph/badge.svg)](https://codecov.io/gh/ndgkhoa/ticket-management-web)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+[![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev)
+[![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 
 A **production-grade single-tenant help desk** built as a portfolio project. Customers open tickets → agents resolve them (by team) → admins manage permissions and SLAs. Full Supabase backend deployed live; MSW for local dev + tests.
 
@@ -25,7 +33,7 @@ with password **`password123`**:
 
 **Backend:** Supabase — Postgres, Auth, Realtime, Storage, pgvector · Edge Functions (Deno) for Gemini AI · row-level security · Postgres triggers for domain invariants (SLA stamping, triage routing, status lifecycle, audit trail)
 
-**Quality:** Vitest + Testing Library · Playwright + `@axe-core/playwright` (WCAG 2.1 AA) · MSW (offline dev + tests) · ESLint + Prettier + Husky · Lighthouse CI · GitHub Actions
+**Quality:** Vitest + Testing Library · Playwright + @axe-core/playwright (WCAG 2.1 AA) · Storybook + Chromatic (visual regression) · Codecov (coverage tracking) · MSW (offline dev + tests) · ESLint + Prettier + Husky · Lighthouse CI · semantic-release (automated versioning) · GitHub Actions
 
 ---
 
@@ -44,7 +52,7 @@ with password **`password123`**:
 - Bulk assignment + team routing
 - Canned responses in the composer
 - AI-suggested replies + thread summary (Gemini)
-- Semantic search over ticket embeddings (`pgvector`)
+- Semantic search over ticket embeddings (pgvector)
 
 ### Admin
 
@@ -100,7 +108,7 @@ vars live in `.env.example`, validated by a Zod schema at boot.
 - **[System Architecture](docs/system-architecture.md)** — layers, data flow, RLS/triggers, CI/CD
 - **[Codebase Summary](docs/codebase-summary.md)** — structure, principles, key files, data model
 - **[Deployment Guide](docs/deployment-guide.md)** — local setup, Cloudflare Pages + Supabase, secrets
-- **[Architecture Decisions](docs/adr/)** — trade-offs: router, shadcn, MSW parity, Gemini, TS 6
+- **[Architecture Decisions](docs/adr/)** — trade-offs: router, shadcn, MSW parity, Gemini, TS 6, semantic-release, observability, deploy
 - **[AI Features](docs/ai-features.md)** — Gemini integration, semantic search, rate limits
 - **[Code Standards](docs/code-standards.md)** — naming, patterns, architecture rules (ESLint-enforced)
 - **[Project Overview / PDR](docs/project-overview-pdr.md)** — vision, requirements, success criteria

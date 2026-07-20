@@ -1,6 +1,3 @@
-// ai-summarize — condense a long ticket thread into a short summary an agent can read
-// at a glance. Model: Gemini 3.1 Flash Lite.
-
 import { generateContent, GeminiError } from '../_shared/gemini.ts';
 import { handlePreflight, jsonResponse } from '../_shared/cors.ts';
 

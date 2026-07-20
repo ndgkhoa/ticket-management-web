@@ -13,12 +13,6 @@ type Props = {
   label: string;
 } & Omit<ComponentProps<typeof Input>, 'value' | 'onChange' | 'onBlur' | 'name' | 'id' | 'type'>;
 
-/**
- * A password field bound to a TanStack Form field, with a show/hide toggle. Same
- * label/error wiring as `FieldText`; the eye button flips the input between `password`
- * and `text` and is `tabindex`-reachable with an `aria-label` so it isn't a mouse-only
- * control.
- */
 export function FieldPassword({ field, label, className, disabled, ...inputProps }: Props) {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);

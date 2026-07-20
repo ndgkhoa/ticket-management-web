@@ -8,7 +8,6 @@ import {
 } from '~/components/ui';
 import type { DistributionSlice } from '~/features/dashboard/schemas/dashboard-schema';
 
-/** Ticket status split as a donut. */
 export function StatusDonut({ data }: { data: DistributionSlice[] }) {
   return (
     <ChartContainer>

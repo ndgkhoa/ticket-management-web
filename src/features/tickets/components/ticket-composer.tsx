@@ -14,13 +14,10 @@ import type { MessageType } from '~/features/tickets/schemas/ticket-enums';
 
 type Props = {
   ticketId: string;
-  /** Plain-text draft to load into the editor (e.g. an accepted AI reply). */
   insertDraft?: string | null;
-  /** Called once a pending draft has been loaded, so the parent can clear it. */
   onDraftConsumed?: () => void;
 };
 
-/** Escape HTML, then turn blank-line-separated text into paragraphs for the editor. */
 function draftToHtml(draft: string): string {
   const escaped = draft.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   return escaped
@@ -29,12 +26,6 @@ function draftToHtml(draft: string): string {
     .join('');
 }
 
-/**
- * The reply / internal-note composer: a Tiptap rich-text editor with a small formatting
- * toolbar and a public/internal toggle. The internal option shows only for staff who hold
- * `message.create.internal` (RLS rejects it otherwise). On send it posts the HTML body and
- * clears the editor.
- */
 export function TicketComposer({ ticketId, insertDraft, onDraftConsumed }: Props) {
   const { t } = useTranslation();
   const canInternal = useAuthStore((state) => state.hasPermission('message.create.internal'));
@@ -48,15 +39,10 @@ export function TicketComposer({ ticketId, insertDraft, onDraftConsumed }: Props
     editorProps: { attributes: { class: 'rich-text min-h-24 px-3 py-2' } },
   });
 
-  // Insert a canned body at the cursor (not setContent) so it augments the current draft
-  // instead of replacing it. Plain-text bodies go through the same paragraph conversion as an
-  // accepted AI draft.
   const insertCanned = (body: string) => {
     editor?.chain().focus().insertContent(draftToHtml(body)).run();
   };
 
-  // Load an accepted AI draft into the editor, then tell the parent to clear it so the
-  // same draft isn't re-inserted on every render.
   useEffect(() => {
     if (!editor || !insertDraft) return;
     editor.commands.setContent(draftToHtml(insertDraft));

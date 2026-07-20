@@ -7,18 +7,12 @@ import { FieldText } from '~/components/form/field-text';
 
 const schema = z.object({ email: z.email('Enter a valid email') });
 
-/**
- * `FieldText` binds to a TanStack Form field, so every story sets up a real form and
- * renders the field through `form.Field` — the same wiring the app uses.
- */
 function EmailField({ invalid = false }: { invalid?: boolean }) {
   const form = useForm({
     defaultValues: { email: invalid ? 'not-an-email' : '' },
     validators: { onChange: schema, onSubmit: schema },
   });
 
-  // Submitting marks fields touched + runs validation, so the invalid story shows the
-  // error ring and message on load without needing interaction. Runs once, after mount.
   useEffect(() => {
     if (invalid) void form.handleSubmit();
   }, [invalid, form]);
@@ -51,5 +45,4 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** A touched field with a failing Zod rule shows the invalid ring + message. */
 export const Invalid: Story = { args: { invalid: true } };

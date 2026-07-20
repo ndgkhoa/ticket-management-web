@@ -2,12 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import { dashboardApi } from '~/features/dashboard/api/dashboard-api';
 
-/**
- * Dashboard metrics over MSW — the mock aggregations mirror the Postgres RPCs. A fixed `from`
- * over the seeded corpus makes the numbers deterministic, so this checks shape + invariants
- * (totals agree across cuts, agents ranked by resolved) rather than the live SQL, which is
- * verified separately.
- */
 const FROM = '2026-01-01T00:00:00.000Z';
 
 describe('dashboard metrics over MSW', () => {
@@ -16,7 +10,6 @@ describe('dashboard metrics over MSW', () => {
 
     expect(kpis.openCount).toBeGreaterThan(0);
     expect(kpis.avgResolutionMins).toBeGreaterThan(0);
-    // Compliance is a percentage or null (no resolved tickets in window).
     if (kpis.slaCompliancePct !== null) {
       expect(kpis.slaCompliancePct).toBeGreaterThanOrEqual(0);
       expect(kpis.slaCompliancePct).toBeLessThanOrEqual(100);
@@ -42,7 +35,6 @@ describe('dashboard metrics over MSW', () => {
     const priorityTotal = priority.reduce((sum, slice) => sum + slice.count, 0);
     expect(statusTotal).toBe(priorityTotal);
     expect(statusTotal).toBeGreaterThan(0);
-    // Every status label is a real ticket status.
     for (const slice of status) {
       expect(['open', 'pending', 'on_hold', 'solved', 'closed']).toContain(slice.label);
     }

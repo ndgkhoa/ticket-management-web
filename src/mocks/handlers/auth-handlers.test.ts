@@ -5,12 +5,6 @@ import { authApi } from '~/features/auth/api/auth-api';
 import { DEMO_LOGIN } from '~/features/auth/constants/demo-login';
 import { DEMO_PASSWORD, demoUserByRole } from '~/mocks/fixtures';
 
-/**
- * The mock GoTrue: enough of auth for the static demo to sign in with no live Supabase.
- * Sign-in must round-trip a session the SDK accepts, and the nested permission query the
- * auth store runs must resolve to each role's real permission set.
- */
-
 describe('password sign-in over MSW', () => {
   it('returns a session for a seeded account', async () => {
     const { data, error } = await authApi.signInWithPassword('owner@example.com', 'password123');
@@ -27,8 +21,6 @@ describe('password sign-in over MSW', () => {
   });
 
   it('keeps the Google-button demo credentials valid against the fixtures', async () => {
-    // The msw Google shortcut can't import from `~/mocks`, so DEMO_LOGIN duplicates the
-    // fixture password/owner email. Pin them here so drift fails a test, not the demo.
     expect(DEMO_LOGIN.password).toBe(DEMO_PASSWORD);
     expect(DEMO_LOGIN.email).toBe(demoUserByRole.get('owner')!.email);
 
@@ -37,7 +29,6 @@ describe('password sign-in over MSW', () => {
   });
 });
 
-/** Mirrors the store's `fetchPermissions` query so the assertion tracks real app usage. */
 async function permissionCodesFor(userId: string): Promise<Set<string>> {
   const { data } = await supabase
     .from('user_roles')

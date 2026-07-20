@@ -7,15 +7,6 @@ import { Button } from '~/components/ui';
 import { authApi } from '~/features/auth/api/auth-api';
 import { DEMO_LOGIN } from '~/features/auth/constants/demo-login';
 
-/**
- * "Continue with Google" — shared by sign-in and sign-up. Against a live project it kicks
- * off the OAuth redirect; on success the browser leaves this page, so there's nothing to
- * handle but the error (e.g. the provider isn't configured yet).
- *
- * On mocks (the static demo) OAuth cannot run — it is a cross-origin full-page redirect a
- * Service Worker cannot intercept — so the button short-circuits to a demo sign-in and
- * navigates in, keeping the button functional without a real provider.
- */
 export function GoogleButton({ disabled, label }: { disabled?: boolean; label?: string }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -41,7 +32,7 @@ export function GoogleButton({ disabled, label }: { disabled?: boolean; label?: 
       className="w-full font-light"
       onClick={() => void handleGoogle()}
     >
-      {/* Google 'G' brand mark. Decorative — the button text labels the action. */}
+      {}
       <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
         <path
           fill="#EA4335"

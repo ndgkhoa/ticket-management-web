@@ -11,35 +11,23 @@ import { ActionsHeader, ClientDataTable } from '~/components/data-table';
 
 type Entity = { id: string };
 
-/** The lookup entities this shell serves — a plural i18n base key (`Fields.Category`
- *  resolves `_one`/`_other` via `count`). Kept a literal union so `t()` stays type-safe. */
 export type AdminEntityKey =
   'Fields.Category' | 'Fields.Tag' | 'Fields.Team' | 'Fields.SlaPolicy' | 'Fields.Role';
 
 type Props<T extends Entity> = {
-  /** i18n key for the entity name, e.g. `Fields.Category` — pluralised via `count`. */
   entityKey: AdminEntityKey;
   query: UseQueryResult<T[], Error>;
   remove: UseMutationResult<void, Error, string>;
-  /** Data columns; the edit/delete actions column is appended here, not per entity. */
   columns: ColumnDef<T>[];
   renderForm: (props: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     entity: T | null;
   }) => ReactNode;
-  /** Extra per-row action(s) rendered before edit/delete (e.g. a role's permissions). */
   rowActions?: (entity: T) => ReactNode;
-  /** Gate the delete action per row — e.g. a seeded system role can't be removed. */
   canDelete?: (entity: T) => boolean;
 };
 
-/**
- * The shared shell for every admin lookup CRUD screen (categories, tags, teams, SLA):
- * the list + create button, the per-row edit/delete actions, and the delete confirm.
- * An entity supplies only its data columns and its form dialog — everything repeated
- * across the tables lives here once.
- */
 export function AdminCrudPage<T extends Entity>({
   entityKey,
   query,
@@ -61,8 +49,6 @@ export function AdminCrudPage<T extends Entity>({
   const singular = t(entityKey, { count: 1 });
   const rows = query.data ?? [];
 
-  // A running row number in the current sorted order — position in the full sorted list
-  // (not just the page), so it stays consistent across pages. Not sortable itself.
   const indexColumn: ColumnDef<T> = {
     id: 'index',
     header: t('Fields.Index'),
@@ -125,9 +111,7 @@ export function AdminCrudPage<T extends Entity>({
         emptyState={<span className="text-muted-foreground">{t('Common.NoData')}</span>}
       />
 
-      {/* Mount the form only while open, so it unmounts on close and remounts fresh on the
-          next open — TanStack Form reads its defaultValues once at mount, so a reused
-          instance would otherwise keep the previous (or just-submitted) values. */}
+      {}
       {form.open &&
         renderForm({
           open: true,

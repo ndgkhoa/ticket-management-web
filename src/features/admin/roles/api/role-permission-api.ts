@@ -2,12 +2,6 @@ import { z } from 'zod';
 
 import { supabase } from '~/lib/supabase';
 
-/**
- * The role → permission membership (`role_permissions` junction) behind the matrix
- * editor. This is the assignment RBAC is actually about: RLS reads it to resolve which
- * permission codes a role grants. The permission catalogue itself is fixed (defined by
- * the policies); only which roles hold which codes is editable here.
- */
 export const rolePermissionApi = {
   listForRole: async (roleId: string): Promise<string[]> => {
     const { data } = await supabase

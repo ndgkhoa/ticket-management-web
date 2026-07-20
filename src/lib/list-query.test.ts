@@ -63,11 +63,6 @@ describe('shouldUseFullTextSearch', () => {
   });
 });
 
-/**
- * A fake PostgREST builder that records what the runner did to it and returns a
- * scripted result. Structural typing lets it stand in for the real builder without a
- * live database, so the fallback logic, tiebreaker and range are all provable in CI.
- */
 type Call =
   | { method: 'textSearch'; column: string; query: string }
   | { method: 'ilike'; column: string; pattern: string }
@@ -139,8 +134,6 @@ describe('runListQuery', () => {
   });
 
   it('falls back to trigram when full-text search returns nothing', async () => {
-    // First call (FTS) yields 0; second call (trgm) yields a hit. The factory is asked
-    // for a fresh builder each time, exactly as a single-use PostgREST builder needs.
     const builders = [
       fakeQuery({ data: [], count: 0 }),
       fakeQuery({ data: [{ id: '1' }], count: 1 }),
@@ -169,7 +162,7 @@ describe('runListQuery', () => {
       config
     );
 
-    expect(i).toBe(1); // second builder never requested
+    expect(i).toBe(1);
   });
 
   it('applies the primary sort then appends tiebreakers, skipping a duplicated column', async () => {
@@ -197,7 +190,6 @@ describe('runListQuery', () => {
     );
 
     const orders = q.calls.filter((c) => c.method === 'order');
-    // default (created_at desc) is primary; created_at tiebreaker is de-duped; id remains
     expect(orders).toEqual([
       { method: 'order', column: 'created_at', ascending: false },
       { method: 'order', column: 'id', ascending: false },
@@ -205,8 +197,6 @@ describe('runListQuery', () => {
   });
 
   it('throws a clear error when the base query forgot the count option', async () => {
-    // count: null is exactly what PostgREST returns when { count: 'estimated' } was
-    // omitted — the silent-totalCount-0 footgun. It must fail loudly, not report zero.
     const q = fakeQuery({ data: [{ id: '1' }], count: null });
     await expect(
       runListQuery(() => q as never, listParamsSchema.parse({}), config)

@@ -17,59 +17,20 @@ import {
   objectResponse,
 } from '~/mocks/lib/postgrest-response';
 
-/**
- * One PostgREST table endpoint over a mutable fixture store — the mechanism that makes
- * `VITE_API_MODE=msw` answer real data AND accept writes. supabase-js issues plain
- * PostgREST requests in every mode; this intercepts them at the network layer so feature
- * code runs unchanged against the mock and the live project.
- *
- * Reads resolve one of three ways: `.single()` → one row by id; a paginated list (has
- * `limit`/count) with a list config → the parity-tested `applyListQuery` + a
- * `Content-Range`; else a plain filtered + ordered read. Writes (POST/PATCH/DELETE)
- * mutate the store and echo the affected row when `return=representation` is requested.
- */
-
 type TableConfig<Row extends Record<string, unknown> & { id: string }> = {
   table: string;
   rows: readonly Row[];
-  /** Present only for tables with a paginated + searchable list (tickets today). */
   applyConfig?: ApplyListConfig<Row>;
-  /** Row identity for detail lookups + writes. Defaults to the `id` column. */
   getId?: (row: Row) => string;
-  /**
-   * Register the POST/PATCH/DELETE verbs. Off by default so a read-only table (tickets,
-   * profiles, roles, permissions) exposes no mutable surface over its store — only the
-   * admin lookup tables opt in.
-   */
   writable?: boolean;
-  /**
-   * An existing store to read from, instead of one seeded internally from `rows`. Supplied
-   * when another handler must mutate the same data — tickets share a store with the bulk
-   * RPC, so a bulk change shows up on the next list read.
-   */
   store?: TableStore<Row>;
-  /**
-   * Broadcast INSERT/UPDATE/DELETE on this table over the realtime bus, so other tabs of the
-   * demo react (the live twin is Supabase Realtime replicating the write). Off by default.
-   */
   realtime?: boolean;
-  /**
-   * MSW parity for database triggers, which don't run under MSW. `stampInsert` transforms a
-   * row before it is stored (e.g. resolve SLA due_at from priority); `stampUpdate` augments a
-   * PATCH from the current row (e.g. stamp resolved_at when a ticket enters `solved`);
-   * `afterInsert` runs a side effect on another store (e.g. an agent reply stamps its ticket's
-   * first_response_at); `afterUpdate` runs one from the incoming patch + the pre-update row
-   * (e.g. emit ticket_events for each changed field). Each mirrors a specific trigger — keep
-   * them tiny and colocated.
-   */
   stampInsert?: (row: Row) => Row;
   stampUpdate?: (patch: Partial<Row>, current: Row) => Partial<Row>;
   afterInsert?: (row: Row) => void;
   afterUpdate?: (patch: Partial<Row>, current: Row) => void;
 };
 
-/** eq / in matching for the plain-read and detail paths — dynamic column access, since a
- *  fixture row's keys ARE its Postgres columns (snake_case). */
 function matchesFilters<Row extends Record<string, unknown>>(
   row: Row,
   filters: Record<string, ParsedFilter>
@@ -84,8 +45,6 @@ function matchesFilters<Row extends Record<string, unknown>>(
         .split(',')
         .map((entry) => entry.trim().replace(/^"|"$/g, ''))
         .includes(cellText);
-    // Any other operator on a plain read is not something the app emits — ignore it
-    // rather than filter on a half-understood clause.
     return true;
   });
 }
@@ -142,7 +101,6 @@ export function makeTableHandler<Row extends Record<string, unknown> & { id: str
     return collectionResponse(plainRead(rows, query));
   });
 
-  // `.insert(row)` — supabase-js posts an object (or array); an absent id is server-filled.
   const create = http.post(path, async ({ request }) => {
     const query = parsePostgrestRequest(request);
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
@@ -157,7 +115,6 @@ export function makeTableHandler<Row extends Record<string, unknown> & { id: str
     return query.single ? objectResponse(rows[0]) : collectionResponse(rows);
   });
 
-  // `.update(patch).eq('id', …)` — apply the patch to the addressed row.
   const modify = http.patch(path, async ({ request }) => {
     const query = parsePostgrestRequest(request);
     const patch = (await request.json().catch(() => ({}))) as Partial<Row>;
@@ -171,7 +128,6 @@ export function makeTableHandler<Row extends Record<string, unknown> & { id: str
     return query.single ? objectResponse(updated) : collectionResponse([updated]);
   });
 
-  // `.delete().eq('id', …)` — remove the row; no body unless representation is asked for.
   const destroy = http.delete(path, ({ request }) => {
     const query = parsePostgrestRequest(request);
     const id = query.filters.id?.value;

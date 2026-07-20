@@ -1,18 +1,3 @@
-/**
- * The permission catalogue and the role → permission matrix.
- *
- * Every code here is checked by a policy in
- * `supabase/migrations/*_row_level_security.sql`. That is a rule, not a
- * coincidence: a permission nothing enforces is worse than no permission, because
- * it shows up in the admin UI and reads as protection that does not exist.
- *
- * Notably absent: `ticket.assign`. RLS is row-level, so no policy can permit an
- * edit to `status` while refusing one to `assignee_id` — assignment is gated by
- * `ticket.update` instead. If those two ever need to split (an agent may take a
- * ticket, only a lead may hand it to someone else), that is a BEFORE UPDATE
- * trigger comparing `old.assignee_id`, not a policy.
- */
-
 import { uuid } from './uuid';
 import type { PermissionRow, RolePermissionRow, RoleRow } from './row-types';
 
@@ -52,16 +37,11 @@ const ROLE_DEFINITIONS = [
   {
     name: 'owner',
     description: 'Full control, including the permission catalogue itself',
-    // Every permission — spread rather than listed, so a new permission is
-    // owner-granted by construction and cannot be forgotten here.
     permissions: PERMISSION_DEFINITIONS.map(([code]) => code),
   },
   {
     name: 'admin',
     description: 'Runs the help desk: users, org data and every ticket',
-    // Everything except `permission.manage`. The catalogue is a mirror of what the
-    // RLS policies check — editing it from the UI cannot grant real access, it can
-    // only desync the two. That belongs to whoever ships migrations, i.e. owner.
     permissions: PERMISSION_DEFINITIONS.map(([code]) => code).filter(
       (code) => code !== 'permission.manage'
     ),
@@ -70,12 +50,6 @@ const ROLE_DEFINITIONS = [
     name: 'agent',
     description: 'Works tickets for their team, sees internal notes',
     permissions: [
-      // Deliberately NOT `user.read.all`. An agent needs two things: the staff
-      // roster for the assignee picker, and the requesters on their own tickets.
-      // The profiles policy gives both — staff via team membership, requesters via
-      // ticket visibility. `user.read.all` would hand over the entire customer
-      // list to solve the roster problem, which is the shape of over-permissioning
-      // that turns one compromised agent account into a customer database leak.
       'canned.read',
       'ticket.read.team',
       'ticket.create',
@@ -87,10 +61,6 @@ const ROLE_DEFINITIONS = [
   {
     name: 'customer',
     description: 'Opens tickets and replies to their own',
-    // Only this. Reading their own tickets needs no permission — the tickets policy
-    // grants it on `requester_id = auth.uid()`, and replying is an insert into
-    // ticket_messages gated on ticket visibility. Internal notes are invisible
-    // precisely because `message.read.internal` is missing here.
     permissions: ['ticket.create'],
   },
 ] as const satisfies readonly {
@@ -105,7 +75,6 @@ export const roleRows: RoleRow[] = ROLE_DEFINITIONS.map((role, index) => ({
   id: uuid('role', index + 1),
   name: role.name,
   description: role.description,
-  // Seeded roles are load-bearing for RLS; the admin UI must refuse to delete them.
   is_system: true,
 }));
 

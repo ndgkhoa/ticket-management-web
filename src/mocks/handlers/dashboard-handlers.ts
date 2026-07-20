@@ -4,13 +4,6 @@ import { categoryRows, userRows } from '~/mocks/fixtures';
 import { ticketStore } from '~/mocks/stores/ticket-store';
 import type { TicketRow } from '~/mocks/fixtures/row-types';
 
-/**
- * MSW mirror of the dashboard analytics RPCs (`analytics_views` migration). The live functions
- * aggregate in Postgres, scoped by RLS; there's no RLS in the demo, so these compute over the
- * whole ticket store — the same numbers an admin (who sees everything) gets live. Kept beside the
- * SQL it mirrors so the two can't drift.
- */
-
 const MIN = 60_000;
 const DAY = 24 * 60 * MIN;
 const OPEN_STATUSES = ['open', 'pending', 'on_hold'];
@@ -37,14 +30,12 @@ const avgOrNull = (nums: number[]): number | null =>
 const dashboardKpis = http.post('*/rest/v1/rpc/dashboard_kpis', async ({ request }) => {
   const rows = createdSince(await windowStart(request));
   const resolved = rows.filter((row) => row.resolved_at);
-  // Only tickets that had a resolution target count toward compliance (mirrors the SQL).
   const withTarget = resolved.filter((row) => row.due_at);
   const met = withTarget.filter(
     (row) => new Date(row.resolved_at!).getTime() <= new Date(row.due_at!).getTime()
   ).length;
   return HttpResponse.json([
     {
-      // Current open backlog, not window-scoped (mirrors the SQL subquery).
       open_count: ticketStore.all().filter((row) => OPEN_STATUSES.includes(row.status)).length,
       avg_first_response_mins: avgOrNull(
         rows

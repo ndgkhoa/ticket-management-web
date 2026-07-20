@@ -4,18 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~
 import { formatMinutes } from '~/utils/format';
 import type { AgentPerformance } from '~/features/dashboard/schemas/dashboard-schema';
 
-/**
- * Agent throughput as a table rather than a chart — it carries four numbers per agent, which a
- * bar can't show at once, and a real table is inherently accessible + sortable-looking.
- */
 export function AgentPerformanceTable({ data }: { data: AgentPerformance[] }) {
   const { t } = useTranslation();
   return (
     <div
       className="focus-visible:ring-ring max-h-64 overflow-auto rounded-sm focus-visible:ring-2 focus-visible:outline-none"
-      // A scrollable region must be keyboard-focusable so it can be scrolled without a mouse
-      // (axe scrollable-region-focusable). The static rule can't see the overflow; axe, run in a
-      // real browser, is the authority here.
       // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
       tabIndex={0}
       role="group"

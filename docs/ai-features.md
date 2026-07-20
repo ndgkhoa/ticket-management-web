@@ -66,6 +66,7 @@ nothing else competes for the quota.
 | **gemini-embedding-001** @1536 | embeddings           | ~1,000 RPD, 30K TPM (TPM is the binding limit)                                             |
 
 Pin the chat model to a **stable id** (`GEMINI_CHAT_MODEL`), not a `*-latest` alias.
+The embedding model is pinned via `GEMINI_EMBED_MODEL` (defaults to `gemini-embedding-001`).
 Steady-state usage is far below these limits by design: the demo and CI make zero AI
 calls; only hand-driven dev traffic hits the API.
 

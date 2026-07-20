@@ -8,15 +8,9 @@ import {
   volumePointSchema,
 } from '~/features/dashboard/schemas/dashboard-schema';
 
-/**
- * The dashboard metric RPCs. Each is a role-scoped Postgres aggregation (see the
- * `analytics_views` migration); the client only passes the window start and validates the shape.
- * `p_from` is an ISO timestamp — the start of the selected 7/30/90-day range.
- */
 export const dashboardApi = {
   kpis: async (from: string) => {
     const { data } = await supabase.rpc('dashboard_kpis', { p_from: from }).throwOnError();
-    // A table-returning function yields a one-row array even over an empty window.
     return dashboardKpisSchema.parse(data?.[0]);
   },
 

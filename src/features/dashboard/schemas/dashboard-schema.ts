@@ -1,11 +1,5 @@
 import { z } from 'zod';
 
-/**
- * Domain models for the dashboard RPCs. Postgres returns `numeric` as a string (to keep
- * precision) and `bigint` as a number, so counts and averages are coerced to numbers here;
- * averages are nullable (no resolved tickets in the window → no average).
- */
-
 export const dashboardKpisSchema = z
   .object({
     open_count: z.coerce.number(),
@@ -42,7 +36,6 @@ export const distributionSliceSchema = z
 
 export type DistributionSlice = z.infer<typeof distributionSliceSchema>;
 
-/** Each distribution RPC names its label column differently — map to a shared `{ label }`. */
 export const parseDistribution = (rows: unknown, labelKey: string): DistributionSlice[] =>
   z
     .array(

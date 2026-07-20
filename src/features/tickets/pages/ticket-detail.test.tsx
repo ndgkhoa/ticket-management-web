@@ -20,20 +20,10 @@ import { ticketQueries } from '~/features/tickets/api/ticket-queries';
 import { ticketRows } from '~/mocks/fixtures';
 import TicketDetail from '~/features/tickets/pages/ticket-detail';
 
-// Presence is a websocket concern jsdom/undici can't service and is orthogonal to the gating
-// under test — stub it so the page renders without opening a realtime connection.
 vi.mock('~/features/tickets/hooks/use-ticket-detail-realtime', () => ({
   useTicketDetailRealtime: () => [],
 }));
 
-/**
- * Phase 06: the ticket detail is a read-only view for a customer and the full workflow for an
- * agent. The gate is `ticket.update` — the same permission RLS enforces for the writes. RLS is
- * the real guard; this asserts the UI aligns with it, rendered through the real route so
- * `getRouteApi('/_app/tickets/$ticketId')` resolves its param.
- */
-
-// A ticket with a team + assignee, so the agent sidebar has real data to show.
 const target = ticketRows.find((row) => row.assignee_id && row.team_id)!;
 
 async function renderDetailAs(permissions: string[]) {
@@ -72,7 +62,6 @@ async function renderDetailAs(permissions: string[]) {
   );
 }
 
-/** Count calls to the agent-roster RPC, to prove a customer's client never pulls it. */
 function spyAgentRoster() {
   const calls = { count: 0 };
   server.use(
@@ -91,15 +80,12 @@ describe('TicketDetail read-only gating', () => {
     const roster = spyAgentRoster();
     await renderDetailAs(['ticket.update']);
 
-    // The subject renders once the suspense query resolves; wait on it, then assert the sidebar.
     expect(await screen.findByText(target.subject)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Properties' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'SLA' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Activity' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Similar tickets' })).toBeInTheDocument();
-    // Attachments stay for everyone.
     expect(screen.getByRole('heading', { name: 'Attachments' })).toBeInTheDocument();
-    // The workflow is shown, so its data (the agent roster) is fetched.
     await waitFor(() => expect(roster.count).toBeGreaterThan(0));
   });
 
@@ -108,16 +94,13 @@ describe('TicketDetail read-only gating', () => {
     await renderDetailAs([]);
 
     expect(await screen.findByText(target.subject)).toBeInTheDocument();
-    // The read-only essentials remain: attachments card + the reply composer.
     expect(screen.getByRole('heading', { name: 'Attachments' })).toBeInTheDocument();
-    // No agent controls.
     await waitFor(() => {
       expect(screen.queryByRole('heading', { name: 'Properties' })).not.toBeInTheDocument();
     });
     expect(screen.queryByRole('heading', { name: 'SLA' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Activity' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Similar tickets' })).not.toBeInTheDocument();
-    // The gate reaches the network: the agent roster is never pulled into a customer's client.
     expect(roster.count).toBe(0);
   });
 });

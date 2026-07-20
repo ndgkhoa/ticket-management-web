@@ -3,11 +3,6 @@ import { z } from 'zod';
 import type { Tables } from '~/lib/database.types';
 import { messageTypeSchema } from '~/features/tickets/schemas/ticket-enums';
 
-/**
- * TicketMessage: a `ticket_messages` row as a domain model — one entry in the ticket's
- * conversation. `type` separates a customer-visible `public_reply` from an agent-only
- * `internal_note` (RLS hides notes from customers; the UI styles them apart).
- */
 const ticketMessageRowSchema = z.object({
   id: z.uuid(),
   ticket_id: z.uuid(),

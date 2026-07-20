@@ -3,16 +3,6 @@ import { toast } from 'sonner';
 
 import i18n from '~/i18n';
 
-/**
- * The React Query half of an admin CRUD resource, built once and reused by every lookup
- * table (categories, tags, teams, SLA policies). The API layer and the query keys stay
- * per-entity and typed; this removes only the identical list-query + mutation wiring.
- *
- * Mutations invalidate the resource's whole key space on success rather than optimistic
- * patching — these tables are tens of rows, a refetch is cheap, and invalidate-then-refetch
- * cannot desync the way a hand-written optimistic cache edit can. The caller drives the
- * toast + dialog close from the returned mutation's own `onSuccess`/`onError`.
- */
 type CrudApi<Row, Input> = {
   list: () => Promise<Row[]>;
   create: (input: Input) => Promise<Row>;
@@ -33,8 +23,6 @@ export function createCrudQueries<Row, Input>(config: {
 
   const listQuery = () => queryOptions({ queryKey: keys.list(), queryFn: api.list });
 
-  // `enabled` lets a caller skip the fetch when the data won't be shown (e.g. a read-only
-  // customer view that hides the admin lookups). Defaults on, so existing callers are unchanged.
   const useList = (options?: { enabled?: boolean }) =>
     useQuery({ ...listQuery(), enabled: options?.enabled ?? true });
 
@@ -43,9 +31,6 @@ export function createCrudQueries<Row, Input>(config: {
     return () => queryClient.invalidateQueries({ queryKey: keys.all });
   };
 
-  // Success feedback lives here, once, so every entity toasts consistently — the caller's
-  // own onSuccess still runs (it closes the dialog). i18n via the singleton, not the hook,
-  // since this is called inside the mutation callback, not render.
   const useCreate = () => {
     const invalidate = useInvalidate();
     return useMutation({

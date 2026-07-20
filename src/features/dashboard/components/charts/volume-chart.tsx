@@ -10,7 +10,6 @@ import {
 } from '~/components/ui';
 import type { VolumePoint } from '~/features/dashboard/schemas/dashboard-schema';
 
-/** Daily created vs resolved volume over the window. */
 export function VolumeChart({ data }: { data: VolumePoint[] }) {
   const { t } = useTranslation();
   return (

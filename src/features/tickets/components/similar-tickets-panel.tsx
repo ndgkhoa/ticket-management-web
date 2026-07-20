@@ -8,12 +8,6 @@ import { TicketPriorityBadge } from '~/features/tickets/components/ticket-priori
 
 type Props = { ticketId: string };
 
-/**
- * "Similar tickets" sidebar: neighbours of this ticket's stored embedding. Reads the
- * vector already on the row, so it's a pure DB lookup with no API cost. Renders nothing
- * when AI is off, and stays quiet (returns null) when there are no similar tickets, so it
- * never shows an empty box.
- */
 export function SimilarTicketsPanel({ ticketId }: Props) {
   const { t } = useTranslation();
   const query = useSimilarTickets(ticketId);

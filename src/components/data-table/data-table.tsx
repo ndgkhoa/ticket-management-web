@@ -29,34 +29,22 @@ type DataTableProps<TData, TValue> = {
   totalCount: number;
   getRowId: (row: TData) => string;
 
-  // Controlled state, derived from the URL. The table computes nothing — the server
-  // already paged and sorted — so these flow URL → table and the handlers write back.
   pagination: PaginationState;
   sorting: SortingState;
   onPaginationChange: OnChangeFn<PaginationState>;
   onSortingChange: OnChangeFn<SortingState>;
 
-  /** First load — show skeleton rows. */
   isLoading?: boolean;
-  /** A page/sort change is fetching — dim the current rows, never unmount them. */
   isPlaceholderData?: boolean;
-  /** Whether any filter/search is active, to pick empty vs no-results messaging. */
   isFiltered?: boolean;
 
-  // Row selection — opt-in. When enabled, a checkbox column is prepended (header selects
-  // this page's rows only, matching the page-scoped selection contract). State is
-  // controlled by the caller, keyed by `getRowId` (stable ticket id), so a bulk action
-  // over the selection references real ids, never row indices.
   enableRowSelection?: boolean;
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
 
   toolbar?: ReactNode;
-  /** Shown above the table when a selection is active — the bulk action bar + banner. */
   bulkBar?: ReactNode;
-  /** No data at all — an onboarding CTA. */
   emptyState?: ReactNode;
-  /** Filters/search matched nothing — echo the query + a clear action. */
   noResultsState?: ReactNode;
 };
 
@@ -80,8 +68,6 @@ export function DataTable<TData, TValue>({
   emptyState,
   noResultsState,
 }: DataTableProps<TData, TValue>) {
-  // Prepend the checkbox column only when selection is on, so non-selectable tables are
-  // untouched. The header toggles just this page's rows (`toggleAllPageRowsSelected`).
   const selectionColumn: ColumnDef<TData, TValue> = {
     id: 'select',
     header: ({ table }) => (
@@ -110,8 +96,6 @@ export function DataTable<TData, TValue>({
     data,
     columns: tableColumns,
     getRowId,
-    // Server-driven: the table renders what it is handed and reports intent through
-    // the handlers. `rowCount` gives it the total so the pager knows the page count.
     rowCount: totalCount,
     manualPagination: true,
     manualSorting: true,
@@ -138,7 +122,6 @@ export function DataTable<TData, TValue>({
           aria-busy={isPlaceholderData}
           className={cn(
             'transition-opacity',
-            // Dim + lock while the next page loads; same DOM, so no layout jump.
             isPlaceholderData && 'pointer-events-none opacity-60'
           )}
         >
@@ -194,8 +177,7 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      {/* Only when the data spans more than one page — a single page needs no pager or
-          rows-per-page control. `getPageCount` reads the server total via `rowCount`. */}
+      {}
       {table.getPageCount() > 1 && <DataTablePagination table={table} totalCount={totalCount} />}
     </div>
   );

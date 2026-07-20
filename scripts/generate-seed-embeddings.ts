@@ -1,25 +1,3 @@
-/**
- * One-time backfill of ticket embeddings for semantic search.
- *
- * Reads the seeded tickets from the fixtures, embeds each with Gemini
- * (gemini-embedding-001 @ 1536 dims, RETRIEVAL_DOCUMENT), and writes one
- * `update public.tickets set embedding = ...` per ticket into
- * `supabase/seed-embeddings.sql`. That file is loaded after seed.sql on `db reset`, so
- * once this has run the vectors are committed data — resets and fresh checkouts cost zero
- * API calls forever.
- *
- * Three properties make it safe against the free-tier limits:
- *  - Resumable: already-embedded ticket ids are read back from the output file and
- *    skipped, and each result is flushed to disk the moment it returns. A crash at
- *    ticket 400 costs only the missing 100 on the next run, not a fresh 500 that would
- *    blow the 1,000/day embedding budget.
- *  - Token-throttled: TPM (30K), not RPM, is the binding limit. The pacer sleeps to keep
- *    the trailing minute under the cap. No parallelism — nothing to gain, a 429 to lose.
- *  - Backs off on 429 / RESOURCE_EXHAUSTED rather than crashing.
- *
- * Usage: GEMINI_API_KEY=... bun run seed:embed
- */
-
 import { readFileSync, writeFileSync, appendFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
@@ -29,7 +7,7 @@ import { ticketRows } from '../src/mocks/fixtures';
 const EMBED_MODEL = process.env.GEMINI_EMBED_MODEL ?? 'gemini-embedding-001';
 const EMBED_DIMENSIONS = 1536;
 const TOKENS_PER_MINUTE = 30_000;
-const MIN_REQUEST_INTERVAL_MS = 700; // ≥ RPM 100 with margin.
+const MIN_REQUEST_INTERVAL_MS = 700;
 const MAX_RETRIES = 5;
 
 const apiKey = process.env.GEMINI_API_KEY;
@@ -49,7 +27,6 @@ const HEADER = `-- GENERATED FILE — DO NOT EDIT BY HAND.
 -- and loaded after seed.sql on \`supabase db reset\`. These vectors are committed data.
 `;
 
-/** Ticket ids already present in the output file, so a re-run skips them. */
 function loadDoneIds(): Set<string> {
   if (!existsSync(outputPath)) return new Set();
   const text = readFileSync(outputPath, 'utf8');
@@ -59,7 +36,6 @@ function loadDoneIds(): Set<string> {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Rough token estimate; the API bills real tokens, this only paces requests. */
 const estimateTokens = (text: string) => Math.ceil(text.length / 4);
 
 async function embed(text: string): Promise<number[]> {
@@ -110,8 +86,6 @@ async function main() {
     const text = `${ticket.subject}\n\n${ticket.description ?? ''}`.trim();
     const tokens = estimateTokens(text);
 
-    // Token pacer: if this request would push the trailing minute over the cap, wait for
-    // the window to roll over before sending it.
     if (tokensThisWindow + tokens > TOKENS_PER_MINUTE) {
       const wait = 60_000 - (Date.now() - windowStart);
       if (wait > 0) await sleep(wait);
@@ -122,7 +96,6 @@ async function main() {
     const vector = await embed(text);
     tokensThisWindow += tokens;
 
-    // Flush immediately — this is what makes a crash resumable.
     appendFileSync(
       outputPath,
       `update public.tickets set embedding = '[${vector.join(',')}]' where id = '${ticket.id}';\n`,

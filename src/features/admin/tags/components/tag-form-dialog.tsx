@@ -15,21 +15,14 @@ import {
 import { useTagCreate, useTagUpdate } from '~/features/admin/tags/api/tag-queries';
 import type { Tag } from '~/features/admin/tags/schemas/tag-schema';
 
-/** Fallback swatch for a new tag — a neutral slate rather than an arbitrary color. */
 const DEFAULT_TAG_COLOR = '#64748b';
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The row being edited, or null/undefined to create a new one. */
   tag?: Tag | null;
 };
 
-/**
- * Create/edit dialog for a tag. One form serves both: an absent `tag` is a create,
- * a present one pre-fills for an edit. Mount it with a `key` tied to the target id so
- * the defaults reset when the edited row changes (TanStack Form reads them once).
- */
 export function TagFormDialog({ open, onOpenChange, tag }: Props) {
   const { t } = useTranslation();
   const create = useTagCreate();

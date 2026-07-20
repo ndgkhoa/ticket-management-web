@@ -3,19 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 import { server } from '~/mocks/server';
 
-/**
- * Proves the MSW wiring itself, not any app endpoint.
- *
- * The handler registry is intentionally empty until the real data contract exists,
- * so there is nothing to assert against yet — but the plumbing has to be known-good
- * before handlers are written on top of it, or the first failing data test has two
- * possible causes instead of one.
- *
- * `fetch` rather than a client wrapper: supabase-js issues plain `fetch` under the
- * hood, so intercepting `fetch` is exactly what makes the whole app answerable from
- * mocks in msw mode. Handlers are registered per-test with `server.use`; the shared
- * setup resets them afterwards.
- */
 describe('MSW wiring', () => {
   it('intercepts fetch requests', async () => {
     server.use(http.get('https://api.test/probe', () => HttpResponse.json({ ok: true })));

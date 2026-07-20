@@ -13,7 +13,6 @@ export type SuggestReplyInput = {
   cannedResponses?: string[];
 };
 
-/** Ask `ai-suggest-reply` for a draft agent reply built from the ticket thread. */
 export const suggestReplyApi = {
   draft: (input: SuggestReplyInput) =>
     invokeAiFunction('ai-suggest-reply', input, aiReplyResultSchema),

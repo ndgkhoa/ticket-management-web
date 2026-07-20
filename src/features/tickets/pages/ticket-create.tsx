@@ -15,11 +15,6 @@ import { ticketPrioritySchema, type TicketPriority } from '~/features/tickets/sc
 const NO_CATEGORY = '';
 const priorityOptions = ticketPrioritySchema.options.map((value) => ({ label: value, value }));
 
-/**
- * Create-ticket form. The requester is the signed-in user (set in the api), so the form only
- * asks for what the caller decides: subject, description, priority, category. On success it
- * navigates to the new ticket's detail page.
- */
 function TicketCreate() {
   const { t } = useTranslation();
   const navigate = useNavigate();

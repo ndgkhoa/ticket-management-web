@@ -4,11 +4,6 @@ import { parsePostgrestRequest } from '~/mocks/lib/postgrest-request';
 import { collectionResponse } from '~/mocks/lib/postgrest-response';
 import { teamMemberId, teamMemberStore } from '~/mocks/stores/team-members-store';
 
-/**
- * `team_members` handlers — a dedicated set because the table has a composite (team_id,
- * user_id) key and no `id`, so the generic `makeTableHandler` (which reads/deletes by `id`)
- * can't serve it. Backs the admin members dialog: list a team's members, add one, remove one.
- */
 const path = '*/rest/v1/team_members';
 
 const list = http.get(path, ({ request }) => {

@@ -8,12 +8,6 @@ import {
   scrubSentryEvent,
 } from './pii-scrub';
 
-/**
- * These guard the "no PII leaves the client" promise. The threat is help-desk free text
- * (ticket subject/description, customer names) and record ids — none of which match an email
- * pattern, so every case here deliberately uses non-email PII to prove the ALLOWLIST behaviour,
- * not a denylist.
- */
 describe('normalizePath', () => {
   it('replaces UUID and long-numeric segments with :id, keeps the rest', () => {
     expect(normalizePath('/tickets/6f2a1b3c-1111-2222-3333-444455556666')).toBe('/tickets/:id');

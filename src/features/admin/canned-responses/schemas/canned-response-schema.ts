@@ -2,11 +2,6 @@ import { z } from 'zod';
 
 import type { Tables } from '~/lib/database.types';
 
-/**
- * Canned response: the `canned_responses` row as a domain model. A saved title + body
- * pair agents reuse when replying — authored by whichever admin created it, though the
- * UI never needs the author beyond display.
- */
 const cannedResponseRowSchema = z.object({
   id: z.uuid(),
   title: z.string(),

@@ -29,9 +29,11 @@ supabase/
   seed.sql          Seeded demo data (auto-generated from fixtures)
 
 .github/workflows/
-  ci.yml            Lint → typecheck → test → build → e2e → Lighthouse
-  deploy.yml        Supabase backend + frontend → Cloudflare Pages
-  lighthouse.yml    Perf/a11y budgets on PRs
+  ci.yml            Lint → typecheck → lang:check → test:cov → build (every push to main/develop)
+  lighthouse.yml    Perf/a11y/best-practices budgets on PRs (median of 3 runs)
+  deploy.yml        Supabase backend + frontend → Cloudflare Pages (merge to main)
+  release.yml       Semantic-release: version bump + CHANGELOG + GitHub Release (merge to main)
+  chromatic.yml     Storybook visual regression (all PRs)
 
 e2e/
   *.spec.ts         Playwright tests + accessibility scans (@axe-core/playwright)
@@ -76,9 +78,16 @@ e2e/
 | `supabase/migrations/*`                   | Schema + RLS + triggers + RPCs             |
 | `supabase/functions/`                     | Edge Functions (triage, reply, embed)      |
 | `supabase/seed.sql`                       | Generated from fixtures; auto-committed    |
-| `.github/workflows/ci.yml`                | CI gate (lint/type/test/build/e2e)         |
+| `.github/workflows/ci.yml`                | CI gate (lint/type/test/build)             |
 | `.github/workflows/deploy.yml`            | Supabase + Cloudflare Pages deploy         |
-| `lighthouserc.json`                       | Perf/a11y/best-practices budgets           |
+| `.github/workflows/lighthouse.yml`        | Lighthouse budgets on PRs                  |
+| `.github/workflows/release.yml`           | Semantic-release automation                |
+| `.github/workflows/chromatic.yml`         | Storybook visual regression                |
+| `.releaserc.json`                         | Semantic-release config                    |
+| `codecov.yml`                             | Codecov flags + settings                   |
+| `commitlint.config.js`                    | Conventional commit enforcement            |
+| `mcr.config.cjs`                          | Monocart coverage reports (e2e)            |
+| `lighthouserc.json`                       | Lighthouse budgets + URLs                  |
 
 ## Demo Accounts
 
@@ -124,11 +133,12 @@ MSW (`VITE_API_MODE=msw`) is the local-dev + test backend, not deployed; parity 
 
 ## CI/CD
 
-- **Lint + typecheck + test + build:** Every push (fast gate)
-- **E2E + accessibility:** Every PR (slower, quota-consuming)
-- **Lighthouse budgets:** Every PR (perf/a11y/best-practices)
-- **Chromatic:** Storybook diff tracking (5K snapshots/month on free tier)
-- **Deploy:** On merge to main → Supabase backend + Cloudflare Pages
+- **ci.yml:** Lint + typecheck + lang:check + test (with Codecov unit flag) + build — every push to main/develop
+- **lighthouse.yml:** Perf/a11y/best-practices budgets on PRs (median of 3 runs, posts PR comment)
+- **deploy.yml:** Supabase backend + Cloudflare Pages — on merge to main
+- **release.yml:** Semantic-release (version bump, CHANGELOG, GitHub Release) — on merge to main
+- **chromatic.yml:** Storybook visual regression — all PRs
+- **Codecov:** Coverage uploaded with two flags — `unit` (Vitest) and `e2e` (Playwright V8 via monocart-coverage-reports)
 
 ## i18n
 
@@ -139,9 +149,11 @@ Routes + search params + UI text + date/time formats. Translations generated fro
 - **Unit + component:** Vitest + Testing Library on jsdom
 - **MSW parity:** Integration test ensures triggers are mirrored in mocks
 - **E2E:** Playwright against production build (`vite build` output)
+  - V8 coverage via monocart-coverage-reports (mcr.config.cjs) → Codecov `e2e` flag
 - **Accessibility:** WCAG 2.1 AA in real browser (not jsdom — contrast detection requires layout)
 - **Lighthouse:** Perf/a11y/best-practices budgets; fails PR on regression
-- **Storybook:** Primitive + feature components with Chromatic diffs
+- **Storybook:** Primitive + feature components with Chromatic diffs (forced MSW mode in .storybook/main.ts)
+- **commitlint:** Enforces scope-required conventional commits (bare `feat:` rejected)
 
 ## Review Checklist
 

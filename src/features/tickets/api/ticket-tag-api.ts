@@ -1,10 +1,5 @@
 import { supabase } from '~/lib/supabase';
 
-/**
- * A ticket's tags, through the `ticket_tags` junction. The list returns just the tag ids;
- * the UI resolves them to names/colours from the tags lookup it already has. Add/remove are
- * single-membership writes — the detail tag editor toggles one at a time.
- */
 export const ticketTagApi = {
   list: async (ticketId: string): Promise<string[]> => {
     const { data } = await supabase

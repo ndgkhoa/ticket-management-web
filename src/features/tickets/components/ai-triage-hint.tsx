@@ -16,11 +16,6 @@ type Props = {
   onApply: (suggestion: { priority: TicketPriority; categoryId: string | null }) => void;
 };
 
-/**
- * AI triage hint on the create form: a button that asks the model for a priority (and
- * category) from what's typed so far, then lets the user apply it. Rendered only when AI
- * is enabled; on any error it toasts and stays out of the way — the form works without it.
- */
 export function AiTriageHint({ subject, description, categories, onApply }: Props) {
   const { t } = useTranslation();
   const triage = useTriageTicket();
@@ -35,7 +30,6 @@ export function AiTriageHint({ subject, description, categories, onApply }: Prop
   };
 
   const result = triage.data;
-  // Map the model's category label back to an id (case-insensitive); null if it picked none.
   const matchedCategory = result?.category
     ? categories.find((category) => category.name.toLowerCase() === result.category?.toLowerCase())
     : undefined;

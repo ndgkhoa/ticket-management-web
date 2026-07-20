@@ -9,16 +9,6 @@ import { userApi } from '~/features/admin/users/api/user-api';
 import { roleApi } from '~/features/admin/roles/api/role-api';
 import { permissionApi } from '~/features/admin/permissions/api/permission-api';
 
-/**
- * End-to-end proof of the msw data-client: the real feature API (supabase-js →
- * PostgREST request) hits the MSW handler and gets back what `applyListQuery` produces.
- *
- * Paired with the Supabase↔applier parity test, this closes the loop: applier == live
- * Supabase (parity test) and feature-api-over-MSW == applier (here), so the demo agrees
- * with production without a database in CI. This test asserts the WIRING — that the
- * request encodes and the response decodes correctly across the network boundary.
- */
-
 const CASES: Record<string, Partial<ListParams>> = {
   default: {},
   'filter status=open': { filters: { status: 'open' } },
@@ -45,7 +35,6 @@ describe('ticket list over MSW', () => {
 
     expect(viaApi.totalCount).toBe(viaApplier.totalCount);
     expect(viaApi.pageCount).toBe(viaApplier.pageCount);
-    // The API maps rows to the camelCase domain model; compare on the stable id.
     expect(viaApi.rows.map((row) => row.id)).toEqual(viaApplier.rows.map((row) => row.id));
   });
 });
@@ -62,7 +51,6 @@ describe('ticket detail over MSW', () => {
 });
 
 describe('ticket tag filter over MSW', () => {
-  // A tag carried by at least one ticket, and the ground-truth set of tickets on it.
   const tagId = ticketTagRows[0].tag_id;
   const expectedIds = new Set(
     ticketTagRows.filter((row) => row.tag_id === tagId).map((row) => row.ticket_id)

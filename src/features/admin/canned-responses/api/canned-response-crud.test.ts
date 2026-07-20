@@ -3,11 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { cannedResponseApi } from '~/features/admin/canned-responses/api/canned-response-api';
 import { cannedResponseRows } from '~/mocks/fixtures';
 
-/**
- * Canned-response list + CRUD over the mock backend — mirrors `role-crud.test.ts`, plus
- * the server-side list half from `user-api.ts`'s pattern since this resource is
- * paginated. Stores re-seed between tests, so writes here don't leak.
- */
 describe('canned response list over MSW', () => {
   it('lists every seeded row on a page large enough to hold them all', async () => {
     const result = await cannedResponseApi.list({ page: 1, pageSize: 100, filters: {} });

@@ -17,12 +17,6 @@ type Props<TData> = {
   totalCount: number;
 };
 
-/**
- * Pagination bar. `x–y of N` from the server's total, a page-size select that also
- * writes the persisted preference (so the choice sticks across visits), and
- * first/prev/next/last. Boundary controls are DISABLED, not hidden, so the bar keeps
- * its width and doesn't reflow when you reach the first or last page.
- */
 export function DataTablePagination<TData>({ table, totalCount }: Props<TData>) {
   const setPageSizePreference = usePreferencesStore((state) => state.setPageSize);
 
@@ -49,7 +43,7 @@ export function DataTablePagination<TData>({ table, totalCount }: Props<TData>) 
               table.setPageSize(next);
             }}
           >
-            <SelectTrigger size="sm" className="w-[70px]">
+            <SelectTrigger size="sm" className="w-17.5">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

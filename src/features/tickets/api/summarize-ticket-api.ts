@@ -7,7 +7,6 @@ export type SummarizeInput = {
   messages: ThreadMessageInput[];
 };
 
-/** Ask `ai-summarize` to condense a long ticket thread. */
 export const summarizeTicketApi = {
   summarize: (input: SummarizeInput) =>
     invokeAiFunction('ai-summarize', input, aiSummaryResultSchema),

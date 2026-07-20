@@ -15,7 +15,6 @@ function Roles() {
   const { t } = useTranslation();
   const query = useRoleList();
   const remove = useRoleRemove();
-  // The role whose permission matrix is open (null = closed).
   const [permissionsRole, setPermissionsRole] = useState<Role | null>(null);
 
   const columns: ColumnDef<Role>[] = [
@@ -26,8 +25,7 @@ function Roles() {
       ),
       cell: ({ row }) => (
         <span className="flex items-center gap-2">
-          {/* min-width so the badge starts at the same x on every row instead of trailing
-              each name's own width — otherwise the badges look ragged. */}
+          {}
           <span className="min-w-24">{row.original.name}</span>
           {row.original.isSystem && <Badge variant="secondary">{t('Common.System')}</Badge>}
         </span>
@@ -47,7 +45,6 @@ function Roles() {
         query={query}
         remove={remove}
         columns={columns}
-        // Seeded roles are load-bearing for RLS — the UI refuses to delete them.
         canDelete={(role) => !role.isSystem}
         rowActions={(role) => (
           <Button

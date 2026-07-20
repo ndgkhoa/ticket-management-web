@@ -35,8 +35,6 @@ import {
 import type { Ticket } from '~/features/tickets/schemas/ticket-schema';
 import type { TicketSearch } from '~/features/tickets/schemas/ticket-search-schema';
 
-// Facet options are derived from the Zod enums, so a value added to the Postgres enum
-// (and regenerated) shows up here without a second hand-maintained list.
 const statusOptions = ticketStatusSchema.options.map((value) => ({ label: value, value }));
 const priorityOptions = ticketPrioritySchema.options.map((value) => ({ label: value, value }));
 
@@ -45,15 +43,10 @@ function Tickets() {
   const { search, setSearch, applySearch } = useTicketSearchParams();
   const ticketQuery = useTicketList(toTicketListParams(search));
 
-  // Smart search: rank by semantic similarity instead of keyword match. Active only with
-  // AI on, the toggle set, and a query present. On any semantic error it falls back to the
-  // keyword results, so search is never unavailable (Phase 06 guarantees keyword works).
   const smartActive = search.smart && isAiEnabled && Boolean(search.q);
   const semanticQuery = useSemanticSearch(search.q, smartActive);
   const usingSemantic = smartActive && !semanticQuery.isError;
 
-  // Semantic search is a single ranked top-N list, not a server-paged set — clamp it to
-  // one page so the DataTable never renders a pager that would just re-show the same rows.
   const semanticRows = (semanticQuery.data ?? []).slice(0, search.pageSize);
   const rows = usingSemantic ? semanticRows : (ticketQuery.data?.rows ?? []);
   const totalCount = usingSemantic ? semanticRows.length : (ticketQuery.data?.totalCount ?? 0);
@@ -61,8 +54,6 @@ function Tickets() {
   const options = useTicketFilterOptions();
   const bulk = useTicketBulkSelection({ search, rows, totalCount });
 
-  // Continuous row number across pages: the server pages the data, so the display index
-  // is the page offset plus the row's position on the current page.
   const pageOffset = (search.page - 1) * search.pageSize;
 
   const columns: ColumnDef<Ticket>[] = [
@@ -107,8 +98,6 @@ function Tickets() {
     {
       id: 'assignee',
       header: t('Fields.Assignee'),
-      // Relation columns aren't sortable — the sort allowlist is on the ticket's own
-      // columns, and ordering by a joined name isn't part of the list contract.
       enableSorting: false,
       cell: ({ row }) => {
         const agent = row.original.assigneeId
@@ -152,8 +141,6 @@ function Tickets() {
     },
   ];
 
-  // URL → table: pagination is 0-based here, 1-based in the URL. A page-size change
-  // routes through the hook's reset-to-page-1 rule; a page move only changes the page.
   const pagination: PaginationState = { pageIndex: search.page - 1, pageSize: search.pageSize };
   const sorting: SortingState = [{ id: search.sort, desc: search.dir === 'desc' }];
 
@@ -168,8 +155,6 @@ function Tickets() {
     search.tagIds?.length
   );
 
-  // How many faceted filters are active (excludes the free-text query and Smart toggle) —
-  // shown as a badge on the collapsed "Filters" button.
   const activeFilterCount = [
     search.status,
     search.priority,
@@ -190,8 +175,6 @@ function Tickets() {
       tagIds: undefined,
     });
 
-  // A realtime change refetches quietly only when nothing would shift under the user: page 1,
-  // default sort, no filter/search/selection, current data settled. Otherwise it raises a toast.
   const canAutoRefresh =
     search.page === 1 &&
     search.sort === 'created_at' &&
@@ -215,8 +198,6 @@ function Tickets() {
   ]);
   useTicketListRealtime({ canAutoRefresh, viewKey });
 
-  // Only fail the page on a keyword error when we're actually showing keyword results —
-  // in semantic mode the keyword query is irrelevant, and search must stay available.
   if (ticketQuery.isError && !usingSemantic) {
     return <ErrorPage subTitle={ticketQuery.error.message} />;
   }

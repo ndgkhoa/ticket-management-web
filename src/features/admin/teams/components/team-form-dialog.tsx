@@ -18,15 +18,9 @@ import type { Team } from '~/features/admin/teams/schemas/team-schema';
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The row being edited, or null/undefined to create a new one. */
   team?: Team | null;
 };
 
-/**
- * Create/edit dialog for a team. One form serves both: an absent `team` is a create,
- * a present one pre-fills for an edit. Mount it with a `key` tied to the target id so
- * the defaults reset when the edited row changes (TanStack Form reads them once).
- */
 export function TeamFormDialog({ open, onOpenChange, team }: Props) {
   const { t } = useTranslation();
   const create = useTeamCreate();
@@ -42,8 +36,6 @@ export function TeamFormDialog({ open, onOpenChange, team }: Props) {
     defaultValues: { name: team?.name ?? '', description: team?.description ?? '' },
     validators: { onSubmit: schema },
     onSubmit: ({ value }) => {
-      // Empty description collapses to null — the column is nullable, and '' vs null
-      // should not be two distinct "no description" states.
       const input = { name: value.name.trim(), description: value.description.trim() || null };
       const handlers = {
         onSuccess: () => onOpenChange(false),

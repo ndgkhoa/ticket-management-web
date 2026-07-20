@@ -1,12 +1,7 @@
-/**
- * Conventional commits, enforced on commit-msg.
- *
- * The `scope-enum` is intentionally omitted: feature scopes are still moving
- * (Phases 03–06 reshape them), and a stale enum would reject valid commits.
- */
 export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
+    'scope-empty': [2, 'never'],
     'type-enum': [
       2,
       'always',
@@ -24,7 +19,6 @@ export default {
         'style',
       ],
     ],
-    // Long subjects are usually two commits wearing a trenchcoat.
     'subject-max-length': [2, 'always', 100],
     'body-max-line-length': [1, 'always', 100],
   },

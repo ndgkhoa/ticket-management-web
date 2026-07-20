@@ -8,22 +8,8 @@ import { ticketStore } from '~/mocks/stores/ticket-store';
 import { ticketMessageStore } from '~/mocks/stores/ticket-message-store';
 import type { TicketRow } from '~/mocks/fixtures/row-types';
 
-/**
- * The `msw`-mode realtime transport, over a BroadcastChannel shared by every tab of the demo.
- * It plays the part Supabase Realtime plays live: writes broadcast a change (so other tabs
- * react — the "N new" list pill, a spliced-in reply), and presence tracks who's viewing.
- *
- * A synthetic activity generator stands in for "other users" so a single tab still sees the
- * feature move; opening a second tab makes it genuinely cross-session. Each tab keeps its own
- * in-memory store, so a received change is applied to this tab's store before subscribers are
- * notified — that keeps a later refetch consistent with what the pill promised.
- */
-
 const CHANNEL_NAME = 'ticket-realtime';
 
-// Identifies this tab, so a tab ignores the messages it itself published (two
-// BroadcastChannel instances in one page DO deliver to each other — only the exact sending
-// instance is skipped). The publishing tab already has the write; only other tabs react.
 const SENDER_ID = typeof crypto !== 'undefined' ? crypto.randomUUID() : 'server';
 
 type BusMessage = { sender: string } & (
@@ -35,14 +21,12 @@ function openChannel(): BroadcastChannel | null {
   return typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(CHANNEL_NAME);
 }
 
-// One channel for outbound publishing from the write handlers, created lazily.
 let publisher: BroadcastChannel | null | undefined;
 export function publishChange(table: string, change: RealtimeChange): void {
   if (publisher === undefined) publisher = openChannel();
   publisher?.postMessage({ sender: SENDER_ID, kind: 'change', table, change } satisfies BusMessage);
 }
 
-/** Apply a received change to this tab's store so a refetch agrees with the notification. */
 function applyToStore(table: string, change: RealtimeChange): void {
   const store =
     table === 'tickets' ? ticketStore : table === 'ticket_messages' ? ticketMessageStore : null;
@@ -55,12 +39,9 @@ function applyToStore(table: string, change: RealtimeChange): void {
 
 function createTransport(): {
   transport: RealtimeTransport;
-  /** Notify this tab's subscribers directly — for the synthetic generator, whose broadcast the
-   *  sending tab (rightly) ignores. */
   emitLocalChange: (table: string, change: RealtimeChange) => void;
 } {
   const tableSubs = new Map<string, Set<(change: RealtimeChange) => void>>();
-  // Per topic: our own local viewers and the ones learned from other tabs.
   const presence = new Map<
     string,
     {
@@ -80,7 +61,7 @@ function createTransport(): {
 
   rx?.addEventListener('message', (event) => {
     const message = event.data as BusMessage;
-    if (message.sender === SENDER_ID) return; // our own write — already applied locally
+    if (message.sender === SENDER_ID) return;
     if (message.kind === 'change') {
       applyToStore(message.table, message.change);
       tableSubs.get(message.table)?.forEach((cb) => cb(message.change));
@@ -90,7 +71,6 @@ function createTransport(): {
     if (!entry) return;
     if (message.state === 'join') {
       entry.remote.set(message.member.id, message.member);
-      // A newcomer doesn't know who's already here — re-announce our own viewers to it.
       for (const self of entry.local.values()) {
         publisher ??= openChannel();
         publisher?.postMessage({
@@ -164,7 +144,6 @@ const SYNTHETIC_SUBJECTS = [
 
 let syntheticIndex = 0;
 
-/** Stand-in for other users: every ~25s (while the tab is visible) file a fresh ticket. */
 function startSyntheticActivity(
   notifyLocal: (table: string, change: RealtimeChange) => void
 ): void {
@@ -187,12 +166,11 @@ function startSyntheticActivity(
     ticketStore.insert(row);
 
     const change: RealtimeChange = { eventType: 'INSERT', new: row as never, old: null };
-    notifyLocal('tickets', change); // this tab
-    publishChange('tickets', change); // other tabs
+    notifyLocal('tickets', change);
+    publishChange('tickets', change);
   }, 25_000);
 }
 
-/** Install the mock transport and start synthetic activity. Called from the msw bootstrap. */
 export function installMockRealtime(): void {
   const { transport, emitLocalChange } = createTransport();
   registerRealtimeTransport(transport);

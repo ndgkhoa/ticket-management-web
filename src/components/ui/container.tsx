@@ -22,8 +22,6 @@ export function Container(props: Props) {
   const { title, children, extraRight, showBack = false, stickyHeader = false } = props;
 
   const handleBack = () => {
-    // Boolean = go back in history; an explicit link navigates there. The cast bridges
-    // the free-form `link` prop to the typed router (the value is always a real route).
     if (typeof showBack === 'boolean') {
       router.history.back();
     } else if (showBack?.link) {
@@ -37,8 +35,6 @@ export function Container(props: Props) {
     typeof showBack === 'boolean' ? t('Common.Back') : (showBack?.tootipTitle ?? t('Common.Back'));
 
   return (
-    // No `overflow-auto` here — the scroll lives on the layout's <main>. A second scroll
-    // container nested inside it produced two scrollbars for the same content.
     <div className="relative h-full">
       {showContainerHeader && (
         <div
@@ -46,9 +42,7 @@ export function Container(props: Props) {
             'bg-background sticky top-0 z-10': stickyHeader,
           })}
         >
-          {/* min-h matches the default button height so the header is the same height
-              whether or not `extraRight` holds a button — otherwise switching between a
-              page with a Create button and one without shifts the content down/up. */}
+          {}
           <div className="flex min-h-9 items-center gap-2">
             {showBackButton && (
               <TooltipProvider>

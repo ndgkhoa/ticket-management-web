@@ -1,9 +1,3 @@
-// ai-triage — suggest a priority (and, if a category list is given, a category) for a
-// new ticket from its subject and description. Model: Gemini 3.1 Flash Lite.
-//
-// Output is constrained to JSON by a response schema so the client gets a clean object,
-// not prose. The client still re-validates with Zod (LLM output is untrusted input).
-
 import { generateContent, GeminiError } from '../_shared/gemini.ts';
 import { handlePreflight, jsonResponse } from '../_shared/cors.ts';
 

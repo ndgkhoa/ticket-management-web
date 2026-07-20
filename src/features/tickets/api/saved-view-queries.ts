@@ -17,7 +17,6 @@ export const savedViewQueries = {
 
 export const useSavedViews = () => useQuery(savedViewQueries.list());
 
-/** All three mutations invalidate the one list so the menu re-reads after any change. */
 function useInvalidateSavedViews() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: savedViewKeys.list() });

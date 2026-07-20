@@ -2,10 +2,6 @@ import { z } from 'zod';
 
 import type { Tables } from '~/lib/database.types';
 
-/**
- * Team: the `teams` row as a domain model. A support team is just a name + optional
- * description — the group tickets get assigned to.
- */
 const teamRowSchema = z.object({
   id: z.uuid(),
   name: z.string(),

@@ -15,7 +15,6 @@ function Teams() {
   const { t } = useTranslation();
   const query = useTeamList();
   const remove = useTeamRemove();
-  // The team whose members dialog is open (null = closed).
   const [membersTeam, setMembersTeam] = useState<Team | null>(null);
 
   const columns: ColumnDef<Team>[] = [

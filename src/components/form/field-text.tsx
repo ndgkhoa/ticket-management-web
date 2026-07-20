@@ -10,14 +10,6 @@ type Props = {
   label: string;
 } & Omit<ComponentProps<typeof Input>, 'value' | 'onChange' | 'onBlur' | 'name' | 'id'>;
 
-/**
- * A labelled text input bound to a TanStack Form field — the field owns the value and
- * validation, this wires it to the shadcn Input and shows the error.
- *
- * The label is associated by id (real `htmlFor`, so clicking it focuses the input and
- * a screen reader announces it), and `aria-invalid` flips when a touched field has an
- * error so the invalid ring shows and assistive tech knows.
- */
 export function FieldText({ field, label, className, ...inputProps }: Props) {
   const hasError = field.state.meta.isTouched && field.state.meta.errors.length > 0;
 

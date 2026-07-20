@@ -1,10 +1,3 @@
-// ai-suggest-reply — draft an agent reply from the ticket thread and any canned
-// responses the agent has on hand. Model: Gemini 3.1 Flash Lite. Non-streaming: the
-// whole draft comes back in one response, which keeps the client and the mock simple.
-//
-// The thread is sent by the client, which already holds it under RLS — this function
-// generates text, it does not read the database.
-
 import { generateContent, GeminiError } from '../_shared/gemini.ts';
 import { handlePreflight, jsonResponse } from '../_shared/cors.ts';
 
@@ -16,7 +9,6 @@ type ReplyRequest = {
   cannedResponses?: string[];
 };
 
-/** Strip HTML tags so the model reads plain text, not Tiptap markup. */
 function toPlainText(html: string): string {
   return html
     .replace(/<[^>]+>/g, ' ')

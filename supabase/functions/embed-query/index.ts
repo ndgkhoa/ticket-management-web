@@ -1,11 +1,3 @@
-// embed-query — embed a free-text search query and return the vector. The client then
-// passes it to the `match_tickets` RPC, which runs the similarity search as the caller
-// so RLS still decides which tickets are visible.
-//
-// Kept separate from embed-ticket because the task type differs: query embeddings use
-// RETRIEVAL_QUERY, document embeddings use RETRIEVAL_DOCUMENT — they are asymmetric, and
-// this function must never write to the database.
-
 import { embedContent, EMBED_DIMENSIONS, GeminiError } from '../_shared/gemini.ts';
 import { handlePreflight, jsonResponse } from '../_shared/cors.ts';
 

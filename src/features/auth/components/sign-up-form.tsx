@@ -27,7 +27,6 @@ export function SignUpForm() {
       password: z.string().min(8, t('Validation.PasswordMin')),
       confirmPassword: z.string().min(1, t('Validation.Required')),
     })
-    // The match check reports on `confirmPassword` so the error lands under that field.
     .refine((values) => values.password === values.confirmPassword, {
       message: t('Validation.PasswordMismatch'),
       path: ['confirmPassword'],
@@ -46,8 +45,6 @@ export function SignUpForm() {
         },
         {
           onSuccess: (data) => {
-            // A session means the project auto-confirms email — the store picks up
-            // SIGNED_IN and we land in the app. Otherwise the user must confirm first.
             if (data.session) {
               void navigate({ to: '/' });
             } else {

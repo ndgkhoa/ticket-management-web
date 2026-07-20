@@ -25,15 +25,9 @@ const NO_TEAM = '';
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The row being edited, or null/undefined to create a new one. */
   category?: Category | null;
 };
 
-/**
- * Create/edit dialog for a category. One form serves both: an absent `category` is a
- * create, a present one pre-fills for an edit. Mount it with a `key` tied to the target
- * id so the defaults reset when the edited row changes (TanStack Form reads them once).
- */
 export function CategoryFormDialog({ open, onOpenChange, category }: Props) {
   const { t } = useTranslation();
   const create = useCategoryCreate();
@@ -63,8 +57,6 @@ export function CategoryFormDialog({ open, onOpenChange, category }: Props) {
     },
     validators: { onSubmit: schema },
     onSubmit: ({ value }) => {
-      // Empty description collapses to null — the column is nullable, and '' vs null
-      // should not be two distinct "no description" states.
       const input = {
         name: value.name.trim(),
         description: value.description.trim() || null,

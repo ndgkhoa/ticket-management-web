@@ -20,12 +20,6 @@ type Props = {
   user: User;
 };
 
-/**
- * The role matrix for one user: every role in the catalogue with a checkbox for
- * whether this user holds it — mirrors `RolePermissionsDialog`, just the other side
- * of the same `user_roles` junction. Toggling writes it immediately, which is what
- * RLS reads to resolve the user's effective permissions.
- */
 export function UserRolesDialog({ open, onOpenChange, user }: Props) {
   const { t } = useTranslation();
   const rolesQuery = useRoleList();
@@ -34,9 +28,6 @@ export function UserRolesDialog({ open, onOpenChange, user }: Props) {
 
   const assigned = new Set(userRolesQuery.data ?? []);
   const loading = rolesQuery.isPending || userRolesQuery.isPending;
-  // Lock the boxes both while the write is in flight AND while the set refetches
-  // after it — otherwise a fast second click lands on a stale-checked, briefly
-  // enabled box.
   const busy = toggle.isPending || userRolesQuery.isFetching;
 
   return (

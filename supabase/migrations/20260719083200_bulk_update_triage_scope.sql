@@ -1,13 +1,7 @@
--- Teach bulk_update_tickets the triage filter.
---
--- The list gained a triage view (unassigned AND unteamed), but bulk_update_tickets had a
--- fixed filter allowlist with no triage branch, so "select all matching" while in triage
--- would mutate every ticket the caller can see — RLS-bounded, but far wider than the
--- ~40 rows the user is looking at. Add the same `assignee_id is null and team_id is null`
--- constraint the read path applies, so the bulk set matches the visible set exactly.
---
--- Unchanged otherwise: security invoker (RLS decides every row), the no-op guard, and the
--- resolved_at stamp is still owned by the stamp_ticket_sla trigger firing on this UPDATE.
+-- Teach bulk_update_tickets the triage filter. Without a triage branch, "select all matching" in
+-- the triage view would mutate every ticket the caller can see (RLS-bounded, but far wider than the
+-- ~40 visible rows). Add the same `assignee_id is null and team_id is null` constraint the read path uses.
+-- Otherwise unchanged: security invoker, the no-op guard, and resolved_at still stamped by stamp_ticket_sla.
 create or replace function public.bulk_update_tickets(p_filters jsonb, p_patch jsonb)
 returns integer
 language plpgsql

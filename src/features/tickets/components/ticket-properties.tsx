@@ -34,12 +34,6 @@ type Props = {
   ticketTagIds: string[];
 };
 
-/**
- * The workflow sidebar: change a ticket's status, priority, assignee, team, category, and
- * tags inline. Every field change is a plain patch — a database trigger emits the matching
- * `ticket_event` (status_changed, assigned, team_changed, …) so the change shows in the
- * activity feed without the client writing the audit trail. Tags toggle through the junction.
- */
 export function TicketProperties({
   ticket,
   assigneeOptions,
@@ -152,7 +146,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-/** A select over a nullable relation — a leading "none" option maps to `null`. */
 function NullableSelect({
   value,
   options,

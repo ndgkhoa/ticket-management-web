@@ -15,11 +15,6 @@ import {
 } from '~/features/admin/canned-responses/api/canned-response-api';
 import { cannedResponseKeys } from '~/features/admin/canned-responses/constants/canned-response-keys';
 
-/**
- * queryOptions factory, shared by the hook and the route loader (`ensureQueryData`) —
- * mirrors `user-queries.ts`. `keepPreviousData` holds the previous page on screen
- * while the next loads.
- */
 export const cannedResponseListQuery = (params: ListParams) =>
   queryOptions({
     queryKey: cannedResponseKeys.list(params),
@@ -30,9 +25,6 @@ export const cannedResponseListQuery = (params: ListParams) =>
 export const useCannedResponseList = (params: ListParams) =>
   useQuery(cannedResponseListQuery(params));
 
-// Mutations invalidate the whole resource key space (list is a handful of pages, a
-// refetch is cheap) rather than patching the cache — the same trade-off as the
-// lookup-table CRUD helper, hand-written here since this list also takes params.
 function useInvalidateCannedResponses() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: cannedResponseKeys.all });

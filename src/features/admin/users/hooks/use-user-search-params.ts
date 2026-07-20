@@ -9,16 +9,10 @@ const route = getRouteApi('/_app/admin/users');
 
 type SearchPatch = Partial<UserSearch>;
 
-/** A change to any of these resets the user to page 1 — enforced here, not per call. */
 function resetsPage(patch: SearchPatch): boolean {
   return PAGE_RESETTING_KEYS.some((key) => key in patch);
 }
 
-/**
- * The one place the users list params are written — mirrors
- * `use-ticket-search-params.ts`. Every update spreads the previous search and resets
- * `page` to 1 whenever the query or page size changes.
- */
 export function useUserSearchParams() {
   const search = route.useSearch();
   const navigate = route.useNavigate();

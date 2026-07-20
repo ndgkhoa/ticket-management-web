@@ -16,15 +16,10 @@ import type { BulkTicketPatch } from '~/features/tickets/api/ticket-api';
 import type { TicketStatus } from '~/features/tickets/schemas/ticket-enums';
 
 type Props = {
-  /** Rows selected on the current page. */
   selectedCount: number;
-  /** Total rows matching the active filters (the "select all matching" target). */
   totalCount: number;
-  /** Whether every row on the current page is selected (gates the escape hatch). */
   allPageSelected: boolean;
-  /** Whether the "select all matching filters" escape hatch is currently taken. */
   selectAllMatching: boolean;
-  /** Whether the escape hatch may be offered — more than this page, no free-text search. */
   canSelectAllMatching: boolean;
   onSelectAllMatching: () => void;
   onClear: () => void;
@@ -34,12 +29,6 @@ type Props = {
   pending: boolean;
 };
 
-/**
- * The bulk action bar over a ticket selection: change status or assignee for the selected
- * rows, with the Gmail-style "select all N matching" escape hatch when a whole page is
- * selected. An apply that targets the escape-hatch set (rows the user can't all see) is
- * gated behind a confirm dialog stating the count; a plain page-scoped apply runs directly.
- */
 export function BulkActionsBar({
   selectedCount,
   totalCount,
@@ -55,7 +44,6 @@ export function BulkActionsBar({
 }: Props) {
   const { t } = useTranslation();
   const effectiveCount = selectAllMatching ? totalCount : selectedCount;
-  // The patch awaiting confirmation (escape-hatch applies only); null = no dialog open.
   const [pendingPatch, setPendingPatch] = useState<BulkTicketPatch | null>(null);
 
   const apply = (patch: BulkTicketPatch) => {
@@ -79,7 +67,6 @@ export function BulkActionsBar({
             {statusOptions.map((option) => (
               <DropdownMenuItem
                 key={option.value}
-                // The options come from the status enum, so the value is a TicketStatus.
                 onSelect={() => apply({ status: option.value as TicketStatus })}
               >
                 {option.label}
@@ -118,7 +105,7 @@ export function BulkActionsBar({
         </Button>
       </div>
 
-      {/* Escape hatch: only when the whole page is selected and there is more to select. */}
+      {}
       {allPageSelected && canSelectAllMatching && (
         <div className="text-muted-foreground text-sm">
           {selectAllMatching ? (

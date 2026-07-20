@@ -8,19 +8,10 @@ import {
 import { ticketStore } from '~/mocks/stores/ticket-store';
 import type { TicketMessageRow, TicketRow } from '~/mocks/fixtures/row-types';
 
-/**
- * MSW mirror of the SLA-stamping database triggers (`stamp_ticket_sla`,
- * `stamp_first_response`). Triggers don't run under MSW, so the mock write paths call these
- * to keep the same invariant: SLA columns are set by the event that causes them, never by the
- * client. Kept tiny and in one place so the two sources of truth can't quietly diverge.
- */
-
 const resolutionMinsByPriority = new Map(
   slaPolicyRows.map((policy) => [policy.priority, policy.resolution_mins])
 );
 
-// Profiles holding `ticket.update` — an agent reply (not a customer reply) starts the
-// first-response clock. Resolved from the same junctions the RLS `has_permission` walks.
 const ticketUpdatePermissionId = permissionRows.find((row) => row.code === 'ticket.update')?.id;
 const rolesWithTicketUpdate = new Set(
   rolePermissionRows
@@ -37,7 +28,6 @@ function dueAtFor(priority: TicketRow['priority'], createdAt: string): string | 
   return new Date(new Date(createdAt).getTime() + mins * 60_000).toISOString();
 }
 
-/** Resolution deadline measured from now — a fresh window, granted when a ticket reopens. */
 export function dueFromNow(priority: TicketRow['priority']): string | null {
   const mins = resolutionMinsByPriority.get(priority);
   if (mins === undefined) return null;
@@ -48,10 +38,6 @@ const ACTIVE_STATUSES: TicketRow['status'][] = ['open', 'pending', 'on_hold'];
 
 const isPaused = (status: TicketRow['status']) => status === 'pending' || status === 'on_hold';
 
-/**
- * MSW mirror of accumulate_sla_pause: on a status transition into the paused set start the
- * current pause; on leaving it bank the elapsed paused time. Nothing on a non-status change.
- */
 export function accumulatePauseOnUpdate(
   patch: Partial<TicketRow>,
   current: TicketRow
@@ -70,9 +56,6 @@ export function accumulatePauseOnUpdate(
   return {};
 }
 
-/** BEFORE INSERT: resolve sla_policy_id + due_at from priority; SLA stamps default to null.
- *  Mirrors the trigger's `least(created_at, now())` clamp so a forged future date can't push
- *  the deadline out. */
 export function stampTicketSlaOnInsert(row: TicketRow): TicketRow {
   const createdAt = new Date(
     Math.min(new Date(row.created_at).getTime(), Date.now())
@@ -84,16 +67,11 @@ export function stampTicketSlaOnInsert(row: TicketRow): TicketRow {
     due_at: dueAtFor(row.priority, createdAt),
     first_response_at: row.first_response_at ?? null,
     resolved_at: row.resolved_at ?? null,
-    // Mirror accumulate_sla_pause on insert: a ticket created paused starts paused.
     sla_paused_at: isPaused(row.status) ? createdAt : (row.sla_paused_at ?? null),
     sla_paused_ms: row.sla_paused_ms ?? 0,
   };
 }
 
-/**
- * BEFORE UPDATE: stamp resolved_at once on entering `solved`, and recompute due_at +
- * sla_policy_id if priority changes before the ticket is resolved.
- */
 export function stampTicketSlaOnUpdate(
   patch: Partial<TicketRow>,
   current: TicketRow
@@ -109,8 +87,6 @@ export function stampTicketSlaOnUpdate(
     next.due_at = dueAtFor(patch.priority, current.created_at);
   }
 
-  // Reopen (solved → active) restarts the resolution clock with a fresh window and a fresh
-  // pause budget — banked pause from before the solve does not carry into the new window.
   if (current.status === 'solved' && patch.status && ACTIVE_STATUSES.includes(patch.status)) {
     next.due_at = dueFromNow(patch.priority ?? current.priority);
     next.sla_paused_ms = 0;
@@ -119,7 +95,6 @@ export function stampTicketSlaOnUpdate(
   return { ...next, ...accumulatePauseOnUpdate(patch, current) };
 }
 
-/** AFTER INSERT on ticket_messages: first public agent reply stamps first_response_at once. */
 export function stampFirstResponseOnMessage(message: TicketMessageRow): void {
   if (message.type !== 'public_reply') return;
   if (!message.author_id || !agentUserIds.has(message.author_id)) return;
@@ -127,7 +102,6 @@ export function stampFirstResponseOnMessage(message: TicketMessageRow): void {
   const ticket = ticketStore.all().find((row) => row.id === message.ticket_id);
   if (ticket && !ticket.first_response_at) {
     const now = new Date().toISOString();
-    // Bump updated_at too, as the live UPDATE does (fires tickets_set_updated_at).
     ticketStore.update(ticket.id, { first_response_at: now, updated_at: now });
   }
 }

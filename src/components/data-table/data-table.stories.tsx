@@ -46,18 +46,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Server-provided rows with the `x–y of N` pager. */
 export const Default: Story = {};
 
-/** First load — skeleton rows matching the column count, so the shell doesn't resize. */
 export const Loading: Story = { args: { isLoading: true } };
 
-/** A page/sort change is fetching — the current rows dim (no unmount, no layout jump). */
 export const PlaceholderDimming: Story = {
   args: { isPlaceholderData: true },
 };
 
-/** No data at all → an onboarding CTA. */
 export const Empty: Story = {
   args: {
     data: [],
@@ -67,7 +63,6 @@ export const Empty: Story = {
   },
 };
 
-/** Filters/search matched nothing → distinct copy + a clear action (not the empty state). */
 export const NoResults: Story = {
   args: {
     data: [],

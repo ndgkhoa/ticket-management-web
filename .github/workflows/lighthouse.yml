@@ -1,9 +1,5 @@
 name: Lighthouse
 
-# Perf / a11y / best-practices budgets on the deployed-mode build. PR-only: it's slower than the
-# unit gate and consumes minutes (thresholds in lighthouserc.json; a11y is a hard gate, the rest
-# warn). Builds in the app's default `supabase` mode — the same shape the demo ships — so it needs
-# the Supabase env; the job is skipped until the project is configured (like the deploy workflow).
 on:
   pull_request:
     branches: [main, develop]
@@ -13,7 +9,6 @@ jobs:
     name: lighthouse budgets
     runs-on: ubuntu-latest
     if: ${{ vars.SUPABASE_PROJECT_REF != '' }}
-    # Lets the results step post/update its PR comment.
     permissions:
       contents: read
       pull-requests: write
@@ -24,8 +19,6 @@ jobs:
       - name: Install
         run: bun install --frozen-lockfile
 
-      # The pre-auth sign-in page is what's scored; it makes no backend call, but the app boots in
-      # supabase mode so it needs the project URL + anon key (both public) to pass env validation.
       - name: Build (supabase)
         run: bun run build
         env:
@@ -37,10 +30,6 @@ jobs:
         run: bunx @lhci/cli@0.14.x autorun
 
       - name: Comment Lighthouse scores
-        # Runs even when the a11y gate above fails, so the PR shows the scores that failed it.
-        # Reads the per-run LHR reports LHCI writes to `.lighthouseci/lhr-*.json` (the
-        # `temporary-public-storage` upload target writes these, not a manifest.json), and takes
-        # the median score per category per URL across the 3 runs.
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         uses: actions/github-script@v7
         with:
@@ -69,7 +58,7 @@ jobs:
               rows += `| \`${pathname(url)}\` | ${cell(median(r.performance), 90)} | ${cell(median(r.accessibility), 95)} | ${cell(median(r['best-practices']), 90)} |\n`;
             }
             const marker = '<!-- lighthouse-comment -->';
-            const body = `${marker}\n## 🔦 Lighthouse (desktop · median of 3 runs)\n\n`
+            const body = `${marker}\n## Lighthouse (desktop · median of 3 runs)\n\n`
               + `| Page | Performance | Accessibility | Best Practices |\n|---|---|---|---|\n${rows}\n`
               + `<sub>Accessibility is a hard gate (≥ 95); performance & best-practices warn (≥ 90).</sub>`;
             const { owner, repo } = context.repo;

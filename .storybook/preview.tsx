@@ -1,16 +1,8 @@
 import type { Preview, Decorator } from '@storybook/tanstack-react';
 
-// The app's Tailwind theme (tokens + `.dark` block) and i18next, so components render
-// styled and translated exactly as in the app. i18next is a module singleton — importing
-// it here runs `.init()` once before any story mounts.
 import '../src/styles/index.css';
 import '../src/i18n';
 
-/**
- * Toggle the `.dark` class on <html> from the toolbar. Mirrors what the app's
- * ThemeProvider does at runtime, so every story can be viewed in both themes without
- * pulling the provider's state machine into Storybook.
- */
 const withTheme: Decorator = (Story, context) => {
   const theme = context.globals.theme ?? 'light';
   const root = document.documentElement;
@@ -24,8 +16,6 @@ const withTheme: Decorator = (Story, context) => {
 };
 
 const preview: Preview = {
-  // Every component gets an auto-generated Docs page (props from types + the meta
-  // descriptions below), so the catalog documents itself.
   tags: ['autodocs'],
   decorators: [withTheme],
   globalTypes: {

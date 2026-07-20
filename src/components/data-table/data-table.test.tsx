@@ -38,14 +38,12 @@ describe('DataTable', () => {
   });
 
   it('hides the pager for a single page', async () => {
-    // 2 rows at pageSize 20 → one page → no pager or rows-per-page control.
     await renderTable();
 
     expect(screen.queryByText('Rows per page')).not.toBeInTheDocument();
   });
 
   it('shows the pager with the server total across multiple pages', async () => {
-    // 50 rows / pageSize 20 → 3 pages → the pager reads x–y of N from the server total.
     await renderTable({ totalCount: 50 });
 
     expect(screen.getByText('1–20 of 50')).toBeInTheDocument();
@@ -80,7 +78,6 @@ describe('DataTable', () => {
   it('dims rather than unmounts while the next page loads', async () => {
     await renderTable({ isPlaceholderData: true });
 
-    // Rows stay in the DOM (no layout jump); the container is marked busy + dimmed.
     expect(screen.getByText('Alpha')).toBeInTheDocument();
     expect(document.querySelector('[aria-busy="true"]')).toHaveClass('opacity-60');
   });
@@ -89,7 +86,6 @@ describe('DataTable', () => {
     await renderTable({ isLoading: true });
 
     expect(screen.queryByText('Alpha')).not.toBeInTheDocument();
-    // Skeleton rows use the animate-pulse class from the Skeleton primitive.
     expect(document.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 });

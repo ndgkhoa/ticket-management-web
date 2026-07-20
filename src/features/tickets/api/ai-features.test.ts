@@ -6,11 +6,6 @@ import { summarizeTicketApi } from '~/features/tickets/api/summarize-ticket-api'
 import { semanticSearchApi } from '~/features/tickets/api/semantic-search-api';
 import { ticketRows } from '~/mocks/fixtures';
 
-/**
- * AI features over MSW: the edge-function calls and the semantic-search RPCs against the
- * mocked handlers, so this runs with no Gemini key. It exercises the client contract —
- * request shape in, Zod-validated result out — not the model itself.
- */
 describe('AI features over MSW', () => {
   it('triages a ticket into a priority and echoes a category choice', async () => {
     const result = await triageTicketApi.suggest({
@@ -43,7 +38,6 @@ describe('AI features over MSW', () => {
   });
 
   it('returns ranked matches for a semantic search', async () => {
-    // A term taken from a real seeded ticket, so the keyword-backed mock has a hit.
     const term = ticketRows[0].subject.split(/\s+/)[0];
 
     const matches = await semanticSearchApi.search(term);
@@ -53,7 +47,6 @@ describe('AI features over MSW', () => {
       expect(typeof match.similarity).toBe('number');
       expect(match.id).toBeTruthy();
     }
-    // Ranked by descending similarity.
     const sims = matches.map((match) => match.similarity);
     expect([...sims].sort((a, b) => b - a)).toEqual(sims);
   });

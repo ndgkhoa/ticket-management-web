@@ -14,11 +14,6 @@ export const ticketTagQueries = {
 export const useTicketTags = (ticketId: string, enabled = true) =>
   useQuery({ ...ticketTagQueries.list(ticketId), enabled });
 
-/**
- * Toggle one tag on a ticket (add when `next` is true, remove otherwise), then refresh the
- * ticket's tags and activity feed. The `tagged` event is emitted by a database trigger on the
- * junction insert/delete, not written here.
- */
 export const useToggleTicketTag = (ticketId: string) => {
   const queryClient = useQueryClient();
   return useMutation({

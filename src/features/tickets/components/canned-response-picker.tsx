@@ -11,15 +11,9 @@ import {
 import { useCannedResponses } from '~/features/tickets/api/canned-response-queries';
 
 type Props = {
-  /** Insert the chosen response's body into the composer editor. */
   onInsert: (body: string) => void;
 };
 
-/**
- * Composer control: pick a saved canned response by title and drop its body into the reply
- * editor. Renders nothing until the library has entries (empty for anyone without `canned.read`,
- * whose fetch is disabled), so it never shows as a dead control.
- */
 export function CannedResponsePicker({ onInsert }: Props) {
   const { t } = useTranslation();
   const { data: responses = [] } = useCannedResponses();

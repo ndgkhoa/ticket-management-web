@@ -23,12 +23,6 @@ type Props = {
   role: Role;
 };
 
-/**
- * The permission matrix for one role: every permission in the catalogue with a checkbox
- * for whether this role grants it. Toggling writes the `role_permissions` junction
- * immediately. The catalogue is read-only (its codes are fixed by the RLS policies) —
- * what's editable is the membership, which is what RBAC is for.
- */
 export function RolePermissionsDialog({ open, onOpenChange, role }: Props) {
   const { t } = useTranslation();
   const permissionsQuery = usePermissionList();
@@ -37,8 +31,6 @@ export function RolePermissionsDialog({ open, onOpenChange, role }: Props) {
 
   const assigned = new Set(assignedQuery.data ?? []);
   const loading = permissionsQuery.isPending || assignedQuery.isPending;
-  // Lock the boxes both while the write is in flight AND while the set refetches after
-  // it — otherwise a fast second click lands on a stale-checked, briefly-enabled box.
   const busy = toggle.isPending || assignedQuery.isFetching;
 
   return (

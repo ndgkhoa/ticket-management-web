@@ -3,11 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { teamMemberApi } from '~/features/admin/teams/api/team-member-api';
 import { agentUsers, teamMemberRows, teamRows } from '~/mocks/fixtures';
 
-/**
- * Team membership CRUD over MSW — the surface that was missing, so a real deploy can add an
- * agent to a team (and thus grant them the team's ticket visibility). Pick an agent NOT
- * already in the target team so add/remove start from a known state.
- */
 describe('team membership CRUD over MSW', () => {
   const teamId = teamRows[0].id;
   const membersOfTeam = new Set(
