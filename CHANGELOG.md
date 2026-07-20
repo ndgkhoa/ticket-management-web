@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/ndgkhoa/ticket-management-web/compare/v1.0.0...v1.1.0) (2026-07-20)
+
+
+### Bug Fixes
+
+* **tickets:** return sla pause columns from semantic search rpcs ([250d822](https://github.com/ndgkhoa/ticket-management-web/commit/250d822822d6f2d0076fe984d0404d64bd997bb7))
+
+
+### Features
+
+* **navbar:** show the signed-in user in the account menu ([c998409](https://github.com/ndgkhoa/ticket-management-web/commit/c998409b17690576fbd87be3d5571ffa5456dea5))
+
 # 1.0.0 (2026-07-19)
 
 
