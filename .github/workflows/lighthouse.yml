@@ -58,7 +58,7 @@ jobs:
               rows += `| \`${pathname(url)}\` | ${cell(median(r.performance), 90)} | ${cell(median(r.accessibility), 95)} | ${cell(median(r['best-practices']), 90)} |\n`;
             }
             const marker = '<!-- lighthouse-comment -->';
-            const body = `${marker}\n## 🔦 Lighthouse (desktop · median of 3 runs)\n\n`
+            const body = `${marker}\n## Lighthouse (desktop · median of 3 runs)\n\n`
               + `| Page | Performance | Accessibility | Best Practices |\n|---|---|---|---|\n${rows}\n`
               + `<sub>Accessibility is a hard gate (≥ 95); performance & best-practices warn (≥ 90).</sub>`;
             const { owner, repo } = context.repo;

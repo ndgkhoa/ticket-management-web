@@ -6,5 +6,7 @@ const embedResultSchema = z.object({ ok: z.boolean() });
 
 export function embedTicketInBackground(ticketId: string): void {
   if (!isAiEnabled) return;
-  void invokeAiFunction('embed-ticket', { ticketId }, embedResultSchema).catch(() => {});
+  void invokeAiFunction('embed-ticket', { ticketId }, embedResultSchema).catch(() => {
+    // Intentionally ignored
+  });
 }
