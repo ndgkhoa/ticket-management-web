@@ -1,0 +1,34 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "labels": ["dependencies"],
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 5,
+  "semanticCommits": "enabled",
+  "packageRules": [
+    { "matchManagers": ["npm"], "semanticCommitType": "build" },
+    {
+      "matchManagers": ["github-actions"],
+      "semanticCommitType": "ci",
+      "groupName": "github-actions"
+    },
+    {
+      "groupName": "dev-minor-and-patch",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "react",
+      "matchPackageNames": ["react", "react-dom", "@types/react", "@types/react-dom"]
+    },
+    { "groupName": "tanstack", "matchPackageNames": ["@tanstack/**"] },
+    {
+      "groupName": "eslint",
+      "matchPackageNames": ["eslint", "@eslint/**", "eslint-**", "typescript-eslint"]
+    },
+    { "groupName": "i18n", "matchPackageNames": ["i18next", "i18next-**", "react-i18next"] },
+    { "matchPackageNames": ["typescript"], "allowedVersions": "<7.0.0" },
+    { "matchPackageNames": ["@types/node"], "allowedVersions": "<25.0.0" },
+    { "matchPackageNames": ["antd", "@ant-design/icons"], "enabled": false }
+  ]
+}
