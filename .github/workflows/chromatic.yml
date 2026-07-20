@@ -1,0 +1,63 @@
+name: Chromatic
+
+# Visual regression testing for the Storybook design system. Builds Storybook, publishes it to
+# Chromatic, and diffs each commit against its baseline — posting a "UI Tests" check and a PR
+# comment when stories change. The `@chromatic-com/storybook` addon is already wired; this is the
+# CI half that gives the cross-commit comparison.
+#
+# Self-gating like deploy.yml: every step no-ops until CHROMATIC_PROJECT_TOKEN is set, so it never
+# fails red before setup.
+#
+# One-time setup (repo owner): create a project at chromatic.com, link this repo, copy the project
+# token, and add it as the repo secret CHROMATIC_PROJECT_TOKEN.
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+# A newer commit on the same ref makes the previous snapshot run irrelevant; cancel it.
+concurrency:
+  group: chromatic-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chromatic:
+    name: visual regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # `secrets` can't be read in a step-level `if`, so lift the presence check to the job env.
+      HAS_CHROMATIC_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v7
+        if: ${{ env.HAS_CHROMATIC_TOKEN == 'true' }}
+        with:
+          # Chromatic needs full git history to find each commit's baseline and to run TurboSnap.
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        if: ${{ env.HAS_CHROMATIC_TOKEN == 'true' }}
+        with:
+          bun-version: latest
+
+      - name: Install
+        if: ${{ env.HAS_CHROMATIC_TOKEN == 'true' }}
+        run: bun install --frozen-lockfile
+
+      - name: Build Storybook
+        # Build with the existing script (bun) and hand the output to the action, rather than
+        # letting the action rebuild with a package manager it would have to auto-detect.
+        if: ${{ env.HAS_CHROMATIC_TOKEN == 'true' }}
+        run: bun run storybook:build
+
+      - name: Publish to Chromatic
+        if: ${{ env.HAS_CHROMATIC_TOKEN == 'true' }}
+        uses: chromaui/action@latest
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          storybookBuildDir: storybook-static
+          # TurboSnap: only snapshot stories affected by the diff — keeps snapshot usage low.
+          onlyChanged: true
+          # Visual changes need review in the Chromatic UI but don't block CI (solo/portfolio
+          # flow). Flip to false to make an unreviewed change fail the check.
+          exitZeroOnChanges: true
