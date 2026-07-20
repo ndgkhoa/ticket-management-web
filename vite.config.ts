@@ -15,6 +15,9 @@ export default defineConfig({
     tailwindcss(),
   ],
   css: { devSourcemap: true },
+  // Emit source maps for the e2e coverage build (COVERAGE=true) so monocart can map the
+  // browser's V8 coverage back to `src/`. Off for normal builds — no public source maps.
+  build: { sourcemap: process.env.COVERAGE === 'true' },
   resolve: { alias: { '~': path.resolve(__dirname, './src') } },
   // No `port` override — Vite's default (5173) is what every reader already expects.
   // `host: true` is kept on purpose: it binds all interfaces so the dev server is

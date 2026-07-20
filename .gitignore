@@ -52,3 +52,4 @@ pnpm-lock.yaml
 *storybook.log
 storybook-static
 repomix-output.*
+coverage-e2e

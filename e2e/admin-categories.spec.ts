@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 /**
  * Admin CRUD end to end against the mock backend: sign in as the owner (who holds

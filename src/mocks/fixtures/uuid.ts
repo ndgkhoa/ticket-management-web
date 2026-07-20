@@ -33,12 +33,12 @@ export const FIXTURE_NAMESPACE = {
 export type FixtureNamespace = keyof typeof FIXTURE_NAMESPACE;
 
 /**
- * `fixtureUuid('ticket', 42)` → `00000009-0000-4000-8000-000000000042`.
+ * `uuid('ticket', 42)` → `00000009-0000-4000-8000-000000000042`.
  *
  * @param namespace which table the row belongs to — becomes the first block
  * @param index     1-based row number within that table — becomes the last block
  */
-export function fixtureUuid(namespace: FixtureNamespace, index: number): string {
+export function uuid(namespace: FixtureNamespace, index: number): string {
   const namespaceBlock = FIXTURE_NAMESPACE[namespace].toString(16).padStart(8, '0');
   const indexBlock = index.toString(16).padStart(12, '0');
 

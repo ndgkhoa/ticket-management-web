@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 /**
  * The demo build (`VITE_API_MODE=msw`) has no live backend, so sign-in runs entirely

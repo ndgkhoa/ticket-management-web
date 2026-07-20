@@ -11,7 +11,7 @@
 
 import { en, Faker } from '@faker-js/faker';
 
-import { fixtureUuid } from './fixture-uuid';
+import { uuid } from './uuid';
 import type { RoleName } from './rbac';
 import { roleIdByName } from './rbac';
 import type { UserRoleRow, UserRow } from './row-types';
@@ -43,7 +43,7 @@ let nextUserIndex = 1;
 
 function createUser(email: string, fullName: string, createdAt: Date): UserRow {
   return {
-    id: fixtureUuid('user', nextUserIndex++),
+    id: uuid('user', nextUserIndex++),
     email,
     password: DEMO_PASSWORD,
     full_name: fullName,

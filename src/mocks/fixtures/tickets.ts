@@ -9,7 +9,7 @@
 
 import { en, Faker } from '@faker-js/faker';
 
-import { fixtureUuid } from './fixture-uuid';
+import { uuid } from './uuid';
 import { customerUsers } from './people';
 import {
   categoryRows,
@@ -78,7 +78,7 @@ let nextMessageIndex = 1;
 let nextEventIndex = 1;
 
 for (let index = 1; index <= TICKET_COUNT; index += 1) {
-  const id = fixtureUuid('ticket', index);
+  const id = uuid('ticket', index);
 
   // Skewed toward recent: a help desk's backlog is dense in the last fortnight and
   // thins out going back. A uniform spread would make every "last 7 days" filter
@@ -188,7 +188,7 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
   }
 
   ticketEventRows.push({
-    id: fixtureUuid('ticketEvent', nextEventIndex++),
+    id: uuid('ticketEvent', nextEventIndex++),
     ticket_id: id,
     actor_id: requesterId,
     event_type: 'created',
@@ -198,7 +198,7 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
 
   if (assigneeId) {
     ticketEventRows.push({
-      id: fixtureUuid('ticketEvent', nextEventIndex++),
+      id: uuid('ticketEvent', nextEventIndex++),
       ticket_id: id,
       actor_id: assigneeId,
       event_type: 'assigned',
@@ -209,7 +209,7 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
 
   if (firstResponseAt && assigneeId) {
     ticketMessageRows.push({
-      id: fixtureUuid('ticketMessage', nextMessageIndex++),
+      id: uuid('ticketMessage', nextMessageIndex++),
       ticket_id: id,
       author_id: assigneeId,
       type: 'public_reply',
@@ -224,7 +224,7 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
     // single hand-placed row.
     if (faker.datatype.boolean({ probability: 0.25 })) {
       ticketMessageRows.push({
-        id: fixtureUuid('ticketMessage', nextMessageIndex++),
+        id: uuid('ticketMessage', nextMessageIndex++),
         ticket_id: id,
         author_id: assigneeId,
         type: 'internal_note',
@@ -236,7 +236,7 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
     for (let reply = 0; reply < faker.number.int({ min: 0, max: 3 }); reply += 1) {
       const isCustomerTurn = reply % 2 === 0;
       ticketMessageRows.push({
-        id: fixtureUuid('ticketMessage', nextMessageIndex++),
+        id: uuid('ticketMessage', nextMessageIndex++),
         ticket_id: id,
         author_id: isCustomerTurn ? requesterId : assigneeId,
         type: 'public_reply',
@@ -251,7 +251,7 @@ for (let index = 1; index <= TICKET_COUNT; index += 1) {
 
   if (resolvedAt && assigneeId) {
     ticketEventRows.push({
-      id: fixtureUuid('ticketEvent', nextEventIndex++),
+      id: uuid('ticketEvent', nextEventIndex++),
       ticket_id: id,
       actor_id: assigneeId,
       event_type: 'status_changed',

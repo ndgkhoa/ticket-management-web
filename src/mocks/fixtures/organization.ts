@@ -7,7 +7,7 @@
  * vocabulary it draws from.
  */
 
-import { fixtureUuid } from './fixture-uuid';
+import { uuid } from './uuid';
 import { agentUsers, demoUserByRole } from './people';
 import type {
   CannedResponseRow,
@@ -25,7 +25,7 @@ const TEAM_DEFINITIONS = [
 ] as const;
 
 export const teamRows: TeamRow[] = TEAM_DEFINITIONS.map(([name, description], index) => ({
-  id: fixtureUuid('team', index + 1),
+  id: uuid('team', index + 1),
   name,
   description,
 }));
@@ -72,7 +72,7 @@ const teamIdByName = new Map(teamRows.map((team) => [team.name, team.id]));
 
 export const categoryRows: CategoryRow[] = CATEGORY_DEFINITIONS.map(
   ([name, description, defaultTeamName], index) => ({
-    id: fixtureUuid('category', index + 1),
+    id: uuid('category', index + 1),
     name,
     description,
     default_team_id: teamIdByName.get(defaultTeamName) ?? null,
@@ -91,7 +91,7 @@ const TAG_DEFINITIONS = [
 ] as const;
 
 export const tagRows: TagRow[] = TAG_DEFINITIONS.map(([name, color], index) => ({
-  id: fixtureUuid('tag', index + 1),
+  id: uuid('tag', index + 1),
   name,
   color,
 }));
@@ -102,28 +102,28 @@ export const tagRows: TagRow[] = TAG_DEFINITIONS.map(([name, color], index) => (
  */
 export const slaPolicyRows: SlaPolicyRow[] = [
   {
-    id: fixtureUuid('slaPolicy', 1),
+    id: uuid('slaPolicy', 1),
     name: 'Urgent — 15m / 4h',
     priority: 'urgent',
     first_response_mins: 15,
     resolution_mins: 4 * 60,
   },
   {
-    id: fixtureUuid('slaPolicy', 2),
+    id: uuid('slaPolicy', 2),
     name: 'High — 1h / 8h',
     priority: 'high',
     first_response_mins: 60,
     resolution_mins: 8 * 60,
   },
   {
-    id: fixtureUuid('slaPolicy', 3),
+    id: uuid('slaPolicy', 3),
     name: 'Normal — 4h / 2 business days',
     priority: 'normal',
     first_response_mins: 4 * 60,
     resolution_mins: 2 * 24 * 60,
   },
   {
-    id: fixtureUuid('slaPolicy', 4),
+    id: uuid('slaPolicy', 4),
     name: 'Low — 1 day / 5 business days',
     priority: 'low',
     first_response_mins: 24 * 60,
@@ -158,7 +158,7 @@ const CANNED_RESPONSE_DEFINITIONS = [
 
 export const cannedResponseRows: CannedResponseRow[] = CANNED_RESPONSE_DEFINITIONS.map(
   ([title, body], index) => ({
-    id: fixtureUuid('cannedResponse', index + 1),
+    id: uuid('cannedResponse', index + 1),
     title,
     body,
     created_by: demoUserByRole.get('admin')!.id,

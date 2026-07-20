@@ -58,6 +58,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
+          flags: unit
           fail_ci_if_error: false
 
       - name: Build
@@ -98,7 +99,16 @@ jobs:
   e2e:
     name: e2e (Playwright)
     needs: changes
-    if: github.event_name == 'pull_request' && needs.changes.outputs.app == 'true'
+    # PRs that touch the app, plus every push to main. Main must run it so its Codecov `e2e`
+    # flag stays fresh — that's what keeps the coverage badge (default branch) reflecting real
+    # unit + e2e coverage, not unit alone. `always()` lets it evaluate when `changes` is skipped
+    # (on push, that job is PR-only).
+    if: >-
+      always() &&
+      (
+        (github.event_name == 'pull_request' && needs.changes.outputs.app == 'true') ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -140,8 +150,21 @@ jobs:
       - name: Run e2e
         # playwright.config.ts builds the app and serves the production bundle itself.
         # Rolldown breakage can be production-only, so testing a dev server would miss
-        # exactly what the bundler swap is able to break.
+        # exactly what the bundler swap is able to break. COVERAGE=true instruments the
+        # build with source maps and collects V8 coverage for the Codecov `e2e` flag.
         run: bun run e2e
+        env:
+          COVERAGE: 'true'
+
+      - name: Upload e2e coverage
+        # Coverage from the tests that ran is useful even if some failed; never fail CI over it.
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage-e2e/lcov.info
+          flags: e2e
+          fail_ci_if_error: false
 
       - name: Upload report on failure
         if: failure()
