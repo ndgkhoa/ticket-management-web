@@ -59,7 +59,8 @@ Demonstrates senior-level fullstack engineering across:
 - [x] Triage suggestion: subject+description → priority + category (Gemini 3.1 Flash Lite)
 - [x] Reply suggestion: thread + canned responses → draft reply
 - [x] Summary: thread → one-liner
-- [x] Semantic search: ticket text + embeddings → similar tickets (`gemini-embedding-001`)
+- [x] Semantic search: ticket text + embeddings → matching tickets (`gemini-embedding-001`)
+- [x] Similar tickets: RPC neighbor lookup by embedding
 
 ### Audit Trail
 
@@ -106,6 +107,8 @@ Demonstrates senior-level fullstack engineering across:
 - [x] RLS policies (row-level data isolation)
 - [x] No secrets in bundle (Gemini key server-side only)
 - [x] JWT-based API auth
+- [x] Google OAuth sign-in (production)
+- [x] Cloudflare Turnstile captcha (login/signup)
 - [x] Audit trail (compliance)
 - [x] CSRF protection (Supabase default)
 
@@ -114,7 +117,8 @@ Demonstrates senior-level fullstack engineering across:
 - [x] Unit + component tests (Vitest, ≥75% coverage)
 - [x] E2E tests (Playwright, production build)
 - [x] MSW parity (every trigger mirrored in mocks)
-- [x] Accessibility audits (every PR)
+- [x] Accessibility audits (every PR, WCAG 2.1 AA)
+- [x] Visual regression (Storybook + Chromatic, every PR)
 
 ### Reliability
 
@@ -132,6 +136,9 @@ Detailed in `docs/adr/`:
 - AI via Supabase Edge Functions (keeps secrets server-side)
 - Gemini over Claude (Anthropic has no embeddings API; Gemini free tier)
 - TypeScript 6 not 7 (typescript-eslint@8 doesn't support TS7 yet)
+- semantic-release over release-please (CI-first, no standing release PR)
+- Sentry + PostHog observability (two focused tools, id-only + PII allowlist scrub)
+- Cloudflare Pages + Supabase deploy (static CDN frontend, backend ships in one ordered job)
 
 ## Success Metrics
 
@@ -203,17 +210,17 @@ Detailed in `docs/adr/`:
 | 07    | AI features + semantic search          | ✅ done |
 | 08    | Dashboard analytics                    | ✅ done |
 
-**Current (Phase-09):**
+**Completed (Phase-09):**
 
 | Task                                | Status  |
 | ----------------------------------- | ------- |
-| a11y audit + Lighthouse CI          | ⬜ done |
-| Overhaul README + write docs        | ⬜ done |
-| ADRs (6 decisions)                  | ⬜ done |
-| MSW demo deploy (Cloudflare Pages)  | ⬜ done |
-| Live backend deploy (Supabase + CF) | ⬜ done |
-| Demo reset routine + seeding        | ⬜ done |
-| CI badges + final cleanup           | ⬜ done |
+| a11y audit + Lighthouse CI          | ✅ done |
+| Overhaul README + write docs        | ✅ done |
+| ADRs (6 decisions)                  | ✅ done |
+| MSW demo deploy (Cloudflare Pages)  | ✅ done |
+| Live backend deploy (Supabase + CF) | ✅ done |
+| Demo reset routine + seeding        | ✅ done |
+| CI badges + final cleanup           | ✅ done |
 
 ## Acceptance Criteria
 
@@ -224,7 +231,7 @@ Detailed in `docs/adr/`:
 - [x] `docs/deployment-guide.md` (secrets setup + deploy workflow)
 - [x] `docs/code-standards.md` (review checklist — already done, Phase-05)
 - [x] `docs/codebase-summary.md` (structure + principles)
-- [x] 6 ADRs in `docs/adr/` (decisions + trade-offs)
+- [x] 9 ADRs in `docs/adr/` (decisions + trade-offs)
 - [x] `.github/workflows/lighthouse.yml` (perf/a11y/best-practices budgets on PR)
 - [x] `.github/workflows/deploy.yml` (Supabase + Cloudflare Pages automation)
 - [x] `public/_redirects` (SPA fallback)

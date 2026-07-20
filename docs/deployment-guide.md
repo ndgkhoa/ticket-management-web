@@ -38,20 +38,33 @@ bun run db:reset
 **`.env.example`** (copy to `.env`)
 
 ```bash
-# API mode: "msw" (browser mocks) or "supabase" (live backend)
-VITE_API_MODE=msw
+# API mode: "msw" (browser mocks) or "supabase" (live backend) — default is supabase
+VITE_API_MODE=supabase
 
 # Supabase (required if VITE_API_MODE=supabase)
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJ...
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_ANON_KEY=
 
-# AI (optional; UI hides features if not set)
+# Google OAuth (optional; for production sign-in)
+SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=
+SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
+
+# Cloudflare Turnstile (optional; login/signup captcha)
+VITE_TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET=
+
+# Gemini AI (optional; UI hides features if not set)
 VITE_AI_ENABLED=true
-GEMINI_API_KEY=AIzaSy...  # Server-side only (Edge Functions + seed script)
-# GEMINI_CHAT_MODEL=gemini-3.1-flash-lite  # optional; pin a stable model id
+GEMINI_API_KEY=  # Server-side only (Edge Functions + seed script)
+GEMINI_CHAT_MODEL=gemini-3.1-flash-lite
+GEMINI_EMBED_MODEL=gemini-embedding-001
 
-# Turnstile (optional; login/signup captcha) — public site key is safe in the bundle
-VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+# Sentry (optional; error tracking)
+VITE_SENTRY_DSN=
+
+# PostHog (optional; product analytics)
+VITE_POSTHOG_KEY=
+VITE_POSTHOG_HOST=https://eu.i.posthog.com
 ```
 
 **Validation:** Zod schema in `src/config/env.ts` fails at boot if vars are missing or malformed.
@@ -59,11 +72,11 @@ VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA
 ## Local Development
 
 ```bash
-# MSW mode (default; works offline)
-VITE_API_MODE=msw bun run dev
+# Supabase mode (default; needs local db:start + env vars or Supabase credentials)
+bun run dev
 
-# Supabase mode (needs db:start + env vars)
-VITE_API_MODE=supabase bun run dev
+# MSW mode (works fully offline with mocked API)
+VITE_API_MODE=msw bun run dev
 
 # Production build preview
 bun run build
@@ -126,13 +139,20 @@ Settings → Secrets and variables → Actions:
 - `VITE_SUPABASE_ANON_KEY` (from Settings → API)
 - `CLOUDFLARE_API_TOKEN` (Cloudflare dashboard → Account → API Tokens → Create Token)
   - Permissions: `Account.Cloudflare Pages:Edit`
-- `GEMINI_API_KEY` (optional, for AI features)
+- `CLOUDFLARE_ACCOUNT_ID` (Cloudflare dashboard → Account Home → copy the Account ID)
+- `VITE_TURNSTILE_SITE_KEY` (optional, forwarded to build for Turnstile captcha)
+- `VITE_SENTRY_DSN` (optional, forwarded to build for error tracking)
+- `VITE_POSTHOG_KEY` (optional, forwarded to build for analytics)
+- `VITE_POSTHOG_HOST` (optional, forwarded to build for analytics)
 
 **Variables:**
 
 - `SUPABASE_PROJECT_REF` (project ref from step 1)
 - `CLOUDFLARE_PAGES_PROJECT` (Cloudflare Pages project name — create it first)
-- (Optional) `VITE_AI_ENABLED=true` if GEMINI_API_KEY is set
+
+**Server-side secrets (set in Supabase, not GitHub):**
+
+- `GEMINI_API_KEY` — set via `supabase secrets set GEMINI_API_KEY=...` (optional, for AI features)
 
 #### Cloudflare Pages Project
 
@@ -148,12 +168,8 @@ supabase link --project-id <your-project-ref>
 # Push migrations
 supabase db push
 
-# Deploy Edge Functions
-supabase functions deploy ai-triage
-supabase functions deploy ai-suggest-reply
-supabase functions deploy ai-summarize
-supabase functions deploy embed-ticket
-supabase functions deploy embed-query
+# Deploy all Edge Functions
+supabase functions deploy
 
 # Set Gemini key (if using AI)
 supabase secrets set GEMINI_API_KEY=AIzaSy...
@@ -221,50 +237,77 @@ bun run db:reset
 **Triggered automatically:**
 
 ```
-Push to any branch
-  └─→ Lint + typecheck + test + build (< 2 min)
+Push to main or develop
+  ├─→ Lint (ESLint) + typecheck (TypeScript)
+  ├─→ Lang:check (i18n parity)
+  ├─→ Test (Vitest + coverage)
+  └─→ Build (Vite)
 
 PR to main/develop
-  ├─→ [Above]
-  ├─→ E2E + accessibility (≤ 5 min)
-  ├─→ Lighthouse (≤ 2 min)
-  └─→ Chromatic (snapshot diff, ≤ 2 min)
+  ├─→ [All above]
+  ├─→ E2E (Playwright) + accessibility (@axe-core/playwright, WCAG AA)
+  ├─→ Lighthouse (perf/a11y/best-practices budgets)
+  ├─→ Chromatic (Storybook snapshot diff)
+  └─→ Codecov (coverage report: unit + e2e flags combined)
 
 Merge to main
-  ├─→ Supabase: migrations + Edge Functions (~1–2 min)
-  └─→ Cloudflare Pages: frontend build + deploy (~1 min)
+  ├─→ Deploy (Supabase: migrations + Edge Functions + Cloudflare Pages)
+  └─→ Release (semantic-release: version bump, CHANGELOG, GitHub Release)
 ```
 
 View results: GitHub → Actions (each run shows logs + artifacts). Cloudflare Pages → Deployments shows build status + live URL.
 
 ## Lighthouse Budgets
 
-Checked on every PR; fails PR if regression (configured in `lighthouserc.json`):
+Checked on every PR (via `lighthouse.yml`); posts results as a PR comment with median of 3 runs.
 
-```json
-{
-  "ci": {
-    "collect": { "url": ["http://localhost:3000"] },
-    "upload": { "target": "temporary-public-storage" },
-    "assert": [
-      {
-        "matchingUrlPattern": ".*",
-        "assertions": {
-          "categories:performance": { "min": 90 },
-          "categories:accessibility": { "min": 95 }, // Hard gate
-          "categories:best-practices": { "min": 85 }
-        }
-      }
-    ]
-  }
-}
-```
+**Configured in `lighthouserc.json`:**
+
+- **URLs tested:** `http://localhost:4173/auth/sign-in` + `/auth/sign-up`
+- **Performance:** ≥90 (warn if lower)
+- **Accessibility:** ≥95 (hard gate — fail PR if lower)
+- **Best practices:** ≥90 (warn if lower)
+- **Runs:** 3 consecutive, median reported
+- **Server:** `vite preview --port 4173`
 
 Run locally before pushing:
 
 ```bash
-bunx @lhci/cli@latest autorun
+bun run build
+bunx @lhci/cli@0.14.x autorun
 ```
+
+## Release (Semantic Release)
+
+On push to `main`, `.github/workflows/release.yml` runs `semantic-release`:
+
+1. **Analyze commits:** Read conventional commit messages (feat, fix, refactor, etc.)
+2. **Bump version:** Determine next version (major.minor.patch) from commit types
+3. **Generate CHANGELOG.md:** Auto-write release notes from commit bodies
+4. **Create GitHub Release:** Tag and publish on GitHub
+5. **Commit back:** Push `chore(release): x.y.z [skip ci]` to main (no re-trigger)
+
+**NPM publish is disabled** (`. npmPublish: false` in `.releaserc.json`). The app is not an npm package; versioning is for demo tracking only.
+
+## Codecov
+
+Coverage uploaded to Codecov with two flags (configured in `codecov.yml`):
+
+- **`unit`** — Vitest coverage (logic tests via jsdom)
+- **`e2e`** — Playwright coverage (UI flows via V8; monocart-coverage-reports + mcr.config.cjs)
+
+Together they reflect real app coverage. The report is **informational** (does not gate the build); the real gate is the Vitest coverage floor in `vitest.config.ts`. Codecov posts a status comment on PRs when coverage moves.
+
+## Commit Conventions
+
+**`commitlint` enforces** (via `commitlint.config.js`):
+
+- **Types:** `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `build`, `ci`, `chore`, `revert`, `style`
+- **Scope required:** Every commit MUST have a scope (e.g., `feat(auth):`, not bare `feat:`). Bare scopes are rejected.
+- **Subject max length:** 100 characters
+- **Example:** `feat(tickets): add semantic search on ticket embedding`
+
+Failed commitlint blocks the commit hook; `git commit --amend` to fix.
 
 ## Troubleshooting
 

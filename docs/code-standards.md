@@ -7,21 +7,21 @@ follows.
 
 ## What is enforced mechanically today
 
-| Rule                                                  | Enforced by                                              |
-| ----------------------------------------------------- | -------------------------------------------------------- |
-| Conventional commits                                  | `commitlint` on `commit-msg`                             |
-| Lint + format on staged files                         | `husky` pre-commit → `lint-staged`                       |
-| Import order, no duplicate/circular imports           | `import-x/*` (ESLint)                                    |
-| Type-only imports marked explicitly                   | `@typescript-eslint/consistent-type-imports`             |
-| `config/`, `lib/`, `utils/` dependency direction      | `no-restricted-imports` (ESLint, per-directory)          |
-| Baseline a11y (incl. `img` alt text)                  | `jsx-a11y` (ESLint)                                      |
-| Unknown `t()` keys fail the build                     | `src/types/i18next.d.ts` augmenting `CustomTypeOptions`  |
-| `en` / `vi` locale parity + correct plural categories | `bun run lang:check`                                     |
-| Env vars validated at boot                            | Zod schema in `src/config/env.ts`                        |
-| Unit + component tests, coverage floor                | `bun run test:cov` (Vitest) — CI, every push and PR      |
-| WCAG 2.1 AA in a real browser                         | `@axe-core/playwright` — CI, on PRs                      |
-| App boots and runs (not just compiles)                | Playwright e2e against the production build — CI, on PRs |
-| Reproducible installs                                 | committed `bun.lock` + `bun install --frozen-lockfile`   |
+| Rule                                                      | Enforced by                                              |
+| --------------------------------------------------------- | -------------------------------------------------------- |
+| Conventional commits (scope required; types + max length) | `commitlint` on `commit-msg`                             |
+| Lint + format on staged files                             | `husky` pre-commit → `lint-staged`                       |
+| Import order, no duplicate/circular imports               | `import-x/*` (ESLint)                                    |
+| Type-only imports marked explicitly                       | `@typescript-eslint/consistent-type-imports`             |
+| `config/`, `lib/`, `utils/` dependency direction          | `no-restricted-imports` (ESLint, per-directory)          |
+| Baseline a11y (incl. `img` alt text)                      | `jsx-a11y` (ESLint)                                      |
+| Unknown `t()` keys fail the build                         | `src/types/i18next.d.ts` augmenting `CustomTypeOptions`  |
+| `en` / `vi` locale parity + correct plural categories     | `bun run lang:check`                                     |
+| Env vars validated at boot                                | Zod schema in `src/config/env.ts`                        |
+| Unit + component tests, coverage floor                    | `bun run test:cov` (Vitest) — CI, every push and PR      |
+| WCAG 2.1 AA in a real browser                             | `@axe-core/playwright` — CI, on PRs                      |
+| App boots and runs (not just compiles)                    | Playwright e2e against the production build — CI, on PRs |
+| Reproducible installs                                     | committed `bun.lock` + `bun install --frozen-lockfile`   |
 
 **The CI rows report; they do not yet block.** `develop` has no branch protection, so a
 red check leaves the Merge button live and a direct push lands regardless. Enabling
@@ -53,12 +53,26 @@ mechanical.
   API boundary. _Status: target — the current `Id`/`TotalRecord` shapes come from the
   legacy API and are renamed with the Phase 03 data models, not piecemeal._
 
+## Commit Conventions
+
+**`commitlint` enforces** (via `commitlint.config.js`):
+
+- **Scope required:** Every commit MUST have a scope (`scope-empty: never`). Bare `feat:`, `fix:`, etc. are rejected. Example: `feat(auth): add Google OAuth` ✅ vs. `feat: add Google OAuth` ❌
+- **Type enum:** `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `build`, `ci`, `chore`, `revert`, `style`
+- **Subject max length:** 100 characters
+- **Examples:**
+  - `feat(tickets): add semantic search`
+  - `fix(auth): resolve JWT expiry edge case`
+  - `docs(deployment): update Supabase secrets guide`
+
+Failed commitlint blocks the commit; `git commit --amend` to fix.
+
 ## Architecture — feature-based
 
 ```
 src/
   app/                  # application shell — app.tsx (root: providers + router), router.tsx
-  routes/               # TanStack Router tree (phase 04)
+  routes/               # TanStack Router file-based tree (__root.tsx, _app/, auth/)
   components/ui/        # shared UI primitives
   components/           # shared composed components (layouts, inputs, fallbacks)
   features/<feature>/
@@ -70,7 +84,7 @@ src/
     constants/          # query-key factories, enums
     stores/             # feature-scoped Zustand slice (only if it isn't global)
   config/               # env.ts (Zod-validated), app constants
-  lib/                  # configured third-party clients (axios, query-client)
+  lib/                  # configured third-party clients (supabase, query-client, realtime, storage, list-query, route-guards, observability)
   utils/                # pure helpers, zero app deps (cn, format)
   stores/               # global Zustand state (auth session, preferences)
   i18n/, styles/, types/            # global-only
@@ -89,10 +103,9 @@ src/
   in `src/types/i18next.d.ts`.
 - **Barrels only at a feature's public boundary**, to make "no deep cross-feature imports"
   enforceable. No barrel per sub-folder — blanket barrels slow HMR and invite cycles.
-  _Status: target. Today `features/*/index.tsx` are react-router route modules, not public
-  API barrels; Phase 04 replaces that routing and Phase 03 gives each feature a real public
-  surface. The cross-feature `no-restricted-imports` rule lands with them — there is no
-  boundary to point it at until then._
+  _Status: adopted. File-based TanStack Router (`src/routes/`) has replaced react-router;
+  routing is no longer in feature folders. Public API barrels at feature boundaries remain
+  a pattern for the future, pending cross-feature import enforcement via ESLint._
 - Colocate. Files under ~200 LOC. Split by concern before they grow.
 
 ## State: strict separation
@@ -210,12 +223,22 @@ Every list screen obeys all of it. Reviewers reject partial compliance.
 - Date/number formatting via `Intl` — no date library for rendering dates.
 - Namespaces per feature (`common`/`auth`/`admin`/`tickets`). _Status: target — deferred
   to the phase that adds ticket copy, so call sites are rewritten once rather than twice._
+- Flat YAML-based i18n: single `translation` bundle with prefixed keys (e.g., `Tickets.NoActivity`), no per-feature namespaces today.
+
+## Observability
+
+Optional Sentry (errors) + PostHog (analytics/replay) via `src/lib/observability/`:
+
+- **SDK isolation:** Heavy SDKs (Sentry, PostHog) behind a single dynamic `import()` in `main.tsx`, guarded by `api_mode === 'supabase' && key set`. Never enter the main bundle nor load in MSW/tests.
+- **Reporter bridge:** Light, SDK-free `reportError` no-op by default; `initObservability` registers handlers at startup.
+- **PII scrubbing:** Allowlist-based (URLs normalized to `:id`, query strings and element text dropped); replay masks all inputs/text.
+- **User sync:** Auth user synced by **id only**, deduped on id.
+- **Environment gate:** Set `VITE_SENTRY_DSN` and/or `VITE_POSTHOG_KEY` to enable; absent keys = features stay silent.
 
 ## Errors & feedback
 
 - Typed API errors; route-level `errorComponent`. Global toast for mutations.
-- No `window.location.href` redirects for auth — use router navigation + guards. _Status:
-  target (Phase 04); `lib/axios.ts` still hard-redirects on 401/403._
+- No `window.location.href` redirects for auth — use router navigation + guards via `src/lib/route-guards.ts`.
 
 ## Testing
 
@@ -244,6 +267,7 @@ Every list screen obeys all of it. Reviewers reject partial compliance.
 - **Coverage thresholds are a ratchet**: set at the level the suite reaches, so CI fails
   on a drop. Raise them when a phase adds code meant to stay; never set a number the
   repo cannot meet, because a permanently red gate is one people learn to ignore.
+- **Storybook:** Component story files (`*.stories.tsx`) live colocated with components; Vitest excludes stories; Chromatic tracks visual regressions on every PR (forced MSW mode in `.storybook/main.ts`).
 
 ## Dependencies
 
