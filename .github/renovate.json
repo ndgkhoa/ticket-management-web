@@ -5,8 +5,8 @@
   "schedule": ["before 6am on monday"],
   "prConcurrentLimit": 5,
   "semanticCommits": "enabled",
+  "semanticCommitType": "build",
   "packageRules": [
-    { "matchManagers": ["npm"], "semanticCommitType": "build" },
     {
       "matchManagers": ["github-actions"],
       "semanticCommitType": "ci",
