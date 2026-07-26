@@ -1,17 +1,24 @@
 # ticket-management-web
 
+![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+![TanStack](https://img.shields.io/badge/TanStack-Router_+_Query-FF4154?logo=tanstack&logoColor=white)
+![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-Tailwind_4-000000?logo=shadcnui&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres_+_RLS-3FCF8E?logo=supabase&logoColor=white)
+![Bun](https://img.shields.io/badge/Bun-Toolchain-000000?logo=bun&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-Coverage-6E9F18?logo=vitest&logoColor=white)
+![Storybook](https://img.shields.io/badge/Storybook-Chromatic-FF4785?logo=storybook&logoColor=white)
+![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-F38020?logo=cloudflarepages&logoColor=white)
+
+[![Demo](https://img.shields.io/badge/demo-live-3FCF8E?logo=cloudflarepages&logoColor=white)](https://ticket-management.pages.dev)
 [![CI](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml/badge.svg)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml)
 [![Deploy](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/deploy.yml/badge.svg)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/deploy.yml)
 [![codecov](https://codecov.io/gh/ndgkhoa/ticket-management-web/graph/badge.svg)](https://codecov.io/gh/ndgkhoa/ticket-management-web)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/ndgkhoa/ticket-management-web?sort=semver&label=release&color=orange)](https://github.com/ndgkhoa/ticket-management-web/releases)
+[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 
-[![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev)
-[![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-
-A **production-grade single-tenant help desk** built as a portfolio project. Customers open tickets → agents resolve them (by team) → admins manage permissions and SLAs. Full Supabase backend deployed live; MSW for local dev + tests.
+AI-assisted **help desk frontend** in React — TanStack Router + Query over a Supabase backend: Gemini triage suggests priority and routing, realtime ticket updates with presence, SLA clocks and audit trails enforced by Postgres triggers, role scoping via row-level security, en/vi i18n, and WCAG 2.1 AA verified in CI.
 
 ## Demo Accounts
 
