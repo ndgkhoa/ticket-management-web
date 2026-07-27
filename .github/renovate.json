@@ -2,6 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "labels": ["dependencies"],
+  "timezone": "Asia/Ho_Chi_Minh",
   "schedule": ["before 6am on monday"],
   "prConcurrentLimit": 5,
   "semanticCommits": "enabled",
@@ -28,7 +29,6 @@
     },
     { "groupName": "i18n", "matchPackageNames": ["i18next", "i18next-**", "react-i18next"] },
     { "matchPackageNames": ["typescript"], "allowedVersions": "<7.0.0" },
-    { "matchPackageNames": ["@types/node"], "allowedVersions": "<25.0.0" },
-    { "matchPackageNames": ["antd", "@ant-design/icons"], "enabled": false }
+    { "matchPackageNames": ["@types/node"], "allowedVersions": "<25.0.0" }
   ]
 }
