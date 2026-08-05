@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { agentUsers, ticketRows } from '~/mocks/fixtures';
 import { ticketApi } from '~/features/tickets/api/ticket-api';
 
-describe('ticketApi.bulkUpdate over MSW', () => {
+describe('ticket bulk update over MSW', () => {
   const agentId = agentUsers[0].id;
 
   it('updates exactly the ids passed (page-scoped selection)', async () => {

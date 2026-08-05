@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from '@supabase/supabase-js';
 
+import { useAuthStore } from '~/stores/auth';
+import { attachmentApi } from '~/features/tickets/api/attachment-api';
+import { ticketRows } from '~/mocks/fixtures';
+
 vi.mock('~/lib/storage', () => ({
   uploadAttachment: vi.fn(async (ticketId: string, file: File) => ({
     path: `${ticketId}/x`,
@@ -9,14 +13,10 @@ vi.mock('~/lib/storage', () => ({
   revokeAttachmentUrl: vi.fn(),
 }));
 
-import { useAuthStore } from '~/stores/auth';
-import { attachmentApi } from '~/features/tickets/api/attachment-api';
-import { ticketRows } from '~/mocks/fixtures';
-
 const USER_ID = ticketRows[0].requester_id;
 const TICKET_ID = ticketRows[0].id;
 
-describe('attachmentApi over MSW', () => {
+describe('attachment CRUD over MSW', () => {
   beforeEach(() => useAuthStore.setState({ user: { id: USER_ID } as User }));
   afterEach(() => useAuthStore.setState({ user: null }));
 
