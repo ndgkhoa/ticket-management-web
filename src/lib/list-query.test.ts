@@ -9,7 +9,7 @@ import {
 } from '~/lib/list-query';
 import { runListQuery, type ListQueryConfig } from '~/lib/list-query-builder';
 
-describe('pagination math', () => {
+describe('pageToRange and computePageCount', () => {
   it('maps page/pageSize to an inclusive zero-based range', () => {
     expect(pageToRange(1, 20)).toEqual({ from: 0, to: 19 });
     expect(pageToRange(2, 20)).toEqual({ from: 20, to: 39 });
