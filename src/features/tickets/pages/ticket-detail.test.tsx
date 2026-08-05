@@ -1,24 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { User } from '@supabase/supabase-js';
 import { http, HttpResponse } from 'msw';
-import { render as rtlRender } from '@testing-library/react';
-import {
-  createMemoryHistory,
-  createRootRouteWithContext,
-  createRoute,
-  createRouter,
-  RouterProvider,
-} from '@tanstack/react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { AnyRouter } from '@tanstack/react-router';
+import { createRoute } from '@tanstack/react-router';
 
-import { ThemeProvider } from '~/components/theme-provider';
-import { screen, waitFor } from '~/testing/render';
 import { server } from '~/mocks/server';
 import { useAuthStore } from '~/stores/auth';
 import { ticketQueries } from '~/features/tickets/api/ticket-queries';
 import { ticketRows } from '~/mocks/fixtures';
 import TicketDetail from '~/features/tickets/pages/ticket-detail';
+import { renderAppRoute, screen, waitFor } from '~/testing/render';
 
 vi.mock('~/features/tickets/hooks/use-ticket-detail-realtime', () => ({
   useTicketDetailRealtime: () => [],
@@ -26,41 +16,25 @@ vi.mock('~/features/tickets/hooks/use-ticket-detail-realtime', () => ({
 
 const target = ticketRows.find((row) => row.assignee_id && row.team_id)!;
 
-async function renderDetailAs(permissions: string[]) {
+const renderDetailAs = (permissions: string[]) => {
   useAuthStore.setState({
     user: { id: target.requester_id } as User,
     permissions: new Set(permissions),
     status: 'authenticated',
   });
 
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
-  const rootRoute = createRootRouteWithContext<{ queryClient: QueryClient }>()();
-  const appRoute = createRoute({ getParentRoute: () => rootRoute, id: '_app' });
-  const ticketRoute = createRoute({
-    getParentRoute: () => appRoute,
-    path: 'tickets/$ticketId',
-    loader: ({ context, params }) =>
-      context.queryClient.ensureQueryData(ticketQueries.detail(params.ticketId)),
-    component: () => <TicketDetail />,
-  });
-  const routeTree = rootRoute.addChildren([appRoute.addChildren([ticketRoute])]);
-  const router = createRouter({
-    routeTree,
-    history: createMemoryHistory({ initialEntries: [`/tickets/${target.id}`] }),
-    context: { queryClient },
-  });
-  await router.load();
-
-  rtlRender(
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router as unknown as AnyRouter} />
-      </QueryClientProvider>
-    </ThemeProvider>
+  return renderAppRoute(
+    (parent) =>
+      createRoute({
+        getParentRoute: () => parent,
+        path: 'tickets/$ticketId',
+        loader: ({ context, params }) =>
+          context.queryClient.ensureQueryData(ticketQueries.detail(params.ticketId)),
+        component: () => <TicketDetail />,
+      }),
+    `/tickets/${target.id}`
   );
-}
+};
 
 function spyAgentRoster() {
   const calls = { count: 0 };

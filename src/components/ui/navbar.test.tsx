@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import type { User } from '@supabase/supabase-js';
 
-import '~/i18n';
 import { render, screen } from '~/testing/render';
 import { useAuthStore } from '~/stores/auth';
 import { Navbar } from '~/components/ui/navbar';

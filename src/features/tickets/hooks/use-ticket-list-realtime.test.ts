@@ -1,40 +1,34 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ReactNode } from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
-import '~/i18n';
 import { registerRealtimeTransport, type RealtimeChange } from '~/lib/realtime';
 import { ticketKeys } from '~/features/tickets/constants/ticket-keys';
 import { useTicketListRealtime } from '~/features/tickets/hooks/use-ticket-list-realtime';
+import { act, renderHookWithProviders } from '~/testing/render';
 
-const mocks = vi.hoisted(() => {
-  const toast = Object.assign(vi.fn(), { dismiss: vi.fn() });
-  return { toast };
-});
+const mocks = vi.hoisted(() => ({ toast: Object.assign(vi.fn(), { dismiss: vi.fn() }) }));
 
 vi.mock('sonner', () => ({ toast: mocks.toast }));
 
 const THROTTLE_MS = 1500;
 
-let queryClient: QueryClient;
-let invalidate: ReturnType<typeof vi.spyOn>;
+type Args = { canAutoRefresh: boolean; viewKey: string };
+
 let emit: (change: RealtimeChange) => void;
 let unsubscribe: Mock<() => void>;
 let now: number;
 
-const wrapper = ({ children }: { children: ReactNode }) => (
-  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-);
-
-const setup = (props: { canAutoRefresh: boolean; viewKey: string }) =>
-  renderHook((args: { canAutoRefresh: boolean; viewKey: string }) => useTicketListRealtime(args), {
-    wrapper,
-    initialProps: props,
-  });
-
 const change: RealtimeChange = { eventType: 'INSERT', new: { id: 't9' }, old: null };
+
+const setup = (initialProps: Args) => {
+  const rendered = renderHookWithProviders((args: Args) => useTicketListRealtime(args), {
+    initialProps,
+  });
+  const invalidate = vi
+    .spyOn(rendered.queryClient, 'invalidateQueries')
+    .mockResolvedValue(undefined);
+  return { ...rendered, invalidate };
+};
 
 const toastOptions = () =>
   mocks.toast.mock.calls.at(-1)?.[1] as {
@@ -47,9 +41,6 @@ beforeEach(() => {
   now = 1_000_000;
   vi.spyOn(Date, 'now').mockImplementation(() => now);
 
-  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
-
   unsubscribe = vi.fn<() => void>();
   registerRealtimeTransport({
     subscribeTable: (_table, onChange) => {
@@ -60,11 +51,9 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => queryClient.clear());
-
 describe('useTicketListRealtime with auto refresh on', () => {
   it('invalidates the ticket lists as soon as a change lands', () => {
-    setup({ canAutoRefresh: true, viewKey: 'all' });
+    const { invalidate } = setup({ canAutoRefresh: true, viewKey: 'all' });
 
     act(() => emit(change));
 
@@ -73,7 +62,7 @@ describe('useTicketListRealtime with auto refresh on', () => {
   });
 
   it('throttles a burst of changes into a single refetch', () => {
-    setup({ canAutoRefresh: true, viewKey: 'all' });
+    const { invalidate } = setup({ canAutoRefresh: true, viewKey: 'all' });
 
     act(() => emit(change));
     now += THROTTLE_MS - 1;
@@ -83,7 +72,7 @@ describe('useTicketListRealtime with auto refresh on', () => {
   });
 
   it('refetches again once the throttle window has passed', () => {
-    setup({ canAutoRefresh: true, viewKey: 'all' });
+    const { invalidate } = setup({ canAutoRefresh: true, viewKey: 'all' });
 
     act(() => emit(change));
     now += THROTTLE_MS;
@@ -95,7 +84,7 @@ describe('useTicketListRealtime with auto refresh on', () => {
 
 describe('useTicketListRealtime with auto refresh off', () => {
   it('accumulates the unseen count into one toast instead of refetching', () => {
-    setup({ canAutoRefresh: false, viewKey: 'all' });
+    const { invalidate } = setup({ canAutoRefresh: false, viewKey: 'all' });
 
     act(() => emit(change));
     act(() => emit(change));
@@ -108,7 +97,7 @@ describe('useTicketListRealtime with auto refresh off', () => {
   });
 
   it('refetches and dismisses the toast when the user asks to refresh', () => {
-    setup({ canAutoRefresh: false, viewKey: 'all' });
+    const { invalidate } = setup({ canAutoRefresh: false, viewKey: 'all' });
     act(() => emit(change));
 
     act(() => toastOptions().action.onClick());

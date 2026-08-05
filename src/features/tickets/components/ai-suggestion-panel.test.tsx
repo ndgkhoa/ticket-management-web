@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from '@supabase/supabase-js';
 import { http, HttpResponse } from 'msw';
 
-import '~/i18n';
 import { render, screen } from '~/testing/render';
 import { server } from '~/mocks/server';
 import { useAuthStore } from '~/stores/auth';

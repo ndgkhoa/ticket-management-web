@@ -57,7 +57,7 @@ beforeEach(async () => {
   store = await import('~/stores/auth');
 });
 
-describe('auth store', () => {
+describe('useAuthStore', () => {
   it('applies a session and answers hasPermission from the set', () => {
     const session = { user: { id: 'u1' } } as unknown as Session;
     store.useAuthStore.getState().applySession(session, new Set(['ticket.update', 'canned.read']));

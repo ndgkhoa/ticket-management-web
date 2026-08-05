@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import '~/i18n';
 import { render, screen } from '~/testing/render';
 import type { Ticket } from '~/features/tickets/schemas/ticket-schema';
 import { TicketSlaCard } from '~/features/tickets/components/ticket-sla-card';

@@ -17,7 +17,7 @@ const search: TicketSearch = {
   status: ['open'],
 };
 
-describe('savedViewApi over MSW', () => {
+describe('saved view CRUD over MSW', () => {
   beforeEach(() => useAuthStore.setState({ user: { id: USER_ID } as User }));
   afterEach(() => useAuthStore.setState({ user: null }));
 

@@ -46,7 +46,7 @@ const enableBoth = () => {
 };
 
 beforeEach(async () => {
-  vi.resetAllMocks();
+  vi.clearAllMocks();
   mocks.env.VITE_SENTRY_DSN = undefined;
   mocks.env.VITE_POSTHOG_KEY = undefined;
 
@@ -85,7 +85,7 @@ describe('initObservability wiring', () => {
 
   it('keeps going when a provider fails to start', async () => {
     enableBoth();
-    mocks.initSentry.mockImplementation(() => {
+    mocks.initSentry.mockImplementationOnce(() => {
       throw new Error('bad dsn');
     });
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});

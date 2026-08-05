@@ -1,11 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ReactNode } from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import i18n from '~/i18n';
 import { createCrudQueries } from '~/features/admin/shared/use-crud-queries';
+import { renderHookWithProviders, waitFor } from '~/testing/render';
 
 const mocks = vi.hoisted(() => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -23,11 +21,6 @@ let api: {
   remove: Mock<(id: string) => Promise<void>>;
 };
 let queries: ReturnType<typeof createCrudQueries<Tag, TagInput>>;
-let queryClient: QueryClient;
-
-const wrapper = ({ children }: { children: ReactNode }) => (
-  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -40,14 +33,15 @@ beforeEach(() => {
     remove: vi.fn<(id: string) => Promise<void>>().mockResolvedValue(undefined),
   };
   queries = createCrudQueries<Tag, TagInput>({ keys, api });
-  queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
 });
 
-afterEach(() => queryClient.clear());
+const renderMutation = <T>(hook: () => T) => {
+  const { result, queryClient } = renderHookWithProviders(hook);
+  const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
+  return { result, invalidate };
+};
 
-describe('createCrudQueries list', () => {
+describe('createCrudQueries', () => {
   it('exposes query options bound to the list key and loader', () => {
     const options = queries.listQuery();
 
@@ -56,27 +50,21 @@ describe('createCrudQueries list', () => {
   });
 
   it('loads the rows through the api', async () => {
-    const { result } = renderHook(() => queries.useList(), { wrapper });
+    const { result } = renderHookWithProviders(() => queries.useList());
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([{ id: '1', name: 'bug' }]);
   });
 
   it('stays idle while disabled', () => {
-    const { result } = renderHook(() => queries.useList({ enabled: false }), { wrapper });
+    const { result } = renderHookWithProviders(() => queries.useList({ enabled: false }));
 
     expect(api.list).not.toHaveBeenCalled();
     expect(result.current.fetchStatus).toBe('idle');
   });
-});
-
-describe('createCrudQueries mutations', () => {
-  const invalidateSpy = () =>
-    vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
 
   it('creates a row, refreshes the cache and confirms the save', async () => {
-    const invalidate = invalidateSpy();
-    const { result } = renderHook(() => queries.useCreate(), { wrapper });
+    const { result, invalidate } = renderMutation(() => queries.useCreate());
 
     result.current.mutate({ name: 'ui' });
 
@@ -87,8 +75,7 @@ describe('createCrudQueries mutations', () => {
   });
 
   it('sends the id alongside the payload on update', async () => {
-    const invalidate = invalidateSpy();
-    const { result } = renderHook(() => queries.useUpdate(), { wrapper });
+    const { result, invalidate } = renderMutation(() => queries.useUpdate());
 
     result.current.mutate({ id: '1', input: { name: 'renamed' } });
 
@@ -99,8 +86,7 @@ describe('createCrudQueries mutations', () => {
   });
 
   it('removes a row and confirms the delete', async () => {
-    const invalidate = invalidateSpy();
-    const { result } = renderHook(() => queries.useRemove(), { wrapper });
+    const { result, invalidate } = renderMutation(() => queries.useRemove());
 
     result.current.mutate('1');
 
@@ -111,9 +97,8 @@ describe('createCrudQueries mutations', () => {
   });
 
   it('leaves the cache alone and stays silent when the api rejects', async () => {
-    const invalidate = invalidateSpy();
     api.create.mockRejectedValue(new Error('duplicate name'));
-    const { result } = renderHook(() => queries.useCreate(), { wrapper });
+    const { result, invalidate } = renderMutation(() => queries.useCreate());
 
     result.current.mutate({ name: 'ui' });
 

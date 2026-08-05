@@ -1,21 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render as rtlRender } from '@testing-library/react';
-import {
-  createMemoryHistory,
-  createRootRouteWithContext,
-  createRoute,
-  createRouter,
-  RouterProvider,
-} from '@tanstack/react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { AnyRouter } from '@tanstack/react-router';
+import { createRoute } from '@tanstack/react-router';
 import type * as Recharts from 'recharts';
 
-import '~/i18n';
-import { ThemeProvider } from '~/components/theme-provider';
-import { screen } from '~/testing/render';
 import { dashboardSearchSchema } from '~/features/dashboard/schemas/dashboard-search-schema';
 import Dashboard from '~/features/dashboard/pages/dashboard';
+import { renderAppRoute, screen } from '~/testing/render';
 
 vi.mock('recharts', async (importOriginal) => {
   const actual = await importOriginal<typeof Recharts>();
@@ -27,32 +16,17 @@ vi.mock('recharts', async (importOriginal) => {
   };
 });
 
-async function renderDashboard() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const rootRoute = createRootRouteWithContext<{ queryClient: QueryClient }>()();
-  const appRoute = createRoute({ getParentRoute: () => rootRoute, id: '_app' });
-  const indexRoute = createRoute({
-    getParentRoute: () => appRoute,
-    path: '/',
-    validateSearch: dashboardSearchSchema,
-    component: () => <Dashboard />,
-  });
-  const routeTree = rootRoute.addChildren([appRoute.addChildren([indexRoute])]);
-  const router = createRouter({
-    routeTree,
-    history: createMemoryHistory({ initialEntries: ['/?range=30'] }),
-    context: { queryClient },
-  });
-  await router.load();
-
-  rtlRender(
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router as unknown as AnyRouter} />
-      </QueryClientProvider>
-    </ThemeProvider>
+const renderDashboard = () =>
+  renderAppRoute(
+    (parent) =>
+      createRoute({
+        getParentRoute: () => parent,
+        path: '/',
+        validateSearch: dashboardSearchSchema,
+        component: () => <Dashboard />,
+      }),
+    '/?range=30'
   );
-}
 
 describe('Dashboard', () => {
   afterEach(() => vi.clearAllMocks());

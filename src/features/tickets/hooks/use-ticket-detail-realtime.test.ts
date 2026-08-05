@@ -1,7 +1,4 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ReactNode } from 'react';
 import type { Mock } from 'vitest';
 import type { Session } from '@supabase/supabase-js';
 
@@ -13,11 +10,10 @@ import {
 import { ticketKeys } from '~/features/tickets/constants/ticket-keys';
 import { useAuthStore } from '~/stores/auth';
 import { useTicketDetailRealtime } from '~/features/tickets/hooks/use-ticket-detail-realtime';
+import { act, renderHookWithProviders } from '~/testing/render';
 
 const TICKET_ID = 't1';
 
-let queryClient: QueryClient;
-let invalidate: ReturnType<typeof vi.spyOn>;
 let emit: (change: RealtimeChange) => void;
 let presence: {
   topic?: string;
@@ -27,12 +23,13 @@ let presence: {
   joined: number;
 };
 
-const wrapper = ({ children }: { children: ReactNode }) => (
-  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-);
-
-const setup = (trackPresence?: boolean) =>
-  renderHook(() => useTicketDetailRealtime(TICKET_ID, trackPresence), { wrapper });
+const setup = (trackPresence?: boolean) => {
+  const rendered = renderHookWithProviders(() => useTicketDetailRealtime(TICKET_ID, trackPresence));
+  const invalidate = vi
+    .spyOn(rendered.queryClient, 'invalidateQueries')
+    .mockResolvedValue(undefined);
+  return { ...rendered, invalidate };
+};
 
 const signIn = (metadata: Record<string, unknown> = {}) =>
   useAuthStore.getState().applySession(
@@ -44,9 +41,6 @@ const signIn = (metadata: Record<string, unknown> = {}) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
-  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
-
   presence = { leave: vi.fn<() => void>(), joined: 0 };
   registerRealtimeTransport({
     subscribeTable: (_table, onChange) => {
@@ -63,15 +57,14 @@ beforeEach(() => {
   });
 });
 
-afterEach(() => {
-  queryClient.clear();
-  useAuthStore.setState({ session: null, user: null, status: 'loading', permissions: new Set() });
-});
+afterEach(() =>
+  useAuthStore.setState({ session: null, user: null, status: 'loading', permissions: new Set() })
+);
 
 describe('useTicketDetailRealtime message stream', () => {
   it('refreshes messages and events for a change on this ticket', () => {
     signIn();
-    setup();
+    const { invalidate } = setup();
 
     act(() => emit({ eventType: 'INSERT', new: { ticket_id: TICKET_ID }, old: null }));
 
@@ -81,7 +74,7 @@ describe('useTicketDetailRealtime message stream', () => {
 
   it('falls back to the old row when a message is deleted', () => {
     signIn();
-    setup();
+    const { invalidate } = setup();
 
     act(() => emit({ eventType: 'DELETE', new: null, old: { ticket_id: TICKET_ID } }));
 
@@ -90,7 +83,7 @@ describe('useTicketDetailRealtime message stream', () => {
 
   it('ignores changes belonging to another ticket', () => {
     signIn();
-    setup();
+    const { invalidate } = setup();
 
     act(() => emit({ eventType: 'INSERT', new: { ticket_id: 'other' }, old: null }));
 

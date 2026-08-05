@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 
-import '~/i18n';
 import { AdminCrudPage } from '~/features/admin/shared/admin-crud-page';
 import { render, screen, within } from '~/testing/render';
 

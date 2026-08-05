@@ -1,13 +1,12 @@
-import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import '~/i18n';
 import { useTicketBulkSelection } from '~/features/tickets/hooks/use-ticket-bulk-selection';
 import {
   TICKET_SEARCH_DEFAULTS,
   type TicketSearch,
 } from '~/features/tickets/schemas/ticket-search-schema';
 import type { Ticket } from '~/features/tickets/schemas/ticket-schema';
+import { act, renderHook } from '~/testing/render';
 
 const mocks = vi.hoisted(() => ({
   mutate: vi.fn(),
@@ -36,6 +35,8 @@ const setup = (args: { search?: TicketSearch; rows?: Ticket[]; totalCount?: numb
       },
     }
   );
+
+beforeEach(() => vi.clearAllMocks());
 
 describe('useTicketBulkSelection', () => {
   it('derives selectedIds from the truthy entries of rowSelection', () => {
@@ -126,7 +127,7 @@ describe('useTicketBulkSelection', () => {
   });
 
   it('clears the selection and toasts the updated count on success', () => {
-    mocks.mutate.mockImplementation((_vars, options) => options.onSuccess(3));
+    mocks.mutate.mockImplementationOnce((_vars, options) => options.onSuccess(3));
     const { result } = setup();
     act(() => result.current.setRowSelection({ t1: true, t2: true }));
 
@@ -138,7 +139,7 @@ describe('useTicketBulkSelection', () => {
   });
 
   it('keeps the selection and surfaces the error message on failure', () => {
-    mocks.mutate.mockImplementation((_vars, options) => options.onError(new Error('boom')));
+    mocks.mutate.mockImplementationOnce((_vars, options) => options.onError(new Error('boom')));
     const { result } = setup();
     act(() => result.current.setRowSelection({ t1: true }));
 

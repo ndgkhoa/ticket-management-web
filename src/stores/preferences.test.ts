@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { usePreferencesStore } from '~/stores/preferences';
 
-describe('preferences store', () => {
+describe('usePreferencesStore', () => {
   it('updates the persisted page size', () => {
     usePreferencesStore.getState().setPageSize(50);
     expect(usePreferencesStore.getState().pageSize).toBe(50);

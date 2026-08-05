@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { revokeAttachmentUrl, uploadAttachment } from '~/lib/storage';
 
-describe('attachment storage (msw mode)', () => {
+describe('attachment storage over MSW', () => {
   beforeEach(() => {
     URL.createObjectURL = vi.fn(() => 'blob:mock-url');
     URL.revokeObjectURL = vi.fn();
