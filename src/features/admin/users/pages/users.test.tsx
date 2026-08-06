@@ -33,15 +33,15 @@ vi.mock('~/features/admin/users/components/user-roles-dialog', () => ({
 const ROWS = [
   {
     id: 'u1',
-    fullName: 'Khoa',
-    email: 'khoa@example.com',
+    fullName: 'Aiko Tanaka',
+    email: 'agent@example.com',
     avatarUrl: null,
     createdAt: '2026-01-01T00:00:00Z',
   },
   {
     id: 'u2',
     fullName: null,
-    email: 'mai@example.com',
+    email: 'admin@example.com',
     avatarUrl: null,
     createdAt: '2026-01-02T00:00:00Z',
   },
@@ -68,21 +68,21 @@ describe('Users listing', () => {
   it('lists the page of users', async () => {
     await render(<Users />);
 
-    expect(screen.getByText('khoa@example.com')).toBeInTheDocument();
-    expect(screen.getByText('mai@example.com')).toBeInTheDocument();
+    expect(screen.getByText('agent@example.com')).toBeInTheDocument();
+    expect(screen.getByText('admin@example.com')).toBeInTheDocument();
   });
 
   it('falls back to a dash when a user has no name', async () => {
     await render(<Users />);
 
-    expect(within(rowFor('mai@example.com')).getByText('—')).toBeInTheDocument();
+    expect(within(rowFor('admin@example.com')).getByText('—')).toBeInTheDocument();
   });
 
   it('numbers rows continuing from the current page offset', async () => {
     mocks.search.value = { ...mocks.search.value, page: 2, pageSize: 20 };
     await render(<Users />);
 
-    expect(within(rowFor('khoa@example.com')).getByText('21')).toBeInTheDocument();
+    expect(within(rowFor('agent@example.com')).getByText('21')).toBeInTheDocument();
   });
 
   it('replaces the table with the error page when the query fails', async () => {
@@ -94,7 +94,7 @@ describe('Users listing', () => {
     await render(<Users />);
 
     expect(screen.getByText('forbidden')).toBeInTheDocument();
-    expect(screen.queryByText('khoa@example.com')).toBeNull();
+    expect(screen.queryByText('agent@example.com')).toBeNull();
   });
 });
 
@@ -109,10 +109,10 @@ describe('Users roles dialog', () => {
     const { user } = await render(<Users />);
 
     await user.click(
-      within(rowFor('mai@example.com')).getByRole('button', { name: 'roles of user' })
+      within(rowFor('admin@example.com')).getByRole('button', { name: 'roles of user' })
     );
 
-    expect(screen.getByTestId('roles-dialog')).toHaveTextContent('mai@example.com');
+    expect(screen.getByTestId('roles-dialog')).toHaveTextContent('admin@example.com');
   });
 });
 

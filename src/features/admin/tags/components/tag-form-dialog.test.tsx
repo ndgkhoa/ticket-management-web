@@ -18,7 +18,7 @@ vi.mock('~/features/admin/tags/api/tag-queries', () => ({
 
 vi.mock('sonner', () => ({ toast: mocks.toast }));
 
-const TAG = { id: 'tag-1', name: 'billing', color: '#ff0000' } as Tag;
+const TAG = { id: 'tag-1', name: 'refund', color: '#ff0000' } as Tag;
 
 const renderDialog = async (tag?: Tag | null) => {
   const onOpenChange = vi.fn();
@@ -38,23 +38,26 @@ describe('TagFormDialog', () => {
   it('creates a tag with a trimmed name and the chosen colour', async () => {
     const { user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Name'), '  urgent  ');
+    await user.type(screen.getByLabelText('Name'), '  escalated  ');
     const color = colorValue();
     await user.click(save());
 
-    expect(mocks.createMutate).toHaveBeenCalledWith({ name: 'urgent', color }, expect.anything());
+    expect(mocks.createMutate).toHaveBeenCalledWith(
+      { name: 'escalated', color },
+      expect.anything()
+    );
   });
 
   it('prefills and updates an existing tag by id', async () => {
     const { user } = await renderDialog(TAG);
 
-    expect(screen.getByLabelText('Name')).toHaveValue('billing');
+    expect(screen.getByLabelText('Name')).toHaveValue('refund');
     expect(colorValue()).toBe('#ff0000');
 
     await user.click(save());
 
     expect(mocks.updateMutate).toHaveBeenCalledWith(
-      { id: 'tag-1', input: { name: 'billing', color: '#ff0000' } },
+      { id: 'tag-1', input: { name: 'refund', color: '#ff0000' } },
       expect.anything()
     );
   });
@@ -71,7 +74,7 @@ describe('TagFormDialog', () => {
   it('closes on success and reports failure without closing', async () => {
     mocks.createMutate.mockImplementationOnce((_input, handlers) => handlers.onSuccess());
     const first = await renderDialog();
-    await first.user.type(screen.getByLabelText('Name'), 'urgent');
+    await first.user.type(screen.getByLabelText('Name'), 'escalated');
     await first.user.click(save());
     expect(first.onOpenChange).toHaveBeenCalledWith(false);
 
@@ -80,7 +83,7 @@ describe('TagFormDialog', () => {
       handlers.onError(new Error('name taken'))
     );
     const second = await renderDialog();
-    await second.user.type(screen.getByLabelText('Name'), 'urgent');
+    await second.user.type(screen.getByLabelText('Name'), 'escalated');
     await second.user.click(save());
 
     expect(mocks.toast.error).toHaveBeenCalledWith('name taken');

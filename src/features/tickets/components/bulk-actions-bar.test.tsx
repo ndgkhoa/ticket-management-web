@@ -8,7 +8,7 @@ const STATUS_OPTIONS = [
   { label: 'Closed', value: 'closed' },
 ];
 
-const ASSIGNEE_OPTIONS = [{ label: 'Khoa', value: 'u1' }];
+const ASSIGNEE_OPTIONS = [{ label: 'Aiko Tanaka', value: 'u1' }];
 
 type Overrides = Partial<Parameters<typeof BulkActionsBar>[0]>;
 
@@ -95,7 +95,7 @@ describe('BulkActionsBar actions', () => {
     const { onApply, user } = await renderBar();
 
     await user.click(screen.getByRole('button', { name: /Assign to/ }));
-    await user.click(await screen.findByRole('menuitem', { name: 'Khoa' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Aiko Tanaka' }));
 
     expect(onApply).toHaveBeenCalledWith({ assigneeId: 'u1' });
   });

@@ -21,7 +21,11 @@ vi.mock('~/features/admin/canned-responses/api/canned-response-queries', () => (
 
 vi.mock('sonner', () => ({ toast: mocks.toast }));
 
-const RESPONSE = { id: 'c1', title: 'Greeting', body: 'Hello there' } as CannedResponse;
+const RESPONSE = {
+  id: 'c1',
+  title: 'Acknowledge and set expectations',
+  body: 'Thanks for getting in touch',
+} as CannedResponse;
 
 const renderDialog = async (cannedResponse?: CannedResponse | null) => {
   const onOpenChange = vi.fn();
@@ -42,12 +46,12 @@ describe('CannedResponseFormDialog', () => {
   it('creates a response with trimmed title and body', async () => {
     const { user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Title'), '  Greeting  ');
-    await user.type(screen.getByLabelText('Body'), '  Hello there  ');
+    await user.type(screen.getByLabelText('Title'), '  Acknowledge and set expectations  ');
+    await user.type(screen.getByLabelText('Body'), '  Thanks for getting in touch  ');
     await user.click(save());
 
     expect(mocks.createMutate).toHaveBeenCalledWith(
-      { title: 'Greeting', body: 'Hello there' },
+      { title: 'Acknowledge and set expectations', body: 'Thanks for getting in touch' },
       expect.anything()
     );
   });
@@ -55,13 +59,16 @@ describe('CannedResponseFormDialog', () => {
   it('prefills and updates an existing response by id', async () => {
     const { user } = await renderDialog(RESPONSE);
 
-    expect(screen.getByLabelText('Title')).toHaveValue('Greeting');
-    expect(screen.getByLabelText('Body')).toHaveValue('Hello there');
+    expect(screen.getByLabelText('Title')).toHaveValue('Acknowledge and set expectations');
+    expect(screen.getByLabelText('Body')).toHaveValue('Thanks for getting in touch');
 
     await user.click(save());
 
     expect(mocks.updateMutate).toHaveBeenCalledWith(
-      { id: 'c1', input: { title: 'Greeting', body: 'Hello there' } },
+      {
+        id: 'c1',
+        input: { title: 'Acknowledge and set expectations', body: 'Thanks for getting in touch' },
+      },
       expect.anything()
     );
   });
@@ -79,8 +86,8 @@ describe('CannedResponseFormDialog', () => {
     mocks.createMutate.mockImplementationOnce((_input, handlers) => handlers.onSuccess());
     const { onOpenChange, user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Title'), 'Greeting');
-    await user.type(screen.getByLabelText('Body'), 'Hello');
+    await user.type(screen.getByLabelText('Title'), 'Acknowledge and set expectations');
+    await user.type(screen.getByLabelText('Body'), 'Thanks for getting in touch');
     await user.click(save());
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -92,8 +99,8 @@ describe('CannedResponseFormDialog', () => {
     );
     const { onOpenChange, user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Title'), 'Greeting');
-    await user.type(screen.getByLabelText('Body'), 'Hello');
+    await user.type(screen.getByLabelText('Title'), 'Acknowledge and set expectations');
+    await user.type(screen.getByLabelText('Body'), 'Thanks for getting in touch');
     await user.click(save());
 
     expect(mocks.toast.error).toHaveBeenCalledWith('title taken');

@@ -36,8 +36,15 @@ const PARAMS = {
   sort: { field: 'title', dir: 'asc' },
   filters: {},
 } as never;
-const ROW = { id: 'c1', title: 'Greeting', body: 'Hello' };
-const INPUT = { title: 'Greeting', body: 'Hello' } as never;
+const ROW = {
+  id: 'c1',
+  title: 'Acknowledge and set expectations',
+  body: 'Thanks for getting in touch',
+};
+const INPUT = {
+  title: 'Acknowledge and set expectations',
+  body: 'Thanks for getting in touch',
+} as never;
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -25,8 +25,8 @@ vi.mock('sonner', () => ({ toast: mocks.toast }));
 const submit = () => screen.getByRole('button', { name: 'Register' });
 
 const fillValid = async (user: { type: (el: HTMLElement, text: string) => Promise<void> }) => {
-  await user.type(screen.getByLabelText('Full Name'), 'Khoa');
-  await user.type(screen.getByLabelText('Email'), 'khoa@example.com');
+  await user.type(screen.getByLabelText('Full Name'), 'New User');
+  await user.type(screen.getByLabelText('Email'), 'new-user@example.com');
   await user.type(screen.getByLabelText('Password'), 'password123');
   await user.type(screen.getByLabelText('Confirm password'), 'password123');
 };
@@ -49,7 +49,7 @@ describe('SignUpForm validation', () => {
   it('rejects an address the browser accepts but zod does not', async () => {
     const { user } = await render(<SignUpForm />);
 
-    await user.type(screen.getByLabelText('Full Name'), 'Khoa');
+    await user.type(screen.getByLabelText('Full Name'), 'New User');
     await user.type(screen.getByLabelText('Email'), 'foo@bar');
     await user.type(screen.getByLabelText('Password'), 'password123');
     await user.type(screen.getByLabelText('Confirm password'), 'password123');
@@ -62,8 +62,8 @@ describe('SignUpForm validation', () => {
   it('rejects a password under eight characters', async () => {
     const { user } = await render(<SignUpForm />);
 
-    await user.type(screen.getByLabelText('Full Name'), 'Khoa');
-    await user.type(screen.getByLabelText('Email'), 'khoa@example.com');
+    await user.type(screen.getByLabelText('Full Name'), 'New User');
+    await user.type(screen.getByLabelText('Email'), 'new-user@example.com');
     await user.type(screen.getByLabelText('Password'), 'short');
     await user.type(screen.getByLabelText('Confirm password'), 'short');
     await user.click(submit());
@@ -75,8 +75,8 @@ describe('SignUpForm validation', () => {
   it('rejects a confirmation that does not match', async () => {
     const { user } = await render(<SignUpForm />);
 
-    await user.type(screen.getByLabelText('Full Name'), 'Khoa');
-    await user.type(screen.getByLabelText('Email'), 'khoa@example.com');
+    await user.type(screen.getByLabelText('Full Name'), 'New User');
+    await user.type(screen.getByLabelText('Email'), 'new-user@example.com');
     await user.type(screen.getByLabelText('Password'), 'password123');
     await user.type(screen.getByLabelText('Confirm password'), 'password124');
     await user.click(submit());
@@ -95,8 +95,8 @@ describe('SignUpForm submission', () => {
 
     expect(mocks.signUp).toHaveBeenCalledWith(
       {
-        fullName: 'Khoa',
-        email: 'khoa@example.com',
+        fullName: 'New User',
+        email: 'new-user@example.com',
         password: 'password123',
         captchaToken: undefined,
       },
