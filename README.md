@@ -11,12 +11,11 @@
 ![Storybook](https://img.shields.io/badge/Storybook-Chromatic-FF4785?logo=storybook&logoColor=white)
 ![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-F38020?logo=cloudflarepages&logoColor=white)
 
-[![Demo](https://img.shields.io/badge/demo-live-3FCF8E?logo=cloudflarepages&logoColor=white)](https://ticket-management.pages.dev)
-[![CI](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml/badge.svg)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml)
-[![Deploy](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/deploy.yml/badge.svg)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/deploy.yml)
-[![codecov](https://codecov.io/gh/ndgkhoa/ticket-management-web/graph/badge.svg)](https://codecov.io/gh/ndgkhoa/ticket-management-web)
-[![Release](https://img.shields.io/github/v/release/ndgkhoa/ticket-management-web?sort=semver&label=release&color=orange)](https://github.com/ndgkhoa/ticket-management-web/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/ndgkhoa/ticket-management-web/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/ci.yml)
+[![CD](https://img.shields.io/github/actions/workflow/status/ndgkhoa/ticket-management-web/deploy.yml?branch=main&label=CD&logo=githubactions&logoColor=white)](https://github.com/ndgkhoa/ticket-management-web/actions/workflows/deploy.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/ndgkhoa/ticket-management-web?branch=main&label=Coverage&logo=codecov&logoColor=white)](https://codecov.io/gh/ndgkhoa/ticket-management-web)
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/ndgkhoa/ticket-management-web?sort=semver&label=Release&color=orange)](https://github.com/ndgkhoa/ticket-management-web/releases)
 
 AI-assisted **help desk frontend** in React — TanStack Router + Query over a Supabase backend: Gemini triage suggests priority and routing, realtime ticket updates with presence, SLA clocks and audit trails enforced by Postgres triggers, role scoping via row-level security, en/vi i18n, and WCAG 2.1 AA verified in CI.
 
