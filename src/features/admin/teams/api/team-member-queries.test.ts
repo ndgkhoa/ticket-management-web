@@ -5,7 +5,7 @@ import {
   useRemoveTeamMember,
   useTeamMembers,
 } from '~/features/admin/teams/api/team-member-queries';
-import { renderHookWithProviders, waitFor } from '~/testing/render';
+import { renderHookWithInvalidateSpy, renderHookWithProviders, waitFor } from '~/testing/render';
 
 const mocks = vi.hoisted(() => ({
   listIds: vi.fn(),
@@ -19,12 +19,6 @@ vi.mock('~/features/admin/teams/api/team-member-api', () => ({
 
 const TEAM_ID = 'team-1';
 const MEMBERS_KEY = { queryKey: ['team-members', TEAM_ID] };
-
-const renderMutation = <T>(hook: () => T) => {
-  const { result, queryClient } = renderHookWithProviders(hook);
-  const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
-  return { result, invalidate };
-};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -56,7 +50,7 @@ describe('useTeamMembers', () => {
 
 describe('useAddTeamMember', () => {
   it('adds the user to the team and refreshes that team only', async () => {
-    const { result, invalidate } = renderMutation(() => useAddTeamMember(TEAM_ID));
+    const { result, invalidate } = renderHookWithInvalidateSpy(() => useAddTeamMember(TEAM_ID));
 
     result.current.mutate('u3');
 
@@ -67,7 +61,7 @@ describe('useAddTeamMember', () => {
 
   it('leaves the cache alone when the api rejects', async () => {
     mocks.add.mockRejectedValue(new Error('already a member'));
-    const { result, invalidate } = renderMutation(() => useAddTeamMember(TEAM_ID));
+    const { result, invalidate } = renderHookWithInvalidateSpy(() => useAddTeamMember(TEAM_ID));
 
     result.current.mutate('u3');
 
@@ -78,7 +72,7 @@ describe('useAddTeamMember', () => {
 
 describe('useRemoveTeamMember', () => {
   it('removes the user from the team and refreshes that team only', async () => {
-    const { result, invalidate } = renderMutation(() => useRemoveTeamMember(TEAM_ID));
+    const { result, invalidate } = renderHookWithInvalidateSpy(() => useRemoveTeamMember(TEAM_ID));
 
     result.current.mutate('u2');
 

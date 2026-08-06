@@ -8,7 +8,7 @@ import {
   useSavedViews,
   useSetSavedViewShared,
 } from '~/features/tickets/api/saved-view-queries';
-import { renderHookWithProviders, waitFor } from '~/testing/render';
+import { renderHookWithInvalidateSpy, renderHookWithProviders, waitFor } from '~/testing/render';
 
 const mocks = vi.hoisted(() => ({
   list: vi.fn(),
@@ -27,12 +27,6 @@ vi.mock('~/features/tickets/api/saved-view-api', () => ({
 }));
 
 const VIEW = { id: 'v1', name: 'My open', isShared: false };
-
-const renderMutation = <T>(hook: () => T) => {
-  const { result, queryClient } = renderHookWithProviders(hook);
-  const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
-  return { result, invalidate };
-};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -59,7 +53,7 @@ describe('savedViewQueries', () => {
 
 describe('useCreateSavedView', () => {
   it('creates the view and refreshes the list', async () => {
-    const { result, invalidate } = renderMutation(useCreateSavedView);
+    const { result, invalidate } = renderHookWithInvalidateSpy(useCreateSavedView);
 
     result.current.mutate({ name: 'My open', search: {} } as never);
 
@@ -70,7 +64,7 @@ describe('useCreateSavedView', () => {
 
   it('leaves the list alone when the api rejects', async () => {
     mocks.create.mockRejectedValue(new Error('duplicate'));
-    const { result, invalidate } = renderMutation(useCreateSavedView);
+    const { result, invalidate } = renderHookWithInvalidateSpy(useCreateSavedView);
 
     result.current.mutate({ name: 'My open', search: {} } as never);
 
@@ -81,7 +75,7 @@ describe('useCreateSavedView', () => {
 
 describe('useSetSavedViewShared', () => {
   it('forwards the id and the new sharing flag', async () => {
-    const { result, invalidate } = renderMutation(useSetSavedViewShared);
+    const { result, invalidate } = renderHookWithInvalidateSpy(useSetSavedViewShared);
 
     result.current.mutate({ id: 'v1', isShared: true });
 
@@ -93,7 +87,7 @@ describe('useSetSavedViewShared', () => {
 
 describe('useRemoveSavedView', () => {
   it('removes the view and refreshes the list', async () => {
-    const { result, invalidate } = renderMutation(useRemoveSavedView);
+    const { result, invalidate } = renderHookWithInvalidateSpy(useRemoveSavedView);
 
     result.current.mutate('v1');
 

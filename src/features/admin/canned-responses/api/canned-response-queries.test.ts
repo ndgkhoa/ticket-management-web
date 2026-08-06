@@ -9,7 +9,7 @@ import {
   useCannedResponseUpdate,
 } from '~/features/admin/canned-responses/api/canned-response-queries';
 import { cannedResponseKeys } from '~/features/admin/canned-responses/constants/canned-response-keys';
-import { renderHookWithProviders, waitFor } from '~/testing/render';
+import { renderHookWithInvalidateSpy, renderHookWithProviders, waitFor } from '~/testing/render';
 
 const mocks = vi.hoisted(() => ({
   list: vi.fn(),
@@ -39,12 +39,6 @@ const PARAMS = {
 const ROW = { id: 'c1', title: 'Greeting', body: 'Hello' };
 const INPUT = { title: 'Greeting', body: 'Hello' } as never;
 
-const renderMutation = <T>(hook: () => T) => {
-  const { result, queryClient } = renderHookWithProviders(hook);
-  const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
-  return { result, invalidate };
-};
-
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.list.mockResolvedValue({ rows: [ROW], count: 1 });
@@ -73,7 +67,7 @@ describe('cannedResponseListQuery', () => {
 
 describe('useCannedResponseCreate', () => {
   it('creates the row, refreshes the namespace and confirms the save', async () => {
-    const { result, invalidate } = renderMutation(useCannedResponseCreate);
+    const { result, invalidate } = renderHookWithInvalidateSpy(useCannedResponseCreate);
 
     result.current.mutate(INPUT);
 
@@ -85,7 +79,7 @@ describe('useCannedResponseCreate', () => {
 
   it('stays silent and leaves the cache alone when the api rejects', async () => {
     mocks.create.mockRejectedValue(new Error('title taken'));
-    const { result, invalidate } = renderMutation(useCannedResponseCreate);
+    const { result, invalidate } = renderHookWithInvalidateSpy(useCannedResponseCreate);
 
     result.current.mutate(INPUT);
 
@@ -97,7 +91,7 @@ describe('useCannedResponseCreate', () => {
 
 describe('useCannedResponseUpdate', () => {
   it('sends the id alongside the payload', async () => {
-    const { result, invalidate } = renderMutation(useCannedResponseUpdate);
+    const { result, invalidate } = renderHookWithInvalidateSpy(useCannedResponseUpdate);
 
     result.current.mutate({ id: 'c1', input: INPUT });
 
@@ -110,7 +104,7 @@ describe('useCannedResponseUpdate', () => {
 
 describe('useCannedResponseRemove', () => {
   it('removes the row and confirms the delete with its own message', async () => {
-    const { result, invalidate } = renderMutation(useCannedResponseRemove);
+    const { result, invalidate } = renderHookWithInvalidateSpy(useCannedResponseRemove);
 
     result.current.mutate('c1');
 

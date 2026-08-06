@@ -3,7 +3,7 @@ import type { Mock } from 'vitest';
 
 import i18n from '~/i18n';
 import { createCrudQueries } from '~/features/admin/shared/use-crud-queries';
-import { renderHookWithProviders, waitFor } from '~/testing/render';
+import { renderHookWithInvalidateSpy, renderHookWithProviders, waitFor } from '~/testing/render';
 
 const mocks = vi.hoisted(() => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
@@ -35,12 +35,6 @@ beforeEach(() => {
   queries = createCrudQueries<Tag, TagInput>({ keys, api });
 });
 
-const renderMutation = <T>(hook: () => T) => {
-  const { result, queryClient } = renderHookWithProviders(hook);
-  const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
-  return { result, invalidate };
-};
-
 describe('createCrudQueries', () => {
   it('exposes query options bound to the list key and loader', () => {
     const options = queries.listQuery();
@@ -64,7 +58,7 @@ describe('createCrudQueries', () => {
   });
 
   it('creates a row, refreshes the cache and confirms the save', async () => {
-    const { result, invalidate } = renderMutation(() => queries.useCreate());
+    const { result, invalidate } = renderHookWithInvalidateSpy(() => queries.useCreate());
 
     result.current.mutate({ name: 'ui' });
 
@@ -75,7 +69,7 @@ describe('createCrudQueries', () => {
   });
 
   it('sends the id alongside the payload on update', async () => {
-    const { result, invalidate } = renderMutation(() => queries.useUpdate());
+    const { result, invalidate } = renderHookWithInvalidateSpy(() => queries.useUpdate());
 
     result.current.mutate({ id: '1', input: { name: 'renamed' } });
 
@@ -86,7 +80,7 @@ describe('createCrudQueries', () => {
   });
 
   it('removes a row and confirms the delete', async () => {
-    const { result, invalidate } = renderMutation(() => queries.useRemove());
+    const { result, invalidate } = renderHookWithInvalidateSpy(() => queries.useRemove());
 
     result.current.mutate('1');
 
@@ -98,7 +92,7 @@ describe('createCrudQueries', () => {
 
   it('leaves the cache alone and stays silent when the api rejects', async () => {
     api.create.mockRejectedValue(new Error('duplicate name'));
-    const { result, invalidate } = renderMutation(() => queries.useCreate());
+    const { result, invalidate } = renderHookWithInvalidateSpy(() => queries.useCreate());
 
     result.current.mutate({ name: 'ui' });
 

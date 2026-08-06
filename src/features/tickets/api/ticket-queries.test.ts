@@ -7,7 +7,7 @@ import {
   useUpdateTicket,
 } from '~/features/tickets/api/ticket-queries';
 import { ticketKeys } from '~/features/tickets/constants/ticket-keys';
-import { renderHookWithProviders, waitFor } from '~/testing/render';
+import { renderHookWithInvalidateSpy, renderHookWithProviders, waitFor } from '~/testing/render';
 
 const mocks = vi.hoisted(() => ({
   list: vi.fn(),
@@ -40,12 +40,6 @@ const PARAMS = {
 } as never;
 const TICKET = { id: 't1', subject: 'Printer down' };
 
-const renderMutation = <T>(hook: () => T) => {
-  const { result, queryClient } = renderHookWithProviders(hook);
-  const invalidate = vi.spyOn(queryClient, 'invalidateQueries').mockResolvedValue(undefined);
-  return { result, invalidate };
-};
-
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.list.mockResolvedValue({ rows: [TICKET], count: 1 });
@@ -71,7 +65,7 @@ describe('ticketQueries', () => {
 
 describe('useCreateTicket', () => {
   it('queues the embedding for the new ticket and refreshes the lists', async () => {
-    const { result, invalidate } = renderMutation(useCreateTicket);
+    const { result, invalidate } = renderHookWithInvalidateSpy(useCreateTicket);
 
     result.current.mutate({ subject: 'Printer down' } as never);
 
@@ -83,7 +77,7 @@ describe('useCreateTicket', () => {
 
   it('does not queue an embedding when creation fails', async () => {
     mocks.create.mockRejectedValue(new Error('rejected'));
-    const { result, invalidate } = renderMutation(useCreateTicket);
+    const { result, invalidate } = renderHookWithInvalidateSpy(useCreateTicket);
 
     result.current.mutate({ subject: 'Printer down' } as never);
 
@@ -95,7 +89,7 @@ describe('useCreateTicket', () => {
 
 describe('useUpdateTicket', () => {
   it('refreshes both the edited ticket and the lists it appears in', async () => {
-    const { result, invalidate } = renderMutation(useUpdateTicket);
+    const { result, invalidate } = renderHookWithInvalidateSpy(useUpdateTicket);
 
     result.current.mutate({ id: 't1', patch: { status: 'closed' } as never });
 
