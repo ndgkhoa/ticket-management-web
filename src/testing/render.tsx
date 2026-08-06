@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-router';
 import { render as rtlRender, renderHook as rtlRenderHook } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
 import type { AnyRoute, AnyRouter } from '@tanstack/react-router';
 import type { RenderHookOptions, RenderOptions } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
@@ -115,6 +116,15 @@ export const renderHookWithProviders = <Result, Props>(
     queryClient,
     ...result,
   };
+};
+
+export const renderHookWithInvalidateSpy = <Result,>(hook: () => Result) => {
+  const rendered = renderHookWithProviders(hook);
+  const invalidate = vi
+    .spyOn(rendered.queryClient, 'invalidateQueries')
+    .mockResolvedValue(undefined);
+
+  return { ...rendered, invalidate };
 };
 
 export * from '@testing-library/react';
