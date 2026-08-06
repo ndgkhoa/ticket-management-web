@@ -8,7 +8,7 @@ const mocks = vi.hoisted(() => ({
   createMutate: vi.fn(),
   updateMutate: vi.fn(),
   pending: { value: false },
-  teams: { value: [{ id: 'team-1', name: 'Support' }] as { id: string; name: string }[] },
+  teams: { value: [{ id: 'team-1', name: 'Technical' }] as { id: string; name: string }[] },
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
@@ -25,8 +25,8 @@ vi.mock('sonner', () => ({ toast: mocks.toast }));
 
 const CATEGORY = {
   id: 'cat-1',
-  name: 'Hardware',
-  description: 'Physical kit',
+  name: 'Bug report',
+  description: 'Something is broken',
   defaultTeamId: 'team-1',
 } as Category;
 
@@ -43,19 +43,19 @@ const save = () => screen.getByRole('button', { name: 'Save' });
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.pending.value = false;
-  mocks.teams.value = [{ id: 'team-1', name: 'Support' }];
+  mocks.teams.value = [{ id: 'team-1', name: 'Technical' }];
 });
 
 describe('CategoryFormDialog', () => {
   it('creates a category with trimmed values and no team by default', async () => {
     const { user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Name'), '  Hardware  ');
-    await user.type(screen.getByLabelText('Description'), '  Physical kit  ');
+    await user.type(screen.getByLabelText('Name'), '  Bug report  ');
+    await user.type(screen.getByLabelText('Description'), '  Something is broken  ');
     await user.click(save());
 
     expect(mocks.createMutate).toHaveBeenCalledWith(
-      { name: 'Hardware', description: 'Physical kit', default_team_id: null },
+      { name: 'Bug report', description: 'Something is broken', default_team_id: null },
       expect.anything()
     );
   });
@@ -63,11 +63,11 @@ describe('CategoryFormDialog', () => {
   it('sends a null description rather than an empty string', async () => {
     const { user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Name'), 'Hardware');
+    await user.type(screen.getByLabelText('Name'), 'Bug report');
     await user.click(save());
 
     expect(mocks.createMutate).toHaveBeenCalledWith(
-      { name: 'Hardware', description: null, default_team_id: null },
+      { name: 'Bug report', description: null, default_team_id: null },
       expect.anything()
     );
   });
@@ -75,13 +75,17 @@ describe('CategoryFormDialog', () => {
   it('keeps the routing team when updating an existing category', async () => {
     const { user } = await renderDialog(CATEGORY);
 
-    expect(screen.getByLabelText('Name')).toHaveValue('Hardware');
+    expect(screen.getByLabelText('Name')).toHaveValue('Bug report');
     await user.click(save());
 
     expect(mocks.updateMutate).toHaveBeenCalledWith(
       {
         id: 'cat-1',
-        input: { name: 'Hardware', description: 'Physical kit', default_team_id: 'team-1' },
+        input: {
+          name: 'Bug report',
+          description: 'Something is broken',
+          default_team_id: 'team-1',
+        },
       },
       expect.anything()
     );
@@ -107,7 +111,7 @@ describe('CategoryFormDialog', () => {
     mocks.createMutate.mockImplementationOnce((_input, handlers) => handlers.onSuccess());
     const { onOpenChange, user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Name'), 'Hardware');
+    await user.type(screen.getByLabelText('Name'), 'Bug report');
     await user.click(save());
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -119,7 +123,7 @@ describe('CategoryFormDialog', () => {
     );
     const { onOpenChange, user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Name'), 'Hardware');
+    await user.type(screen.getByLabelText('Name'), 'Bug report');
     await user.click(save());
 
     expect(mocks.toast.error).toHaveBeenCalledWith('name taken');

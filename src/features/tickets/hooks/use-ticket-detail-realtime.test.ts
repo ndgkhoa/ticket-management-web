@@ -34,7 +34,7 @@ const setup = (trackPresence?: boolean) => {
 const signIn = (metadata: Record<string, unknown> = {}) =>
   useAuthStore.getState().applySession(
     {
-      user: { id: 'u1', email: 'me@example.com', user_metadata: metadata },
+      user: { id: 'u1', email: 'agent@example.com', user_metadata: metadata },
     } as unknown as Session,
     new Set()
   );
@@ -93,18 +93,18 @@ describe('useTicketDetailRealtime message stream', () => {
 
 describe('useTicketDetailRealtime presence', () => {
   it('joins the ticket topic with the display name from user metadata', () => {
-    signIn({ full_name: 'Khoa', avatar_url: 'khoa.png' });
+    signIn({ full_name: 'Aiko Tanaka', avatar_url: 'khoa.png' });
     setup();
 
     expect(presence.topic).toBe(`ticket:${TICKET_ID}`);
-    expect(presence.self).toEqual({ id: 'u1', name: 'Khoa', avatarUrl: 'khoa.png' });
+    expect(presence.self).toEqual({ id: 'u1', name: 'Aiko Tanaka', avatarUrl: 'khoa.png' });
   });
 
   it('falls back to the email when metadata carries no name', () => {
     signIn();
     setup();
 
-    expect(presence.self).toEqual({ id: 'u1', name: 'me@example.com', avatarUrl: null });
+    expect(presence.self).toEqual({ id: 'u1', name: 'agent@example.com', avatarUrl: null });
   });
 
   it('reports the other viewers and leaves itself out', () => {
@@ -113,12 +113,12 @@ describe('useTicketDetailRealtime presence', () => {
 
     act(() =>
       presence.sync?.([
-        { id: 'u1', name: 'me@example.com', avatarUrl: null },
-        { id: 'u2', name: 'Mai', avatarUrl: null },
+        { id: 'u1', name: 'agent@example.com', avatarUrl: null },
+        { id: 'u2', name: 'Adrian Cole', avatarUrl: null },
       ])
     );
 
-    expect(result.current).toEqual([{ id: 'u2', name: 'Mai', avatarUrl: null }]);
+    expect(result.current).toEqual([{ id: 'u2', name: 'Adrian Cole', avatarUrl: null }]);
   });
 
   it('leaves the topic on unmount', () => {

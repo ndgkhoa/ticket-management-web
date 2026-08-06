@@ -41,8 +41,18 @@ vi.mock('~/features/admin/canned-responses/components/canned-response-form-dialo
 vi.mock('sonner', () => ({ toast: mocks.toast }));
 
 const ROWS = [
-  { id: 'c1', title: 'Greeting', body: 'Hello', createdAt: '2026-01-01T00:00:00Z' },
-  { id: 'c2', title: 'Closing', body: 'Bye', createdAt: '2026-01-02T00:00:00Z' },
+  {
+    id: 'c1',
+    title: 'Acknowledge and set expectations',
+    body: 'Thanks for getting in touch',
+    createdAt: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'c2',
+    title: 'Closing after silence',
+    body: 'Closing this for now',
+    createdAt: '2026-01-02T00:00:00Z',
+  },
 ] as CannedResponse[];
 
 const listResult = (overrides: Record<string, unknown> = {}) => ({
@@ -66,16 +76,16 @@ describe('CannedResponses listing', () => {
   it('lists the page of responses', async () => {
     await render(<CannedResponses />);
 
-    expect(screen.getByText('Greeting')).toBeInTheDocument();
-    expect(screen.getByText('Closing')).toBeInTheDocument();
+    expect(screen.getByText('Acknowledge and set expectations')).toBeInTheDocument();
+    expect(screen.getByText('Closing after silence')).toBeInTheDocument();
   });
 
   it('numbers rows continuing from the current page offset', async () => {
     mocks.search.value = { ...mocks.search.value, page: 3, pageSize: 20 };
     await render(<CannedResponses />);
 
-    expect(within(rowFor('Greeting')).getByText('41')).toBeInTheDocument();
-    expect(within(rowFor('Closing')).getByText('42')).toBeInTheDocument();
+    expect(within(rowFor('Acknowledge and set expectations')).getByText('41')).toBeInTheDocument();
+    expect(within(rowFor('Closing after silence')).getByText('42')).toBeInTheDocument();
   });
 
   it('replaces the table with the error page when the query fails', async () => {
@@ -87,7 +97,7 @@ describe('CannedResponses listing', () => {
     await render(<CannedResponses />);
 
     expect(screen.getByText('forbidden')).toBeInTheDocument();
-    expect(screen.queryByText('Greeting')).toBeNull();
+    expect(screen.queryByText('Acknowledge and set expectations')).toBeNull();
   });
 });
 
@@ -109,9 +119,9 @@ describe('CannedResponses form', () => {
   it('opens the form on the row being edited', async () => {
     const { user } = await render(<CannedResponses />);
 
-    await user.click(within(rowFor('Closing')).getByRole('button', { name: 'Edit' }));
+    await user.click(within(rowFor('Closing after silence')).getByRole('button', { name: 'Edit' }));
 
-    expect(screen.getByTestId('form-dialog')).toHaveTextContent('Closing');
+    expect(screen.getByTestId('form-dialog')).toHaveTextContent('Closing after silence');
   });
 });
 
@@ -120,7 +130,9 @@ describe('CannedResponses delete', () => {
     const { user } = await render(<CannedResponses />);
 
     await user.click(
-      within(rowFor('Greeting')).getByRole('button', { name: 'Delete canned response' })
+      within(rowFor('Acknowledge and set expectations')).getByRole('button', {
+        name: 'Delete canned response',
+      })
     );
 
     expect(
@@ -133,7 +145,9 @@ describe('CannedResponses delete', () => {
     const { user } = await render(<CannedResponses />);
 
     await user.click(
-      within(rowFor('Greeting')).getByRole('button', { name: 'Delete canned response' })
+      within(rowFor('Acknowledge and set expectations')).getByRole('button', {
+        name: 'Delete canned response',
+      })
     );
     await user.click(screen.getByRole('button', { name: 'Delete canned response', hidden: false }));
 
@@ -147,7 +161,9 @@ describe('CannedResponses delete', () => {
     const { user } = await render(<CannedResponses />);
 
     await user.click(
-      within(rowFor('Greeting')).getByRole('button', { name: 'Delete canned response' })
+      within(rowFor('Acknowledge and set expectations')).getByRole('button', {
+        name: 'Delete canned response',
+      })
     );
     await user.click(screen.getByRole('button', { name: 'Delete canned response', hidden: false }));
 

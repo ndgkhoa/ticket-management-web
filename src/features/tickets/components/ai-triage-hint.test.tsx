@@ -23,8 +23,8 @@ vi.mock('~/features/tickets/api/triage-ticket-queries', () => ({
 vi.mock('sonner', () => ({ toast: mocks.toast }));
 
 const CATEGORIES = [
-  { id: 'cat-1', name: 'Hardware' },
-  { id: 'cat-2', name: 'Billing' },
+  { id: 'cat-1', name: 'Bug report' },
+  { id: 'cat-2', name: 'Billing question' },
 ];
 
 type Overrides = Partial<Parameters<typeof AiTriageHint>[0]>;
@@ -94,7 +94,7 @@ describe('AiTriageHint suggestion', () => {
       {
         subject: 'Printer down',
         description: 'It will not print',
-        categories: ['Hardware', 'Billing'],
+        categories: ['Bug report', 'Billing question'],
       },
       expect.anything()
     );
@@ -113,13 +113,13 @@ describe('AiTriageHint suggestion', () => {
 
   it('matches the suggested category name case-insensitively', async () => {
     mocks.triage.value = triageState({
-      data: { priority: 'high', category: 'hardware', reason: 'Mentions a printer' },
+      data: { priority: 'high', category: 'bug report', reason: 'Mentions a broken feature' },
     });
     const { onApply, user } = await renderHint();
 
-    expect(screen.getByText('Category: Hardware')).toBeInTheDocument();
+    expect(screen.getByText('Category: Bug report')).toBeInTheDocument();
     expect(screen.getByText('Priority: high')).toBeInTheDocument();
-    expect(screen.getByText('Mentions a printer')).toBeInTheDocument();
+    expect(screen.getByText('Mentions a broken feature')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Apply' }));
 
@@ -128,7 +128,7 @@ describe('AiTriageHint suggestion', () => {
 
   it('applies the priority alone when the category is unknown', async () => {
     mocks.triage.value = triageState({
-      data: { priority: 'low', category: 'Networking', reason: 'Unclear' },
+      data: { priority: 'low', category: 'Account access', reason: 'Unclear' },
     });
     const { onApply, user } = await renderHint();
 

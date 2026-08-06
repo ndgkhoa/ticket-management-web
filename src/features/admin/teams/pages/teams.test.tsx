@@ -27,7 +27,7 @@ vi.mock('~/features/admin/teams/components/team-members-dialog', () => ({
 vi.mock('sonner', () => ({ toast: mocks.toast }));
 
 const TEAMS = [
-  { id: 't1', name: 'Support', description: 'Front line' },
+  { id: 't1', name: 'Technical', description: 'Bugs, outages and integrations' },
   { id: 't2', name: 'Billing', description: null },
 ] as Team[];
 
@@ -47,7 +47,7 @@ describe('Teams', () => {
   it('lists every team and dashes a missing description', async () => {
     await render(<Teams />);
 
-    expect(screen.getByText('Support')).toBeInTheDocument();
+    expect(screen.getByText('Technical')).toBeInTheDocument();
     expect(within(rowFor('Billing')).getByText('—')).toBeInTheDocument();
   });
 
@@ -55,7 +55,7 @@ describe('Teams', () => {
     await render(<Teams />);
 
     expect(
-      within(rowFor('Support')).getByRole('button', { name: 'Delete team' })
+      within(rowFor('Technical')).getByRole('button', { name: 'Delete team' })
     ).toBeInTheDocument();
   });
 

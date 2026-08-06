@@ -25,8 +25,10 @@ let queries: ReturnType<typeof createCrudQueries<Tag, TagInput>>;
 beforeEach(() => {
   vi.clearAllMocks();
   api = {
-    list: vi.fn<() => Promise<Tag[]>>().mockResolvedValue([{ id: '1', name: 'bug' }]),
-    create: vi.fn<(input: TagInput) => Promise<Tag>>().mockResolvedValue({ id: '2', name: 'ui' }),
+    list: vi.fn<() => Promise<Tag[]>>().mockResolvedValue([{ id: '1', name: 'regression' }]),
+    create: vi
+      .fn<(input: TagInput) => Promise<Tag>>()
+      .mockResolvedValue({ id: '2', name: 'mobile' }),
     update: vi
       .fn<(id: string, input: TagInput) => Promise<Tag>>()
       .mockResolvedValue({ id: '1', name: 'renamed' }),
@@ -47,7 +49,7 @@ describe('createCrudQueries', () => {
     const { result } = renderHookWithProviders(() => queries.useList());
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual([{ id: '1', name: 'bug' }]);
+    expect(result.current.data).toEqual([{ id: '1', name: 'regression' }]);
   });
 
   it('stays idle while disabled', () => {
@@ -60,10 +62,10 @@ describe('createCrudQueries', () => {
   it('creates a row, refreshes the cache and confirms the save', async () => {
     const { result, invalidate } = renderHookWithInvalidateSpy(() => queries.useCreate());
 
-    result.current.mutate({ name: 'ui' });
+    result.current.mutate({ name: 'mobile' });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(api.create).toHaveBeenCalledWith({ name: 'ui' });
+    expect(api.create).toHaveBeenCalledWith({ name: 'mobile' });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: keys.all });
     expect(mocks.toast.success).toHaveBeenCalledWith(i18n.t('Common.Saved'));
   });
@@ -94,7 +96,7 @@ describe('createCrudQueries', () => {
     api.create.mockRejectedValue(new Error('duplicate name'));
     const { result, invalidate } = renderHookWithInvalidateSpy(() => queries.useCreate());
 
-    result.current.mutate({ name: 'ui' });
+    result.current.mutate({ name: 'mobile' });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error?.message).toBe('duplicate name');

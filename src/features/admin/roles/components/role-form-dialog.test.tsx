@@ -19,7 +19,7 @@ vi.mock('~/features/admin/roles/api/role-queries', () => ({
 
 vi.mock('sonner', () => ({ toast: mocks.toast }));
 
-const ROLE = { id: 'r1', name: 'Agent', description: 'Handles tickets' } as Role;
+const ROLE = { id: 'r1', name: 'agent', description: 'Handles tickets' } as Role;
 
 const renderDialog = async (role?: Role | null) => {
   const onOpenChange = vi.fn();
@@ -47,12 +47,12 @@ describe('RoleFormDialog in create mode', () => {
   it('creates the role with trimmed values', async () => {
     const { user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Role Name'), '  Supervisor  ');
+    await user.type(screen.getByLabelText('Role Name'), '  supervisor  ');
     await user.type(screen.getByLabelText('Description'), '  Runs the queue  ');
     await user.click(save());
 
     expect(mocks.createMutate).toHaveBeenCalledWith(
-      { name: 'Supervisor', description: 'Runs the queue' },
+      { name: 'supervisor', description: 'Runs the queue' },
       expect.anything()
     );
     expect(mocks.updateMutate).not.toHaveBeenCalled();
@@ -61,11 +61,11 @@ describe('RoleFormDialog in create mode', () => {
   it('sends a null description rather than an empty string', async () => {
     const { user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Role Name'), 'Supervisor');
+    await user.type(screen.getByLabelText('Role Name'), 'supervisor');
     await user.click(save());
 
     expect(mocks.createMutate).toHaveBeenCalledWith(
-      { name: 'Supervisor', description: null },
+      { name: 'supervisor', description: null },
       expect.anything()
     );
   });
@@ -85,7 +85,7 @@ describe('RoleFormDialog in edit mode', () => {
     await renderDialog(ROLE);
 
     expect(screen.getByRole('heading', { name: 'Update role' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Role Name')).toHaveValue('Agent');
+    expect(screen.getByLabelText('Role Name')).toHaveValue('agent');
     expect(screen.getByLabelText('Description')).toHaveValue('Handles tickets');
   });
 
@@ -93,11 +93,11 @@ describe('RoleFormDialog in edit mode', () => {
     const { user } = await renderDialog(ROLE);
 
     await user.clear(screen.getByLabelText('Role Name'));
-    await user.type(screen.getByLabelText('Role Name'), 'Lead agent');
+    await user.type(screen.getByLabelText('Role Name'), 'auditor');
     await user.click(save());
 
     expect(mocks.updateMutate).toHaveBeenCalledWith(
-      { id: 'r1', input: { name: 'Lead agent', description: 'Handles tickets' } },
+      { id: 'r1', input: { name: 'auditor', description: 'Handles tickets' } },
       expect.anything()
     );
     expect(mocks.createMutate).not.toHaveBeenCalled();
@@ -109,7 +109,7 @@ describe('RoleFormDialog outcomes', () => {
     mocks.createMutate.mockImplementationOnce((_input, handlers) => handlers.onSuccess());
     const { onOpenChange, user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Role Name'), 'Supervisor');
+    await user.type(screen.getByLabelText('Role Name'), 'supervisor');
     await user.click(save());
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -121,7 +121,7 @@ describe('RoleFormDialog outcomes', () => {
     );
     const { onOpenChange, user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Role Name'), 'Supervisor');
+    await user.type(screen.getByLabelText('Role Name'), 'supervisor');
     await user.click(save());
 
     expect(mocks.toast.error).toHaveBeenCalledWith('name taken');

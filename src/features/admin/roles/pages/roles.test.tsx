@@ -27,8 +27,8 @@ vi.mock('~/features/admin/roles/components/role-permissions-dialog', () => ({
 vi.mock('sonner', () => ({ toast: mocks.toast }));
 
 const ROLES = [
-  { id: 'r1', name: 'Owner', description: 'Everything', isSystem: true },
-  { id: 'r2', name: 'Agent', description: null, isSystem: false },
+  { id: 'r1', name: 'owner', description: 'Everything', isSystem: true },
+  { id: 'r2', name: 'agent', description: null, isSystem: false },
 ] as Role[];
 
 const rowFor = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
@@ -47,26 +47,26 @@ describe('Roles', () => {
   it('marks a built-in role and shows a dash for a missing description', async () => {
     await render(<Roles />);
 
-    expect(within(rowFor('Owner')).getByText('System')).toBeInTheDocument();
-    expect(within(rowFor('Agent')).queryByText('System')).toBeNull();
-    expect(within(rowFor('Agent')).getByText('—')).toBeInTheDocument();
+    expect(within(rowFor('owner')).getByText('System')).toBeInTheDocument();
+    expect(within(rowFor('agent')).queryByText('System')).toBeNull();
+    expect(within(rowFor('agent')).getByText('—')).toBeInTheDocument();
   });
 
   it('protects a system role from deletion but allows deleting a custom one', async () => {
     await render(<Roles />);
 
-    expect(within(rowFor('Owner')).queryByRole('button', { name: 'Delete role' })).toBeNull();
+    expect(within(rowFor('owner')).queryByRole('button', { name: 'Delete role' })).toBeNull();
     expect(
-      within(rowFor('Agent')).getByRole('button', { name: 'Delete role' })
+      within(rowFor('agent')).getByRole('button', { name: 'Delete role' })
     ).toBeInTheDocument();
   });
 
   it('opens the permission matrix for the chosen role', async () => {
     const { user } = await render(<Roles />);
 
-    await user.click(within(rowFor('Agent')).getByRole('button', { name: 'permissions of role' }));
+    await user.click(within(rowFor('agent')).getByRole('button', { name: 'permissions of role' }));
 
-    expect(screen.getByTestId('permissions-dialog')).toHaveTextContent('Agent');
+    expect(screen.getByTestId('permissions-dialog')).toHaveTextContent('agent');
   });
 
   it('keeps the permission matrix closed until it is asked for', async () => {
