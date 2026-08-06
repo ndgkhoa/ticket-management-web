@@ -18,7 +18,11 @@ vi.mock('~/features/admin/teams/api/team-queries', () => ({
 
 vi.mock('sonner', () => ({ toast: mocks.toast }));
 
-const TEAM = { id: 'team-1', name: 'Support', description: 'Front line' } as Team;
+const TEAM = {
+  id: 'team-1',
+  name: 'Technical',
+  description: 'Bugs, outages and integrations',
+} as Team;
 
 const renderDialog = async (team?: Team | null) => {
   const onOpenChange = vi.fn();
@@ -37,12 +41,12 @@ describe('TeamFormDialog', () => {
   it('creates a team with trimmed values', async () => {
     const { user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Name'), '  Billing  ');
-    await user.type(screen.getByLabelText('Description'), '  Handles invoices  ');
+    await user.type(screen.getByLabelText('Name'), '  Onboarding  ');
+    await user.type(screen.getByLabelText('Description'), '  Account setup and migrations  ');
     await user.click(save());
 
     expect(mocks.createMutate).toHaveBeenCalledWith(
-      { name: 'Billing', description: 'Handles invoices' },
+      { name: 'Onboarding', description: 'Account setup and migrations' },
       expect.anything()
     );
   });
@@ -50,11 +54,11 @@ describe('TeamFormDialog', () => {
   it('sends a null description rather than an empty string', async () => {
     const { user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Name'), 'Billing');
+    await user.type(screen.getByLabelText('Name'), 'Onboarding');
     await user.click(save());
 
     expect(mocks.createMutate).toHaveBeenCalledWith(
-      { name: 'Billing', description: null },
+      { name: 'Onboarding', description: null },
       expect.anything()
     );
   });
@@ -62,11 +66,11 @@ describe('TeamFormDialog', () => {
   it('prefills and updates an existing team by id', async () => {
     const { user } = await renderDialog(TEAM);
 
-    expect(screen.getByLabelText('Name')).toHaveValue('Support');
+    expect(screen.getByLabelText('Name')).toHaveValue('Technical');
     await user.click(save());
 
     expect(mocks.updateMutate).toHaveBeenCalledWith(
-      { id: 'team-1', input: { name: 'Support', description: 'Front line' } },
+      { id: 'team-1', input: { name: 'Technical', description: 'Bugs, outages and integrations' } },
       expect.anything()
     );
   });
@@ -84,7 +88,7 @@ describe('TeamFormDialog', () => {
     mocks.createMutate.mockImplementationOnce((_input, handlers) => handlers.onSuccess());
     const { onOpenChange, user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Name'), 'Billing');
+    await user.type(screen.getByLabelText('Name'), 'Onboarding');
     await user.click(save());
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -96,7 +100,7 @@ describe('TeamFormDialog', () => {
     );
     const { onOpenChange, user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Name'), 'Billing');
+    await user.type(screen.getByLabelText('Name'), 'Onboarding');
     await user.click(save());
 
     expect(mocks.toast.error).toHaveBeenCalledWith('name taken');

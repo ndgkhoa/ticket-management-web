@@ -20,7 +20,7 @@ vi.mock('sonner', () => ({ toast: mocks.toast }));
 
 const POLICY = {
   id: 'sla-1',
-  name: 'Urgent',
+  name: 'Urgent — 15m / 4h',
   priority: 'high',
   first_response_mins: 15,
   resolution_mins: 240,
@@ -41,7 +41,7 @@ const fill = async (
   firstResponse: string,
   resolution: string
 ) => {
-  await user.type(screen.getByLabelText('Name'), 'Urgent');
+  await user.type(screen.getByLabelText('Name'), 'Urgent — 15m / 4h');
   await user.type(screen.getByLabelText('First response (min)'), firstResponse);
   await user.type(screen.getByLabelText('Resolution (min)'), resolution);
 };
@@ -59,7 +59,7 @@ describe('SlaPolicyFormDialog', () => {
     await user.click(save());
 
     expect(mocks.createMutate).toHaveBeenCalledWith(
-      { name: 'Urgent', priority: 'low', first_response_mins: 15, resolution_mins: 240 },
+      { name: 'Urgent — 15m / 4h', priority: 'low', first_response_mins: 15, resolution_mins: 240 },
       expect.anything()
     );
   });
@@ -76,7 +76,7 @@ describe('SlaPolicyFormDialog', () => {
       {
         id: 'sla-1',
         input: {
-          name: 'Urgent',
+          name: 'Urgent — 15m / 4h',
           priority: 'high',
           first_response_mins: 15,
           resolution_mins: 240,
@@ -119,7 +119,7 @@ describe('SlaPolicyFormDialog', () => {
   it('requires both targets', async () => {
     const { user } = await renderDialog();
 
-    await user.type(screen.getByLabelText('Name'), 'Urgent');
+    await user.type(screen.getByLabelText('Name'), 'Urgent — 15m / 4h');
     await user.click(save());
 
     expect(await screen.findAllByText('This field is required')).toHaveLength(2);

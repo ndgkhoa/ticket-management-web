@@ -26,11 +26,11 @@ vi.mock('~/features/tickets/api/assignee-queries', () => ({
 
 vi.mock('sonner', () => ({ toast: mocks.toast }));
 
-const TEAM = { id: 'team-1', name: 'Support' } as Team;
+const TEAM = { id: 'team-1', name: 'Technical' } as Team;
 
 const AGENTS = [
-  { id: 'u1', fullName: 'Khoa', avatarUrl: null },
-  { id: 'u2', fullName: 'Mai', avatarUrl: null },
+  { id: 'u1', fullName: 'Aiko Tanaka', avatarUrl: null },
+  { id: 'u2', fullName: 'Adrian Cole', avatarUrl: null },
 ];
 
 const renderDialog = () => render(<TeamMembersDialog open onOpenChange={vi.fn()} team={TEAM} />);
@@ -49,22 +49,24 @@ describe('TeamMembersDialog', () => {
   it('titles the dialog with the team being edited', async () => {
     await renderDialog();
 
-    expect(screen.getByRole('heading', { name: /Manage members — Support/ })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Manage members — Technical/ })).toBeInTheDocument();
   });
 
   it('offers remove for a current member and add for everyone else', async () => {
     await renderDialog();
 
     expect(
-      within(rowFor('Khoa')).getByRole('button', { name: 'Delete Members' })
+      within(rowFor('Aiko Tanaka')).getByRole('button', { name: 'Delete Members' })
     ).toBeInTheDocument();
-    expect(within(rowFor('Mai')).getByRole('button', { name: 'Add member' })).toBeInTheDocument();
+    expect(
+      within(rowFor('Adrian Cole')).getByRole('button', { name: 'Add member' })
+    ).toBeInTheDocument();
   });
 
   it('adds the chosen agent to this team', async () => {
     const { user } = await renderDialog();
 
-    await user.click(within(rowFor('Mai')).getByRole('button', { name: 'Add member' }));
+    await user.click(within(rowFor('Adrian Cole')).getByRole('button', { name: 'Add member' }));
 
     expect(mocks.addMutate).toHaveBeenCalledWith('u2', expect.anything());
   });
@@ -72,7 +74,7 @@ describe('TeamMembersDialog', () => {
   it('removes the chosen member from this team', async () => {
     const { user } = await renderDialog();
 
-    await user.click(within(rowFor('Khoa')).getByRole('button', { name: 'Delete Members' }));
+    await user.click(within(rowFor('Aiko Tanaka')).getByRole('button', { name: 'Delete Members' }));
 
     expect(mocks.removeMutate).toHaveBeenCalledWith('u1', expect.anything());
   });
@@ -83,7 +85,7 @@ describe('TeamMembersDialog', () => {
     );
     const { user } = await renderDialog();
 
-    await user.click(within(rowFor('Mai')).getByRole('button', { name: 'Add member' }));
+    await user.click(within(rowFor('Adrian Cole')).getByRole('button', { name: 'Add member' }));
 
     expect(mocks.toast.error).toHaveBeenCalledWith('already a member');
   });
@@ -94,7 +96,7 @@ describe('TeamMembersDialog', () => {
     );
     const { user } = await renderDialog();
 
-    await user.click(within(rowFor('Khoa')).getByRole('button', { name: 'Delete Members' }));
+    await user.click(within(rowFor('Aiko Tanaka')).getByRole('button', { name: 'Delete Members' }));
 
     expect(mocks.toast.error).toHaveBeenCalledWith('last member');
   });
@@ -103,7 +105,9 @@ describe('TeamMembersDialog', () => {
     mocks.addPending.value = true;
     await renderDialog();
 
-    expect(within(rowFor('Mai')).getByRole('button', { name: 'Add member' })).toBeDisabled();
+    expect(
+      within(rowFor('Adrian Cole')).getByRole('button', { name: 'Add member' })
+    ).toBeDisabled();
   });
 
   it('falls back to a dash when an agent has no name', async () => {

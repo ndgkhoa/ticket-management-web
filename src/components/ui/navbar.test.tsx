@@ -12,8 +12,8 @@ describe('Navbar account menu', () => {
     useAuthStore.setState({
       user: {
         id: 'u1',
-        email: 'khoa@example.com',
-        user_metadata: { full_name: 'Khoa Nguyen', avatar_url: 'https://example.com/a.png' },
+        email: 'agent@example.com',
+        user_metadata: { full_name: 'Aiko Tanaka', avatar_url: 'https://example.com/a.png' },
       } as unknown as User,
       status: 'authenticated',
     });
@@ -21,8 +21,8 @@ describe('Navbar account menu', () => {
     const { user } = await render(<Navbar />);
     await user.click(await screen.findByRole('button', { name: 'Account menu' }));
 
-    expect(await screen.findByText('Khoa Nguyen')).toBeInTheDocument();
-    expect(screen.getByText('khoa@example.com')).toBeInTheDocument();
+    expect(await screen.findByText('Aiko Tanaka')).toBeInTheDocument();
+    expect(screen.getByText('agent@example.com')).toBeInTheDocument();
   });
 
   it('falls back to the email when the user has no full name', async () => {
@@ -35,6 +35,6 @@ describe('Navbar account menu', () => {
     await user.click(await screen.findByRole('button', { name: 'Account menu' }));
 
     expect(await screen.findByText('no-name@example.com')).toBeInTheDocument();
-    expect(screen.queryByText('Khoa Nguyen')).not.toBeInTheDocument();
+    expect(screen.queryByText('Aiko Tanaka')).not.toBeInTheDocument();
   });
 });

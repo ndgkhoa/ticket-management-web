@@ -17,7 +17,7 @@ vi.mock('~/lib/supabase', () => ({ supabase: mocks.supabase }));
 
 let realtime: typeof RealtimeModule;
 
-const self: PresenceMember = { id: 'u1', name: 'Khoa', avatarUrl: null };
+const self: PresenceMember = { id: 'u1', name: 'Aiko Tanaka', avatarUrl: null };
 
 const onChangeHandler = () =>
   mocks.channel.on.mock.calls[0][2] as (payload: Record<string, unknown>) => void;
@@ -114,18 +114,18 @@ describe('joinPresence', () => {
     const onSync = vi.fn();
     realtime.joinPresence('ticket:t1', self, onSync);
     mocks.channel.presenceState.mockReturnValue({
-      u1: [{ id: 'u1', name: 'Khoa', avatarUrl: null }],
+      u1: [{ id: 'u1', name: 'Aiko Tanaka', avatarUrl: null }],
       u2: [
-        { id: 'u2', name: 'Mai', avatarUrl: 'a.png' },
-        { id: 'u2', name: 'Mai', avatarUrl: 'a.png' },
+        { id: 'u2', name: 'Adrian Cole', avatarUrl: 'a.png' },
+        { id: 'u2', name: 'Adrian Cole', avatarUrl: 'a.png' },
       ],
     });
 
     presenceSyncHandler()();
 
     expect(onSync).toHaveBeenCalledWith([
-      { id: 'u1', name: 'Khoa', avatarUrl: null },
-      { id: 'u2', name: 'Mai', avatarUrl: 'a.png' },
+      { id: 'u1', name: 'Aiko Tanaka', avatarUrl: null },
+      { id: 'u2', name: 'Adrian Cole', avatarUrl: 'a.png' },
     ]);
   });
 
