@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/ndgkhoa/ticket-management-web/compare/v1.1.0...v1.1.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* **deps:** update dependency lucide-react to ^0.577.0 ([#17](https://github.com/ndgkhoa/ticket-management-web/issues/17)) ([f47148f](https://github.com/ndgkhoa/ticket-management-web/commit/f47148f7492161d1cc19274261df68ad82b126f4))
+
 # [1.1.0](https://github.com/ndgkhoa/ticket-management-web/compare/v1.0.0...v1.1.0) (2026-07-20)
 
 
