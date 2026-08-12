@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/ndgkhoa/ticket-management-web/compare/v1.1.1...v1.1.2) (2026-08-12)
+
+
+### Bug Fixes
+
+* **config:** treat an empty turnstile site key as unset ([536bcad](https://github.com/ndgkhoa/ticket-management-web/commit/536bcad98203e02b2725374e8f211b5fa11e02f0))
+
 ## [1.1.1](https://github.com/ndgkhoa/ticket-management-web/compare/v1.1.0...v1.1.1) (2026-08-06)
 
 
