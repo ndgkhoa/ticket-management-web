@@ -1,11 +1,5 @@
 import { expect, test } from './fixtures';
 
-/**
- * Admin CRUD end to end against the mock backend: sign in as the owner, open the SLA policies
- * screen, and create a row through the dialog. Priority defaults to the first enum value; the
- * two response-time fields are required. Proves the table + form dialog + MSW write path work
- * together in a real browser.
- */
 test('creates an SLA policy from the admin screen', async ({ page }) => {
   await page.goto('/auth/sign-in');
   await page.getByLabel('Email').fill('owner@example.com');
