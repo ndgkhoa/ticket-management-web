@@ -1,10 +1,5 @@
--- Two SLA-pause fixes:
---  1. accumulate_sla_pause on INSERT started the pause from the client-supplied created_at (it fires
---     before stamp_ticket_sla clamps it), so a forged future value left sla_paused_at in the future →
---     negative paused time on resume. Clamp to now() here too.
---  2. A reopen grants a fresh resolution window but kept the banked sla_paused_ms from before the
---     solve, leaking grace into the new window. Reset the pause budget to 0 on reopen.
-
+-- Fix: this trigger runs before `stamp_ticket_sla` clamps `created_at`, so a forged future value
+-- left the pause start in the future and produced negative paused time on resume
 create or replace function public.accumulate_sla_pause()
 returns trigger
 language plpgsql
@@ -12,7 +7,6 @@ set search_path = ''
 as $$
 begin
   if tg_op = 'INSERT' then
-    -- Created paused starts the clock, clamped to now() (this trigger fires before stamp_ticket_sla's clamp).
     if new.status in ('pending', 'on_hold') then
       new.sla_paused_at := least(new.created_at, now());
     end if;
@@ -33,6 +27,7 @@ begin
 end;
 $$;
 
+-- Fix: a reopen granted a fresh window but kept the pause banked before the solve, leaking grace
 create or replace function public.stamp_ticket_sla()
 returns trigger
 language plpgsql
@@ -65,8 +60,6 @@ begin
     new.resolved_at := now();
   end if;
 
-  -- Reopen restarts the clock with a fresh window and a fresh pause budget (pre-solve banked pause
-  -- doesn't carry over). sla_paused_at is left to accumulate_sla_pause, which fires first.
   if tg_op = 'UPDATE'
      and old.status = 'solved'
      and new.status in ('open', 'pending', 'on_hold')

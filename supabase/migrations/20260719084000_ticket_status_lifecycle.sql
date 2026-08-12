@@ -1,10 +1,4 @@
--- Ticket status lifecycle: auto-reopen on customer reply, auto-close stale solved tickets. Both
--- live in the database so every path is covered and a customer (holds no ticket.update) can still reopen.
-
--- AFTER INSERT on ticket_messages: a public reply from the requester reopens a solved ticket and
--- clears resolved_at, restarting the resolution clock. SECURITY DEFINER (the customer can't update
--- tickets). Only when solved, so it never touches an open or `closed` (terminal) ticket; an agent
--- reply has author_id ≠ requester_id, so it never reopens.
+-- Lifecycle lives in-db because a customer holds no `ticket.update` yet must still reopen a ticket
 create or replace function public.reopen_on_customer_reply()
 returns trigger
 language plpgsql
@@ -28,9 +22,6 @@ after insert on public.ticket_messages
 for each row
 execute function public.reopen_on_customer_reply();
 
--- Sweep solved tickets resolved more than N days ago (default 7) into closed. Idempotent (a re-run
--- touches only newly-aged rows) and independent of any end user — runs from the scheduler as definer
--- with a system/null audit actor.
 create or replace function public.close_stale_solved_tickets(p_days integer default 7)
 returns integer
 language plpgsql
@@ -50,8 +41,7 @@ begin
 end;
 $$;
 
--- Schedule the daily sweep via pg_cron. If pg_cron is unavailable, remove this block and call
--- close_stale_solved_tickets() from a scheduled Edge Function — the SQL function holds the logic either way.
+-- If pg_cron is unavailable, drop this block and call the function from a scheduled Edge Function
 create extension if not exists pg_cron;
 
 select cron.schedule(

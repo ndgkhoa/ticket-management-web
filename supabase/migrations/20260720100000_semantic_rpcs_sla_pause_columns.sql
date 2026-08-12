@@ -1,8 +1,5 @@
--- match_tickets / similar_tickets predate sla_paused_at + sla_paused_ms, so their RETURNS TABLE
--- omitted them. The client parses every RPC row with the full ticket schema, so a missing column
--- makes the parse throw and semantic results render empty. Re-create both with the two columns.
--- `create or replace` can't widen a RETURNS TABLE, so drop by exact signature first, then re-create.
-
+-- The client parses every RPC row against the full ticket schema, so the two SLA pause columns
+-- must be returned too; dropped first because `create or replace` cannot widen a RETURNS TABLE
 drop function if exists public.match_tickets(extensions.vector(1536), integer, double precision);
 drop function if exists public.similar_tickets(uuid, integer);
 

@@ -1,8 +1,4 @@
--- RPCs backing the ticket list: the assignee filter's options and the filter-scoped bulk update.
--- Both are security invoker, so RLS decides what each user may see and change — never widened.
-
--- Assignable agents: profiles holding `ticket.update`, so a customer never appears as an assignment
--- target. Security invoker: profiles RLS still applies, but this is the staff roster agents already see.
+-- Both RPCs are security invoker: RLS, not the function, decides what the caller may see and change
 create or replace function public.assignable_agents()
 returns setof public.profiles
 language sql
@@ -18,11 +14,6 @@ $$;
 
 grant execute on function public.assignable_agents() to authenticated;
 
--- Filter-scoped bulk status/assignee change. The caller passes the list's own filter object (page
--- selection sends `{ "id": [...] }`; select-all-matching sends the active filters), so the server
--- mutates exactly the visible set — never a payload of thousands of ids.
--- Security invoker is the safety model: the UPDATE runs as the caller, so `tickets_update`
--- (ticket.update AND can_access_ticket) decides every row, and the returned count is what RLS let through.
 create or replace function public.bulk_update_tickets(p_filters jsonb, p_patch jsonb)
 returns integer
 language plpgsql
@@ -32,7 +23,6 @@ as $$
 declare
   v_count integer;
 begin
-  -- A patch setting neither field would still bump updated_at on every matched row; return early.
   if not (p_patch ? 'status' or p_patch ? 'assignee_id') then
     return 0;
   end if;
@@ -42,7 +32,7 @@ begin
     status = case when p_patch ? 'status'
                   then (p_patch ->> 'status')::public.ticket_status
                   else t.status end,
-    -- Empty string is the "unassign" sentinel the client sends for a null assignee.
+    -- Empty string is the client's "unassign" sentinel
     assignee_id = case when p_patch ? 'assignee_id'
                        then nullif(p_patch ->> 'assignee_id', '')::uuid
                        else t.assignee_id end,

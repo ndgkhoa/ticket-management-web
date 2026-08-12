@@ -1,14 +1,6 @@
--- Semantic search over the ticket embeddings. The `embedding vector(1536)` column + its hnsw
--- (cosine) index already exist; this adds two read paths: free-text semantic search and a
--- "tickets like this one" lookup. Both are security invoker, so the `tickets` RLS policy decides
--- every row — never surfacing a ticket the caller couldn't already read.
--- Operators/types are qualified (`OPERATOR(extensions.<=>)`, `extensions.vector`) because these
--- functions pin `search_path = ''`. `<=>` is cosine distance, matching the model and the index's
--- `vector_cosine_ops` so the index serves the ORDER BY; similarity is `1 - distance`, so higher = closer.
+-- Types and operators are schema-qualified because these functions pin `search_path = ''`
 
--- Free-text semantic search: rank visible tickets by cosine similarity to a query embedding. The
--- vector is produced server-side (`embed-query` edge function holds the API key); the client passes
--- it into this RPC so RLS still applies.
+-- The caller passes a vector embedded server-side, so the API key never reaches the client
 create or replace function public.match_tickets(
   query_embedding extensions.vector(1536),
   match_count integer default 10,
@@ -53,8 +45,6 @@ $$;
 grant execute on function public.match_tickets(extensions.vector, integer, double precision)
   to authenticated;
 
--- "Similar tickets" for the detail sidebar: neighbours of a ticket's own stored embedding (one
--- index lookup, zero API calls). The source ticket is read through RLS and excluded from its own results.
 create or replace function public.similar_tickets(
   p_ticket_id uuid,
   match_count integer default 5

@@ -10,7 +10,10 @@ const envSchema = z
       z.string().min(1).optional()
     ),
 
-    VITE_TURNSTILE_SITE_KEY: z.string().min(1).optional(),
+    VITE_TURNSTILE_SITE_KEY: z.preprocess(
+      (value) => value || undefined,
+      z.string().min(1).optional()
+    ),
 
     VITE_AI_ENABLED: z
       .enum(['true', 'false'])
