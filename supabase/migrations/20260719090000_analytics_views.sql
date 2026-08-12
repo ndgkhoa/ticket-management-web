@@ -1,10 +1,5 @@
--- Dashboard analytics, computed in Postgres. Every function is SECURITY INVOKER and reads
--- `public.tickets` directly, so the `tickets_select` RLS policy scopes each aggregation to what the
--- caller may see (agent's own + team, admin's everything) — no separate role logic. All are
--- range-windowed by `p_from` (the dashboard's 7/30/90-day filter start).
-
--- KPI headline numbers: open count, avg first-response + resolution minutes, resolution-SLA
--- compliance (% of resolved tickets that met their due_at).
+-- Every function is security invoker and reads `tickets` directly, so RLS scopes each aggregation
+-- to the caller with no separate role logic
 create or replace function public.dashboard_kpis(p_from timestamptz)
 returns table (
   open_count bigint,
@@ -18,15 +13,13 @@ security invoker
 set search_path = ''
 as $$
   select
-    -- Open backlog, deliberately not window-scoped: "open tickets" is a right-now number, so one
-    -- opened before the window but still open must count.
+    -- Not window-scoped: "open tickets" is a right-now number, whatever the filter range
     (select count(*) from public.tickets where status in ('open', 'pending', 'on_hold')),
     round(avg(extract(epoch from (t.first_response_at - t.created_at)) / 60)
       filter (where t.first_response_at is not null))::numeric,
     round(avg(extract(epoch from (t.resolved_at - t.created_at)) / 60)
       filter (where t.resolved_at is not null))::numeric,
-    -- Compliance is over resolved tickets that had a due_at; one without (a priority with no
-    -- resolution SLA) is excluded from the denominator, not counted as a breach.
+    -- A resolved ticket with no `due_at` leaves the denominator rather than counting as a breach
     round(
       100.0 * count(*) filter (where t.resolved_at is not null and t.resolved_at <= t.due_at)
         / nullif(count(*) filter (where t.resolved_at is not null and t.due_at is not null), 0),
@@ -36,8 +29,6 @@ as $$
   where t.created_at >= p_from;
 $$;
 
--- Daily created vs resolved counts, gap-filled so every day has a point. Day buckets use the session
--- timezone (Supabase runs UTC; the MSW mirror matches) — a non-UTC session would shift boundaries.
 create or replace function public.dashboard_volume(p_from timestamptz)
 returns table (day date, created_count bigint, resolved_count bigint)
 language sql
@@ -63,7 +54,6 @@ as $$
   order by d.day;
 $$;
 
--- Status breakdown for the donut.
 create or replace function public.dashboard_status_distribution(p_from timestamptz)
 returns table (status text, count bigint)
 language sql
@@ -76,7 +66,6 @@ as $$
   group by t.status order by t.status;
 $$;
 
--- Priority breakdown for the bar chart.
 create or replace function public.dashboard_priority_distribution(p_from timestamptz)
 returns table (priority text, count bigint)
 language sql
@@ -89,7 +78,6 @@ as $$
   group by t.priority order by t.priority;
 $$;
 
--- Tickets per category (null category folded into "Uncategorized"), busiest first.
 create or replace function public.dashboard_category_distribution(p_from timestamptz)
 returns table (category text, count bigint)
 language sql
@@ -105,7 +93,6 @@ as $$
   order by count(*) desc, coalesce(c.name, 'Uncategorized');
 $$;
 
--- Per-agent load + throughput: assigned, resolved, and average resolution time.
 create or replace function public.dashboard_agent_performance(p_from timestamptz)
 returns table (
   agent text,
@@ -131,7 +118,6 @@ as $$
   order by count(*) filter (where t.resolved_at is not null) desc;
 $$;
 
--- Callable by signed-in users only; the anon role has no business reading operational metrics.
 do $$
 declare
   fn text;

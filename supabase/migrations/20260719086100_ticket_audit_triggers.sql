@@ -1,10 +1,5 @@
--- The audit trail moves from the client to the database. The app wrote its own ticket_events, so
--- team/category and bulk changes logged nothing and the trail's subject held the pen. These triggers
--- make every state change emit one authoritative event, and the client loses write access to the table.
-
--- One event per changed field on UPDATE; `created` (plus the initial assignment) on INSERT. Actor is
--- the caller (auth.uid()), falling back to the ticket's participants for system/seed writes with no
--- auth context, so the trail is never unattributed.
+-- The audit trail moves from the client to the database: the app wrote its own events, so team,
+-- category and bulk changes logged nothing and the trail's subject held the pen
 create or replace function public.emit_ticket_change_events()
 returns trigger
 language plpgsql
@@ -12,6 +7,7 @@ security definer
 set search_path = ''
 as $$
 declare
+  -- Falls back to a participant below, so seed and system writes are never unattributed
   v_actor uuid := auth.uid();
 begin
   if tg_op = 'INSERT' then
@@ -59,7 +55,6 @@ create trigger tickets_emit_change_events
 after insert or update on public.tickets
 for each row execute function public.emit_ticket_change_events();
 
--- A reply or internal note logs a `commented` event, attributed to its author (RLS pins it to the caller).
 create or replace function public.emit_comment_event()
 returns trigger
 language plpgsql
@@ -78,7 +73,6 @@ create trigger ticket_messages_emit_comment
 after insert on public.ticket_messages
 for each row execute function public.emit_comment_event();
 
--- Adding or removing a tag logs a `tagged` event; the junction carries no actor, so it comes from auth.uid().
 create or replace function public.emit_tag_event()
 returns trigger
 language plpgsql
@@ -103,6 +97,5 @@ create trigger ticket_tags_emit_event
 after insert or delete on public.ticket_tags
 for each row execute function public.emit_tag_event();
 
--- Close the client's write door: every event now originates in the security-definer triggers above; the client only reads.
 drop policy if exists ticket_events_insert on public.ticket_events;
 revoke insert on public.ticket_events from authenticated;
